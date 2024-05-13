@@ -37,6 +37,7 @@
                 <th>Publisher</th>
                 <th>Abstract</th>
                 <th>Keywords</th>
+                <th>Author</th>
             </tr>
         </thead>
         <tbody>
@@ -51,6 +52,14 @@
                 <td>{{ paper.publisher }}</td>
                 <td>{{ paper.abstract }}</td>
                 <td>{{ paper.keywords }}</td>
+                <td>
+                    <ul>
+                        {% for author in paper.author_names %}
+                            <li>{{ author }}</li>
+                        {% endfor %}
+                    </ul>
+                </td>
+                
             </tr>
             {% endfor %}
         </tbody>
