@@ -1,0 +1,90 @@
+/* Add this file in static/css/styles.css */
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* 가로 중앙 정렬 */
+    height: 100vh; /* 화면 전체 높이 */
+}
+
+.header {
+    display: flex;
+    justify-content: space-between; /* 로고와 검색 폼을 좌우로 분산 배치 */
+    align-items: center; /* 세로 중앙 정렬 */
+    background-color: #ffffff;
+    border-bottom: 1px solid #e7e7e7;
+    padding: 10px 20px;
+    width: 100%;
+}
+
+.logo-container {
+    margin-left: 30%; /* 로고 컨테이너를 왼쪽에서 30%만큼 이동 */
+}
+
+.logo {
+    height: 80px;
+}
+
+.search-container {
+    display: flex;
+    margin-right: 50%;
+    margin-top: 20px; /* 검색 폼을 상단에 위치시킴 */
+}
+
+.search-form {
+    display: flex;
+}
+
+.search-form input {
+    width: 500px;
+    height: 30px;
+    padding: 10px;
+    font-size: 20px;
+    border: 1px solid #ccc;
+    border-radius: 4px 0 0 4px;
+    outline: none;
+}
+
+.search-form button {
+    padding: 10px 20px;
+    font-size: 16px;
+    border: 1px solid #ccc;
+    border-left: none;
+    border-radius: 0 4px 4px 0;
+    cursor: pointer;
+    background-color: #f8f8f8;
+    outline: none;
+}
+
+/* 표 전체 스타일 */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+}
+
+/* 표 헤더 스타일 */
+th {
+    background-color: #f2f2f2;
+    padding: 10px;
+    text-align: left;
+}
+
+/* 표 셀 스타일 */
+td {
+    border: 1px solid #dddddd;
+    padding: 10px;
+}
+
+/* 짝수 행 배경색 스타일 */
+tbody tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+/* 마우스 호버 스타일 */
+tbody tr:hover {
+    background-color: #f2f2f2;
+}
+
