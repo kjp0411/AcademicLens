@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Number of Papers per Author</title>
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    <script type="text/javascript">
+        google.charts.load('current', {'packages':['corechart']});
+
+        google.charts.setOnLoadCallback(drawChart);
+
+        function drawChart() {
+            var data = new google.visualization.DataTable();
+            data.addColumn('string', 'Author');
+            data.addColumn('number', 'Number of Papers');
+
+            data.addRows([
+                {% for author_name, paper_count in author_data %}
+                    ['{{ author_name }}', {{ paper_count }}],
+                {% endfor %}
+            ]);
+
+            var options = {
+                title: 'Number of Papers per Author',
+                hAxis: {
+                    title: 'Number of Papers',
+                    minValue: 0,
+                },
+                vAxis: {
+                    title: 'Author'
+                },
+                chartArea: {width: '50%'},
+                legend: 'none'
+            };
+
+            var chart = new google.visualization.BarChart(document.getElementById('chart_div'));
+            chart.draw(data, options);
+        }
+    </script>
+</head>
+<body>
+    <h2>Searched Keyword: "{{ keyword }}"</h2>
+    <div id="chart_div" style="width: 900px; height: 500px;"></div>
+</body>
+</html>
