@@ -8,15 +8,14 @@
     <link rel="stylesheet" href="{% static 'css/styles.css' %}">
 </head>
 <body>
-    <header class="header">
-        <div class="logo-container">
-            <img src="{% static 'images/Logo2.png' %}" alt="Logo" class="logo">
-        </div>
+    <header>
         <div class="search-container">
-            <form action="{% url 'index' %}" method="get" class="search-form">
-                <input type="text" name="q" placeholder="Search...">
+            <form action="/search" method="get" class="search-form">
+                <img src="{% static 'images/Logo2.png' %}" alt="Logo" class="logo">
+                <input type="text" name="query" id="search-box" placeholder="Enter search query">
                 <button type="submit">Search</button>
             </form>
+            <div id="suggestions" class="suggestions"></div>
         </div>
     </header>
     <main>

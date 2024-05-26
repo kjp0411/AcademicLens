@@ -19,37 +19,58 @@ db = mariadb.connect(**db_config)
 cursor = db.cursor(dictionary=True)
 
 # 쿼리 실행 / 검색 방식
-cursor.execute("""
-SELECT p.id, GROUP_CONCAT(k.keyword_name) AS keywords
-FROM paper p
-JOIN paper_keyword pk ON p.id = pk.paper_id
-JOIN keyword k ON pk.keyword_id = k.id
-WHERE MATCH(p.search, p.title, p.abstract) AGAINST(%s)
-   OR MATCH(k.keyword_name) AGAINST(%s)
-GROUP BY p.id;
-""", (user_keyword, user_keyword))
+if len(user_keyword) <= 2:
+    cursor.execute("""
+    SELECT id
+    FROM paper
+    WHERE search LIKE %s
+       OR title LIKE %s
+       OR abstract LIKE %s
+    UNION
+    SELECT p.id
+    FROM paper p
+    JOIN paper_keyword pk ON p.id = pk.paper_id
+    JOIN keyword k ON pk.keyword_id = k.id
+    WHERE k.keyword_name LIKE %s;
+    """, (f'% {user_keyword} %', f'% {user_keyword} %', f'% {user_keyword} %', f' %{user_keyword} %'))
+else:
+    cursor.execute("""
+    SELECT id
+    FROM paper
+    WHERE MATCH(search, title, abstract) AGAINST(%s)
+    UNION
+    SELECT p.id
+    FROM paper p
+    JOIN paper_keyword pk ON p.id = pk.paper_id
+    JOIN keyword k ON pk.keyword_id = k.id
+    WHERE MATCH(k.keyword_name) AGAINST(%s);
+    """, (user_keyword, user_keyword))
 
 # 쿼리 결과 가져오기
-results = cursor.fetchall()
-print("가져온 총 논문 수 >>> ", len(results))
+paper_ids = [row['id'] for row in cursor.fetchall()]
 
-# 키워드 데이터를 하나의 리스트로 만들기
-all_keywords = []
-for row in results:
-    all_keywords.extend(row['keywords'].split(','))
+# 키워드 카운트 초기화
+keyword_counts = Counter()
 
-# 키워드 빈도수 계산하기
-keyword_counts = Counter(all_keywords)
+# 각 논문의 키워드 카운트
+for paper_id in paper_ids:
+    cursor.execute("""
+    SELECT keyword_name
+    FROM paper_keyword pk
+    JOIN keyword k ON pk.keyword_id = k.id
+    WHERE pk.paper_id = %s;
+    """, (paper_id,))
+    keywords = [row['keyword_name'] for row in cursor.fetchall()]
+    keyword_counts.update(keywords)
 
 # 빈도수가 높은 top 10 키워드 출력하기
 top_keywords = keyword_counts.most_common(10)
 print("Top 10 Keywords:")
 for keyword, count in top_keywords:
-    print(f"- {keyword.strip()}: {count}")
+    print(f"- {keyword}: {count}")
 
-keywords = [keyword.strip() for keyword, count in top_keywords]
-counts = [count for keyword, count in top_keywords]
-
+# 시각화
+keywords, counts = zip(*top_keywords)
 fig, ax = plt.subplots(figsize=(12, 6))
 ax.barh(keywords, counts)
 
@@ -57,7 +78,6 @@ ax.set_title('Top 10 Keywords')
 ax.set_xlabel('Frequency')
 ax.set_ylabel('Keyword')
 
-ax.set_xticks(range(0, max(counts)+1, 500))
 plt.show()
 
 # 데이터베이스 연결 종료

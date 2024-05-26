@@ -10,3 +10,4 @@ def show_paper_info(request):
         'paper_count': paper_count,
         'affiliation_count': affiliation_count
     })
+

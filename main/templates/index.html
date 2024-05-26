@@ -69,9 +69,21 @@
     </tbody>
 </table>
 
-
 <!-- 총 논문 수와 학회 수 -->
-<p>총 논문 수 : {{ paper_count }}</p>
-<p>총 학회 수: {{ affiliation_count }}</p>
+<h2>총 논문 수와 학회 수</h2>
+<table>
+    <thead>
+        <tr>
+            <th>논문 수</th>
+            <th>학회 수</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>{{ paper_count }}</td>
+            <td>{{ affiliation_count }}</td>
+        </tr>
+    </tbody
+</table>
 {% endblock %}
 
