@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>연도별 논문 수 및 저자별 논문 수</title>
+    <!-- Chart.js 라이브러리 불러오기 -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Google Charts 라이브러리 불러오기 -->
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    <style>
+        #papersChart, #authorsChart {
+            width: 600px; /* 원하는 너비로 조절 */
+            height: 400px; /* 원하는 높이로 조절 */
+            display: block; /* 이 부분을 추가 */
+            margin: auto; /* 중앙 정렬을 위해 추가 */
+        }
+    </style>
+</head>
+<body>
+    <h2>Searched Keyword: "{{ keyword }}"</h2>
+
+    <ul>
+        {% for item in papers_count %}
+            <li>{{ item.year }}년: {{ item.count }}개</li>
+        {% endfor %}
+    </ul>
+    <canvas id="papersChart"></canvas>
+
+    <div id="authorsChart"></div>
+
+    <div id="affiliationChart"></div>
+
+    <div id="countryChart"></div>
+
+    <div id="keywordChart"></div>
+
+    <!-- 연도별 논문 수 차트를 그리는 스크립트 -->
+    <script>
+        var ctx = document.getElementById('papersChart').getContext('2d');
+        var papersChart = new Chart(ctx, {
+            type: 'bar', // 차트의 형태
+            data: {
+                labels: [{% for item in papers_count %} "{{ item.year }}", {% endfor %}], // X 축 레이블
+                datasets: [{
+                    label: '연도별 논문 수',
+                    data: [{% for item in papers_count %} {{ item.count }}, {% endfor %}], // Y 축 데이터
+                    backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                    borderColor: 'rgba(255, 99, 132, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                },
+                plugins: {
+                    title: {
+                        display: true,
+                        text: '연도별 논문 수',
+                        font: {
+                            size: 20
+                        },
+                        color: '#333'
+                    }
+                }
+            }
+        });
+    </script>
+
+    <!-- 저자별 논문 수 차트를 그리는 스크립트 -->
+    <script type="text/javascript">
+        google.charts.load('current', {'packages':['corechart']});
+
+        google.charts.setOnLoadCallback(drawChart);
+
+        function drawChart() {
+            var data = new google.visualization.DataTable();
+            data.addColumn('string', 'Author');
+            data.addColumn('number', 'Number of Papers');
+
+            data.addRows([
+                {% for author_name, paper_count in author_data %}
+                    ['{{ author_name }}', {{ paper_count }}],
+                {% endfor %}
+            ]);
+
+            var options = {
+                title: 'Number of Papers per Author',
+                hAxis: {
+                    title: 'Number of Papers',
+                    minValue: 0,
+                },
+                vAxis: {
+                    title: 'Author'
+                },
+                chartArea: {width: '50%'},
+                legend: 'none'
+            };
+
+            var chart = new google.visualization.BarChart(document.getElementById('authorsChart'));
+            chart.draw(data, options);
+        }
+    </script>
+
+    <!-- 소속별 논문 수 차트를 그리는 스크립트 -->
+    <script type="text/javascript">
+        google.charts.load('current', {'packages':['corechart']});
+
+        google.charts.setOnLoadCallback(drawChart);
+
+        function drawChart() {
+            var data = new google.visualization.DataTable();
+            data.addColumn('string', 'Affiliation');
+            data.addColumn('number', 'Number of Papers');
+
+            data.addRows([
+                {% for affiliation_name, paper_count in affiliation_data %}
+                    ['{{ affiliation_name }}', {{ paper_count }}],
+                {% endfor %}
+            ]);
+
+            var options = {
+                title: 'Number of Papers per Affiliation',
+                hAxis: {
+                    title: 'Number of Papers',
+                    minValue: 0,
+                },
+                vAxis: {
+                    title: 'Affiliation'
+                },
+                chartArea: {width: '50%'},
+                legend: 'none'
+            };
+
+            var chart = new google.visualization.BarChart(document.getElementById('affiliationChart'));
+            chart.draw(data, options);
+        }
+    </script>
+
+    <!-- 나라별 논문 수 차트를 그리는 스크립트 -->
+    <script type="text/javascript">
+        google.charts.load('current', {'packages':['corechart']});
+
+        google.charts.setOnLoadCallback(drawChart);
+
+        function drawChart() {
+            var data = new google.visualization.DataTable();
+            data.addColumn('string', 'Country');
+            data.addColumn('number', 'Number of Papers');
+
+            data.addRows([
+                {% for country_name, paper_count in country_data %}
+                    ['{{ country_name }}', {{ paper_count }}],
+                {% endfor %}
+            ]);
+
+            var options = {
+                title: 'Number of Papers per Country',
+                hAxis: {
+                    title: 'Number of Papers',
+                    minValue: 0,
+                },
+                vAxis: {
+                    title: 'Country'
+                },
+                chartArea: {width: '50%'},
+                legend: 'none'
+            };
+
+            var chart = new google.visualization.BarChart(document.getElementById('countryChart'));
+            chart.draw(data, options);
+        }
+    </script>
+
+    <!-- 키워드 탑 10 -->
+    <script type="text/javascript">
+        google.charts.load('current', {'packages':['corechart']});
+
+        google.charts.setOnLoadCallback(drawChart);
+
+        function drawChart() {
+            var data = new google.visualization.DataTable();
+            data.addColumn('string', 'Keyword');
+            data.addColumn('number', 'Count');
+
+            data.addRows([
+                {% for keyword, count in top_keywords %}
+                    ['{{ keyword }}', {{ count }}],
+                {% endfor %}
+            ]);
+
+            var options = {
+                title: 'Top 10 Keywords',
+                hAxis: {
+                    title: 'Count',
+                    minValue: 0,
+                },
+                vAxis: {
+                    title: 'Keyword'
+                },
+                chartArea: {width: '50%'},
+                legend: 'none'
+            };
+
+            var chart = new google.visualization.BarChart(document.getElementById('keywordChart'));
+            chart.draw(data, options);
+        }
+    </script>
+</body>
+</html>

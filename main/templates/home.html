@@ -1,6 +1,8 @@
 {% extends 'base.html' %}
 
-{% block title %}Home{% endblock %}
+{% load static %}
+
+{% block title %}AcademicLens{% endblock %}
 
 {% block content %}
 <!-- 인기 검색어 -->
@@ -70,20 +72,19 @@
 </table>
 
 <!-- 총 논문 수와 학회 수 -->
-<h2>총 논문 수와 학회 수</h2>
-<table>
-    <thead>
-        <tr>
-            <th>논문 수</th>
-            <th>학회 수</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td>{{ paper_count }}</td>
-            <td>{{ affiliation_count }}</td>
-        </tr>
-    </tbody
-</table>
-{% endblock %}
+<div class="info-container">
+    <div class="paper-info">
+    <p>총 논문 수 <br>
+    <img src="{% static 'image/cap_paper.png' %}" alt="Paper" class="paper">
+    <span>{{ paper_count }}건</span>
+    </p>
+    </div>
+    <div class="affiliation-info">
+    <p>총 학회 수 <br>
+        <img src="{% static 'image/cap_affiliation.png' %}" alt="Affiliation" class="affiliation">
+        <span>{{ affiliation_count }}개</span>
+        </p>
+    </div>
+</div>
 
+{% endblock %}
