@@ -56,11 +56,25 @@ for index, row in data.iterrows():
             cursor.execute(sql, values)
             paper_id = cursor.lastrowid  # 삽입된 article의 id를 가져옴
 
-            # affiliation 테이블과 article_affiliations 테이블에 데이터 삽입
             for author, affiliation in affiliations.items():
                 if affiliation == 'none':
                     continue
 
+                affiliation_list=affiliation.split(',')
+
+                # 각 항목의 양쪽 공백을 제거
+                affiliation_list=[a.strip() for a in affiliation_list]
+
+                country = None
+
+                if len(affiliation_list) >= 3:
+                    affiliation = ', '.join(affiliation_list[:-1])
+                    if ' ' not in affiliation_list[-1]:
+                        country = affiliation_list[-1]
+                else:
+                    affiliation = ', '.join(affiliation_list[:])
+
+                
                 sql = "INSERT INTO affiliation (name) VALUES (%s)"
                 cursor.execute(sql, (affiliation,))
                 affiliation_id = cursor.lastrowid  
@@ -69,11 +83,20 @@ for index, row in data.iterrows():
                 cursor.execute(sql, (author, affiliation))
                 author_id = cursor.lastrowid  
 
+                if country:  # country가 설정된 경우에만 country 삽입
+                    sql = "INSERT INTO country (name) VALUES (%s)"
+                    cursor.execute(sql, (country,))
+                    country_id = cursor.lastrowid
+
+                    sql = "INSERT INTO paper_country (paper_id, country_id) VALUES (%s, %s)"
+                    cursor.execute(sql, (paper_id, country_id))
+
                 sql = "INSERT INTO paper_author (paper_id, author_id) VALUES (%s, %s)"
                 cursor.execute(sql, (paper_id, author_id))
                 
                 sql = "INSERT INTO paper_affiliation (paper_id, affiliation_id) VALUES (%s, %s)"
                 cursor.execute(sql, (paper_id, affiliation_id))
+
             
             # keyword 테이블과 paper_keyword 테이블에 데이터 삽입
             for keyword in keywords:
