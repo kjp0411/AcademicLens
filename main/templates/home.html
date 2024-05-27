@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+
+{% load static %}
+
+{% block title %}AcademicLens{% endblock %}
+
+{% block content %}
+<!-- 인기 검색어 -->
+<h2>실시간 인기 키워드</h2>
+<table>
+    <thead>
+        <tr>
+            <th>Rank</th>
+            <th>Keyword</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>1</td>
+            <td>Python</td>
+        </tr>
+        <tr>
+            <td>2</td>
+            <td>Machine Learning</td>
+        </tr>
+        <tr>
+            <td>3</td>
+            <td>Data Science</td>
+        </tr>
+        <tr>
+            <td>4</td>
+            <td>Artificial Intelligence</td>
+        </tr>
+        <tr>
+            <td>5</td>
+            <td>Deep Learning</td>
+        </tr>
+    </tbody>
+</table>
+
+<!-- 인기 자료 -->
+<h2>실시간 인기 자료</h2>
+<table>
+    <thead>
+        <tr>
+            <th>Rank</th>
+            <th>Title</th>
+            <th>Author</th>
+            <!-- 추가 필요한 다른 정보들 -->
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>1</td>
+            <td>Introduction to Python Programming</td>
+            <td>John Smith</td>
+            <!-- 추가 필요한 다른 정보들 -->
+        </tr>
+        <tr>
+            <td>2</td>
+            <td>Machine Learning for Beginners</td>
+            <td>Jane Doe</td>
+            <!-- 추가 필요한 다른 정보들 -->
+        </tr>
+        <tr>
+            <td>3</td>
+            <td>Data Science Essentials</td>
+            <td>Alex Johnson</td>
+            <!-- 추가 필요한 다른 정보들 -->
+        </tr>
+    </tbody>
+</table>
+
+<!-- 총 논문 수와 학회 수 -->
+<div class="info-container">
+    <div class="paper-info">
+    <p>총 논문 수 <br>
+    <img src="{% static 'image/cap_paper.png' %}" alt="Paper" class="paper">
+    <span>{{ paper_count }}건</span>
+    </p>
+    </div>
+    <div class="affiliation-info">
+    <p>총 학회 수 <br>
+        <img src="{% static 'image/cap_affiliation.png' %}" alt="Affiliation" class="affiliation">
+        <span>{{ affiliation_count }}개</span>
+        </p>
+    </div>
+</div>
+
+{% endblock %}

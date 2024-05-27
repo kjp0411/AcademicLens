@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>연도별 논문 수 증감 그래프</title>
+    <!-- Chart.js 라이브러리 불러오기 -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        #papersChart {
+            width: 600px; /* 원하는 너비로 조절 */
+            height: 400px; /* 원하는 높이로 조절 */
+            display: block; /* 이 부분을 추가 */
+            margin: auto; /* 중앙 정렬을 위해 추가 */
+        }
+    </style>
+</head>
+<body>
+    <ul>
+        {% for item in papers_count %}
+            <li>{{ item.year }}년: {{ item.count }}개</li>
+        {% endfor %}
+    </ul>
+    <canvas id="papersChart"></canvas>
+
+    <!-- 차트를 그리는 스크립트 -->
+    <script>
+        var ctx = document.getElementById('papersChart').getContext('2d');
+        var papersChart = new Chart(ctx, {
+            type: 'bar', // 차트의 형태
+            data: {
+                labels: [{% for item in papers_count %} "{{ item.year }}", {% endfor %}], // X 축 레이블
+                datasets: [{
+                    label: '연도별 논문 수',
+                    data: [{% for item in papers_count %} {{ item.count }}, {% endfor %}], // Y 축 데이터
+                    backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                    borderColor: 'rgba(255, 99, 132, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                },
+                plugins: {
+                    title: {
+                        display: true,
+                        text: '연도별 논문 수',
+                        font: {
+                            size: 20
+                        },
+                        color: '#333'
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>

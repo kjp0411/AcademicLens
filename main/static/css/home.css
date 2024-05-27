@@ -1,0 +1,54 @@
+/* home.html에서 표랑 논문, 학회수(이미지까지) */
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+}
+
+/* 표 헤더 스타일 */
+th {
+    background-color: #f2f2f2;
+    padding: 10px;
+    text-align: left;
+}
+
+/* 표 셀 스타일 */
+td {
+    border: 1px solid #dddddd;
+    padding: 10px;
+}
+
+/* 짝수 행 배경색 스타일 */
+tbody tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+/* 마우스 호버 스타일 */
+tbody tr:hover {
+    background-color: #f2f2f2;
+}
+
+.info-container {
+    display: flex; /* 플렉스 박스 설정 */
+    justify-content: center; /* 가운데 정렬 */
+    gap: 40px; /* 요소 사이의 간격 */
+    border: 2px solid #f2f2f2;
+}
+
+.paper-info, .affiliation-info {
+    font-weight: bold; /* 글씨 굵게 */
+    text-align: center; /* 텍스트 가운데 정렬 */
+}
+
+.paper-info p, .affiliation-info p {
+    margin: 20px 0; /* 위아래 여백 추가 */
+    margin-inline: 30px;
+}
+
+.paper, .affiliation {
+    display: block; /* 이미지를 블록 요소로 설정하여 텍스트 아래에 위치 */
+    margin: 0 auto; /* 이미지 가운데 정렬 */
+    width: 70px; /* 이미지 크기 조정, 필요에 따라 조정 가능 */
+    height: 70px; /* 이미지 비율 유지 */
+}

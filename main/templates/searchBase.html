@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %} AcademicLens {% endblock %}</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/searchBase.css' %}">
+</head>
+<body>
+    <header class="header">
+        <div class="search-container">
+            <div class="logo-container">
+                <img src="{% static 'image/cap_logo.png' %}" alt="Logo" class="logo">
+            </div>
+            <form action="{% url 'search' %}" method="get" class="search-form">
+                <input type="text" name="query" id="search-box" placeholder="Enter search query">
+                <button type="submit">Search</button>
+            </form>
+        </div>
+        {% comment %} <div id="suggestions" class="suggestions"></div> {% endcomment %}
+        <div class="analysis-button-container">
+            <form action="{% url 'total_graph' %}" method="get">
+                <input type="hidden" name="query" value="anti">
+                <button type="submit"> 분석결과보기 </button>
+            </form>
+        </div>
+    </header>
+
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+    <script src="{% static 'js/script.js' %}"></script>
+</body>
+</html>
