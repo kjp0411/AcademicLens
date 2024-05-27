@@ -22,9 +22,13 @@ def home(request):
     })
 
 def search(request):
-    query = request.GET.get('q', '')
+    query = request.GET.get('query', '')
     # 여기에 검색 결과 처리 로직을 추가할 수 있습니다.
-    return render(request, 'search.html', {'query': query})
+    context = {
+        'query': query,
+        # 다른 컨텍스트 데이터 추가
+    }
+    return render(request, 'search.html', context)
 
 # 검색 엔진
 def get_paper_ids(user_keyword):
