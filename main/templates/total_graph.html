@@ -38,7 +38,7 @@
     <script>
         var ctx = document.getElementById('papersChart').getContext('2d');
         var papersChart = new Chart(ctx, {
-            type: 'bar', // 차트의 형태
+            type: 'line', // 차트의 형태
             data: {
                 labels: [{% for item in papers_count %} "{{ item.year }}", {% endfor %}], // X 축 레이블
                 datasets: [{

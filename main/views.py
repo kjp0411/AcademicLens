@@ -303,7 +303,8 @@ def analyze(request):
                 LIMIT 10;
                 """, paper_ids)
 
-                author_counts = cursor.fetchall()
+                rows = cursor.fetchall()
+                author_counts = [(row[0].encode('latin1').decode('utf8'), row[1]) for row in rows]
 
         # 저자 이름과 논문 수를 결합한 리스트 생성
         author_data = list(zip([item[0] for item in author_counts], [item[1] for item in author_counts]))
@@ -324,7 +325,9 @@ def analyze(request):
                 LIMIT 10;
                 """, paper_ids)
 
-                affiliation_counts = cursor.fetchall()
+                # 데이터를 UTF-8로 인코딩하여 가져오기
+                rows = cursor.fetchall()
+                affiliation_counts = [(row[0].encode('latin1').decode('utf8'), row[1]) for row in rows]
 
         # 소속 이름과 논문 수를 결합한 리스트 생성
         affiliation_data = list(zip([item[0] for item in affiliation_counts], [item[1] for item in affiliation_counts]))
