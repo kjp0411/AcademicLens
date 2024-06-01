@@ -1,5 +1,6 @@
-{% extends 'searchBase.html' %}
+<!-- search.html -->
 
+{% extends 'searchBase.html' %}
 {% load static %}
 
 {% block title %}AcademicLens{% endblock %}
@@ -12,121 +13,107 @@
                 <p> 검색결과 좁혀 보기 </p>
                 <!-- 여기에 선택해제 -->
             </div>
-            <form name="group">
-                <input type="hidden" name="orderBy" value> 
+            <form name="group" method="GET" action="{% url 'search' %}">
+                <input type="hidden" name="query" value="{{ query }}"> 
                 <ul class="filterList">
                     <li class="on">
-                        <a href="redirect" class="title"> 발행연도 </a>
+                        <a href="#" class="title"> 발행연도 </a>
                         <div>
                             <ul class="contList year" data-header="발행연도">
                                 <div id="mCSB_1" class="mCustomScrollBox" tabindex="0" style="max-height: 120px;">
                                     <div id="mCSB_1_container" class="mCSB_1_container" style="position:relative; top:0; left:0;" dir="ltr">
                                         <li>
-                                            <input type="checkbox" id="re_a_kor1" name="c_use_pyear" value="2024">
+                                            <input type="checkbox" id="re_a_kor1" name="year" value="2024">
                                             <label for="re_a_kor1" data-currname="2024" data-currvalue="2024">
                                                 <span class="checkBox"></span>
                                                 2024
-                                                <span class="total"> (38) </span>
+                                                <span class="total"> ({{paper_counts_by_year.2024}}) </span>
                                             </label>
                                         </li>
                                         <li>
-                                            <input type="checkbox" id="re_a_kor2" name="c_use_pyear" value="2023">
+                                            <input type="checkbox" id="re_a_kor2" name="year" value="2023">
                                             <label for="re_a_kor2" data-currname="2023" data-currvalue="2023">
                                                 <span class="checkBox"></span>
                                                 2023
-                                                <span class="total"> (110) </span>
+                                                <span class="total"> ({{paper_counts_by_year.2023}}) </span>
                                             </label>
                                         </li>
                                         <li>
-                                            <input type="checkbox" id="re_a_kor3" name="c_use_pyear" value="2022">
+                                            <input type="checkbox" id="re_a_kor3" name="year" value="2022">
                                             <label for="re_a_kor3" data-currname="2022" data-currvalue="2022">
                                                 <span class="checkBox"></span>
                                                 2022
-                                                <span class="total"> (38) </span>
+                                                <span class="total"> ({{paper_counts_by_year.2022}}) </span>
                                             </label>
                                         </li>
                                         <li>
-                                            <input type="checkbox" id="re_a_kor4" name="c_use_pyear" value="2021">
-                                            <label for="re_a_kor64" data-currname="2021" data-currvalue="2021">
+                                            <input type="checkbox" id="re_a_kor4" name="year" value="2021">
+                                            <label for="re_a_kor4" data-currname="2021" data-currvalue="2021">
                                                 <span class="checkBox"></span>
                                                 2021
-                                                <span class="total"> (38) </span>
+                                                <span class="total"> ({{paper_counts_by_year.2021}}) </span>
                                             </label>
                                         </li>
                                         <li>
-                                            <input type="checkbox" id="re_a_kor5" name="c_use_pyear" value="2020">
+                                            <input type="checkbox" id="re_a_kor5" name="year" value="2020">
                                             <label for="re_a_kor5" data-currname="2020" data-currvalue="2020">
                                                 <span class="checkBox"></span>
                                                 2020
-                                                <span class="total"> (38) </span>
+                                                <span class="total"> ({{paper_counts_by_year.2020}}) </span>
                                             </label>
                                         </li>
                                     </div>
                                     <div id="mCSB_1_scrollbar_vertical" class="mCSB_scrollTools" style="display: block;"></div>
                                 </div>
                             </ul>
-                            {% comment %} <a href class="artucleToggleBtn"> 펼치기 </a> {% endcomment %}
-                        </div>
-                    </li>
-                    <li class="on">
-                        <a href="redirect" class="title"> 발행처 </a>
-                        <div>
-                            <ul class="contList publisher" data-header="발행처">
-                                <div id="mCSB_2" class="mCustomScrollBox" tabindex="0" style="max-height: 120px;">
-                                    <div id="mCSB_2_container" class="mCSB_2_container" style="position:relative; top:0; left:0;" dir="ltr">
-                                        <li>
-                                            <input type="checkbox" id="re_a_kor6" name="c_use_publisher" value="IEEE">
-                                            <label for="re_a_kor6" data-currname="IEEE" data-currvalue="IEEE">
-                                                <span class="checkBox"></span>
-                                                IEEE
-                                                <span class="total"> (38) </span> <!-- 몇 개의 논문이 있는지 보여주기. 장고로 연결하기 -->
-                                            </label>
-                                        </li>
-                                        <li>
-                                            <input type="checkbox" id="re_a_kor7" name="c_use_publisher" value="Springer">
-                                            <label for="re_a_kor7" data-currname="Springer" data-currvalue="Springer">
-                                                <span class="checkBox"></span>
-                                                Springer
-                                                <span class="total"> (110) </span>
-                                            </label>
-                                        </li>
-                                        <li>
-                                            <input type="checkbox" id="re_a_kor8" name="c_use_publisher" value="ACM">
-                                            <label for="re_a_kor8" data-currname="ACM" data-currvalue="ACM">
-                                                <span class="checkBox"></span>
-                                                   ACM
-                                                <span class="total"> (38) </span>
-                                            </label>
-                                        </li>
-                                    </div>
-                                    <div id="mCSB_2_scrollbar_vertical" class="mCSB_scrollTools" style="display: block;"></div>
-                                </div>
-                            </ul>
-                            {% comment %} <a href class="artucleToggleBtn"> 펼치기 </a> {% endcomment %}
                         </div>
                     </li>
                 </ul>
+                <button type="submit">검색</button>
             </form>
         </div>
         <div class="searchResult">
-            <!-- 장고랑 연결 필요 -->
-            <div class="cont">
-                <p class="title">
-                    <a href="해당 논문 선택시 화면 URL">
-                        <!-- 검색어 강조 -->
-                        <span class="highlight"> </span>
-                        " 제목 "
-                    </a>
-                </p>
-                <p class="etc">
-                    <span class="writer">
-                        A, B, B
+            {% if papers %}
+                {% for paper in papers %}
+                    <div class="cont">
+                        <p class="title">
+                            <a href="{{ paper.url }}">
+                                <span class="highlight">{{ paper.title }}</span>
+                            </a>
+                        </p>
+                        <p class="etc">
+                            <span class="writer">
+                                {{ paper.author }}
+                            </span>
+                        </p>
+                        <p class="preAbstract">
+                            {{ paper.abstract|truncatechars:250 }}
+                        </p>
+                    </div>
+                    <hr>
+                {% endfor %}
+                
+                <!-- 페이징 -->
+                <div class="pagination">
+                    <span class="step-links">
+                        {% if papers.has_previous %}
+                            <a href="?query={{ query }}&page=1">&laquo; 첫 페이지</a>
+                            <a href="?query={{ query }}&page={{ papers.previous_page_number }}"> < </a>
+                        {% endif %}
+                        
+                        <span class="current">
+                            페이지 {{ papers.number }} / {{ papers.paginator.num_pages }}
+                        </span>
+                        
+                        {% if papers.has_next %}
+                            <a href="?query={{ query }}&page={{ papers.next_page_number }}"> > </a>
+                            <a href="?query={{ query }}&page={{ papers.paginator.num_pages }}"> 마지막 페이지 &raquo; </a>
+                        {% endif %}
                     </span>
-                </p>
-                <p class="preAbstract">
-                    "초록 내용 여기에 넣기"
-                </p>
-            </div>
+                </div>
+            {% else %}
+                <p>검색 결과가 없습니다.</p>
+            {% endif %}
         </div>
     </div>
 </div>

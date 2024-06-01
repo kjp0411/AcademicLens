@@ -70,7 +70,7 @@ body {
 }
 
 .analysis-button-container {
-    margin-right: 15%;
+    margin-right: 20px;
     margin-left: 20px;
     margin-top: 20px;
 }
@@ -117,20 +117,33 @@ body {
     /* margin-top: 30px; */
 }
 
+.content-container {
+    display: flex;
+    justify-content: flex-start; /* 자식 요소들을 왼쪽으로 정렬 */
+    align-items: flex-start; /* 자식 요소들을 상단으로 정렬 */
+    margin: 20px; /* 필요에 따라 조절 */
+}
+
 .filter-container {
-    flex: 1;
     padding: 20px;
     box-shadow: 0 0 5px rgba(0,0,0,0.2); /* 박스에 그림자 효과를 줍니다 */
     margin-right: 20px; /* content-container와의 간격 */
     margin-left: 20px;
-    width: 15%;
+    width: 200px;
   }
 
-.content-container {
-    flex: 3;
-    padding: 20px;
+  ul, ol {
+    list-style: none;
 }
 
-ul, ol {
-    list-style: none;
+.searchResult {
+    margin-left: 50px;
+    width: 700px;
+    padding: 30px;
+    box-shadow: 0 0 5px rgba(0,0,0,0.2);
+}
+
+.pagination {
+    display: flex;
+    justify-content: center;
 }
