@@ -1,0 +1,128 @@
+<!-- templates/country_network.html -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Country Network</title>
+    <script src="https://d3js.org/d3.v6.min.js"></script>
+    <style>
+        .node circle {
+            stroke: black;  /* 노드 테두리를 검은색으로 설정 */
+            stroke-width: 1.5px;
+            fill: blue;  /* 노드의 색상을 파란색으로 설정 */
+        }
+
+        .link {
+            stroke: #666;
+            stroke-opacity: 0.8;
+        }
+
+        .node text {
+            pointer-events: none;
+            font-size: 10px;
+            text-anchor: middle;
+            fill: #000;
+        }
+    </style>
+</head>
+<body>
+    <h2>Country Network</h2>
+    <div id="network"></div>
+
+    <script>
+        async function fetchNetworkData() {
+            const response = await fetch('/country_network/');
+            if (!response.ok) {
+                console.error('Network response was not ok', response.statusText);
+                return;
+            }
+            const data = await response.json();
+            return data;
+        }
+
+        function visualizeNetwork(data) {
+            const width = 960;
+            const height = 600;
+
+            const svg = d3.select("#network")
+                .append("svg")
+                .attr("width", width)
+                .attr("height", height);
+            
+            
+            const simulation = d3.forceSimulation(data.nodes)
+                .force("link", d3.forceLink(data.links).id(d => d.id).distance(100))
+                .force("charge", d3.forceManyBody().strength(-300))
+                .force("center", d3.forceCenter(width / 2, height / 2));
+
+            const link = svg.append("g")
+                .attr("class", "links")
+                .selectAll("line")
+                .data(data.links)
+                .enter()
+                .append("line")
+                .attr("class", "link")
+                .attr("stroke-width", d => Math.sqrt(d.value) * 2);  // 링크의 굵기를 논문 수에 따라 설정
+
+            const node = svg.append("g")
+                .attr("class", "nodes")
+                .selectAll("g")
+                .data(data.nodes)
+                .enter()
+                .append("g")
+                .attr("class", "node");
+
+            node.append("circle")
+                .attr("r", d => Math.sqrt(d.value) * 5)  // 노드의 크기를 논문 수에 따라 설정
+
+            node.append("text")
+                .attr("dy", ".35em")
+                .text(d => d.id);
+
+            simulation.on("tick", () => {
+                link
+                    .attr("x1", d => d.source.x)
+                    .attr("y1", d => d.source.y)
+                    .attr("x2", d => d.target.x)
+                    .attr("y2", d => d.target.y);
+
+                node
+                    .attr("transform", d => `translate(${d.x},${d.y})`);
+            });
+
+            node.call(d3.drag()
+                .on("start", (event, d) => {
+                    if (!event.active) simulation.alphaTarget(0.3).restart();
+                    d.fx = d.x;
+                    d.fy = d.y;
+                })
+                .on("drag", (event, d) => {
+                    d.fx = event.x;
+                    d.fy = event.y;
+                })
+                .on("end", (event, d) => {
+                    if (!event.active) simulation.alphaTarget(0);
+                    d.fx = null;
+                    d.fy = null;
+                }));
+        }
+
+        fetchNetworkData().then(data => {
+            if (data) {
+                data.nodes.forEach(node => {
+                    node.value = data.links.reduce((acc, link) => {
+                        if (link.source === node.id || link.target === node.id) {
+                            acc += link.value;
+                        }
+                        return acc;
+                    }, 0);
+                });
+                visualizeNetwork(data);
+            }
+        }).catch(error => {
+            console.error('Error fetching network data:', error);
+        });
+    </script>
+</body>
+</html>

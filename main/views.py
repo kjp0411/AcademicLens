@@ -5,6 +5,7 @@ from django.db import connection
 from collections import Counter
 from datetime import datetime
 from django.core.paginator import Paginator
+from django.http import JsonResponse
 
 
 
@@ -31,7 +32,6 @@ def search(request):
     year = request.GET.get('year', '')
 
     paper_ids = get_paper_ids(query)
-    print(paper_ids)
     
     if year:
         # 연도 필터를 사용하여 필터링
@@ -39,7 +39,7 @@ def search(request):
     else:
         papers = Paper.objects.filter(id__in=paper_ids)
 
-    # paper_ids 리스트 순서대로 정렬
+    # paper_ids 리스트 순서대로 정렬 [ match율 높은 순서 ]
     ordered_papers = sorted(papers, key=lambda paper: paper_ids.index(paper.id))
 
     # 페이징
@@ -295,3 +295,167 @@ def analyze(request):
 #         }
 
 #         return render(request, 'total_graph.html', context)
+
+def author_network(request):
+    try:
+        with connection.cursor() as cursor:
+            query = """
+            SELECT 
+                a1.name AS original_author, 
+                a2.name AS co_author,
+                COUNT(p.id) AS num_papers
+            FROM 
+                author a1
+            JOIN 
+                paper_author pa1 ON a1.id = pa1.author_id
+            JOIN 
+                paper_author pa2 ON pa1.paper_id = pa2.paper_id
+            JOIN 
+                author a2 ON pa2.author_id = a2.id
+            JOIN 
+                paper p ON pa1.paper_id = p.id
+            WHERE 
+                a1.name = %s AND a2.name != %s
+            GROUP BY 
+                a1.name, a2.name
+            ORDER BY 
+                num_papers DESC;
+            """
+            
+            cursor.execute(query, ['A. Aguado', 'A. Aguado'])
+            rows = cursor.fetchall()
+
+        nodes = []
+        links = []
+        node_set = set()
+
+        for row in rows:
+            original_author = row[0]
+            co_author = row[1]
+            num_papers = row[2]
+
+            if original_author not in node_set:
+                nodes.append({"id": original_author})
+                node_set.add(original_author)
+            if co_author not in node_set:
+                nodes.append({"id": co_author})
+                node_set.add(co_author)
+            
+            links.append({"source": original_author, "target": co_author, "value": num_papers})
+
+        network_data = {"nodes": nodes, "links": links}
+        return JsonResponse(network_data)
+
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
+
+def author_html(request):
+    return render(request, 'author_network.html')
+
+def affiliation_network(request):
+    try:
+        with connection.cursor() as cursor:
+            query = """
+            SELECT 
+                a1.name AS original_affiliation, 
+                a2.name AS co_affiliation,
+                COUNT(DISTINCT pa1.paper_id) AS num_papers
+            FROM 
+                affiliation a1
+            JOIN 
+                paper_affiliation pa1 ON a1.id = pa1.affiliation_id
+            JOIN 
+                paper_affiliation pa2 ON pa1.paper_id = pa2.paper_id AND pa1.affiliation_id != pa2.affiliation_id
+            JOIN 
+                affiliation a2 ON pa2.affiliation_id = a2.id
+            WHERE 
+                a1.name = %s AND a2.name != %s
+            GROUP BY 
+                a1.name, a2.name
+            ORDER BY 
+                num_papers DESC;
+            """
+            
+            cursor.execute(query, ['University of Florida, Gainesville, FL', 'University of Florida, Gainesville, FL'])
+            rows = cursor.fetchall()
+
+        nodes = []
+        links = []
+        node_set = set()
+
+        for row in rows:
+            original_affiliation = row[0]
+            co_affiliation = row[1]
+            num_papers = row[2]
+
+            if original_affiliation not in node_set:
+                nodes.append({"id": original_affiliation})
+                node_set.add(original_affiliation)
+            if co_affiliation not in node_set:
+                nodes.append({"id": co_affiliation})
+                node_set.add(co_affiliation)
+            
+            links.append({"source": original_affiliation, "target": co_affiliation, "value": num_papers})
+
+        network_data = {"nodes": nodes, "links": links}
+        return JsonResponse(network_data)
+
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
+
+def affiliation_html(request):
+    return render(request, 'affiliation_network.html')
+
+def country_network(request):
+    try:
+        with connection.cursor() as cursor:
+            query = """
+            SELECT 
+                a1.name AS original_country, 
+                a2.name AS co_country,
+                COUNT(DISTINCT pa1.paper_id) AS num_papers
+            FROM 
+                country a1
+            JOIN 
+                paper_country pa1 ON a1.id = pa1.country_id
+            JOIN 
+                paper_country pa2 ON pa1.paper_id = pa2.paper_id AND pa1.country_id != pa2.country_id
+            JOIN 
+                country a2 ON pa2.country_id = a2.id
+            WHERE 
+                a1.name = %s AND a2.name != %s
+            GROUP BY 
+                a1.name, a2.name
+            ORDER BY 
+                num_papers DESC;
+            """
+            
+            cursor.execute(query, ['USA', 'USA'])
+            rows = cursor.fetchall()
+
+        nodes = []
+        links = []
+        node_set = set()
+
+        for row in rows:
+            original_country = row[0]
+            co_country = row[1]
+            num_papers = row[2]
+
+            if original_country not in node_set:
+                nodes.append({"id": original_country})
+                node_set.add(original_country)
+            if co_country not in node_set:
+                nodes.append({"id": co_country})
+                node_set.add(co_country)
+            
+            links.append({"source": original_country, "target": co_country, "value": num_papers})
+
+        network_data = {"nodes": nodes, "links": links}
+        return JsonResponse(network_data)
+
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
+
+def country_html(request):
+    return render(request, 'country_network.html')
