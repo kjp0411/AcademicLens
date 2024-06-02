@@ -10,13 +10,13 @@ from wordcloud import WordCloud
 import matplotlib.pyplot as plt
 
 
-
 db_config = {
     'host': 'localhost',
     'user': 'kaihojun',
     'password': '1234',
     'database': 'capstone'
 }
+
 
 # 메인 화면 논문 수, 소속 수
 def home(request):
@@ -298,6 +298,7 @@ def analyze(request):
 
 #         return render(request, 'total_graph.html', context)
 
+# 저자 네트워크 시각화
 def author_network(request):
     try:
         with connection.cursor() as cursor:
@@ -354,6 +355,8 @@ def author_network(request):
 def author_html(request):
     return render(request, 'author_network.html')
 
+
+# 소속 네트워크 시각화
 def affiliation_network(request):
     try:
         with connection.cursor() as cursor:
@@ -408,6 +411,7 @@ def affiliation_network(request):
 def affiliation_html(request):
     return render(request, 'affiliation_network.html')
 
+# 국가 네트워크 시각화
 def country_network(request):
     try:
         with connection.cursor() as cursor:
@@ -462,7 +466,7 @@ def country_network(request):
 def country_html(request):
     return render(request, 'country_network.html')
 
-
+# 나라 워드클라우드 시각화
 def get_paper_ids_country(country):
     # MariaDB 데이터베이스 연결
     db = mariadb.connect(**db_config)
