@@ -34,6 +34,7 @@ body {
 .search-container {
     display: flex;
     align-items: center;
+    position: relative;
     /* margin-left: 10px;
     margin-right: 40px;
     margin-top: 20px; 검색 폼을 상단에 위치시킴 */
@@ -146,4 +147,33 @@ body {
 .pagination {
     display: flex;
     justify-content: center;
+}
+
+.related-terms-container {
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    margin-top: 10px;
+}
+
+.related-terms-list {
+    display: flex;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    background: #fff;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+.related-term {
+    padding: 5px 10px;
+    font-weight: bold;
+    color: #333;
+    cursor: pointer;
+}
+
+.related-term:hover {
+    background: #f0f0f0;
 }

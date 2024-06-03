@@ -1,3 +1,4 @@
+<!-- searchBase.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -11,15 +12,22 @@
     <header class="header">
         <div class="search-container">
             <div class="logo-container">
-                {% comment %} <a href="{% url 'home' %}"> {% endcomment %}
                 <img src="{% static 'image/cap_logo.png' %}" alt="Logo" class="logo">
             </div>
             <form action="{% url 'search' %}" method="get" class="search-form" id="search-form">
                 <input type="text" name="query" id="search-box" placeholder="Enter search query" value="{{ query }}">
                 <button type="submit">Search</button>
             </form>
+            {% if related_terms %}
+            <div class="related-terms-container">
+                <ul class="related-terms-list">
+                    {% for term in related_terms %}
+                    <li class="related-term">{{ term }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
         </div>
-        {% comment %} <div id="suggestions" class="suggestions"></div> {% endcomment %}
         <div class="analysis-button-container">
             <form action="{% url 'total_graph' %}" method="get" id="analysis-form">
                 <input type="hidden" name="query" id="analysis-query">
