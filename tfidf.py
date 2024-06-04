@@ -80,7 +80,7 @@ def get_abstracts(paper_ids):
     return data
 
 # 사용자 입력 키워드
-user_keyword = "Artificial Intelligence"
+user_keyword = "quantum hacking"
 
 # 검색 엔진을 통해 논문 ID 가져오기
 paper_ids = get_paper_ids(user_keyword)

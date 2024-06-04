@@ -15,7 +15,7 @@ db_config = {
     'port': 3306              # 포트 번호
 }
 
-# 검색 엔진
+# 검색 엔진 함수
 def get_paper_ids(user_keyword):
     # MariaDB 데이터베이스 연결
     db = mariadb.connect(**db_config)
@@ -23,7 +23,7 @@ def get_paper_ids(user_keyword):
     cursor = db.cursor(dictionary=True)
 
     # 쿼리 실행 / 검색 방식
-    if len(user_keyword) <= 2:      # 검색 키워드 길이가 2 이하일 때
+    if len(user_keyword) <= 2:  # 검색 키워드 길이가 2 이하일 때
         cursor.execute("""
         SELECT id
         FROM paper
@@ -36,8 +36,8 @@ def get_paper_ids(user_keyword):
         JOIN paper_keyword pk ON p.id = pk.paper_id
         JOIN keyword k ON pk.keyword_id = k.id
         WHERE k.keyword_name LIKE %s;
-        """, (f'% {user_keyword} %', f'% {user_keyword} %', f'% {user_keyword} %', f' %{user_keyword} %'))
-    else:       # 검색 키워드 길이가 3 이상일 때
+        """, (f'% {user_keyword} %', f'% {user_keyword} %', f'% {user_keyword} %', f'% {user_keyword} %'))
+    else:  # 검색 키워드 길이가 3 이상일 때
         cursor.execute("""
         SELECT id
         FROM paper
@@ -59,6 +59,7 @@ def get_paper_ids(user_keyword):
 
     return paper_ids
 
+
 # 주어진 논문 ID 목록에 대한 abstract를 가져오는 함수
 def get_abstracts(paper_ids):
     # MariaDB 데이터베이스 연결
@@ -68,10 +69,10 @@ def get_abstracts(paper_ids):
 
     # 논문 ID 목록에 해당하는 abstract 가져오기
     format_strings = ','.join(['%s'] * len(paper_ids))
-    cursor.execute(f"SELECT abstract FROM paper WHERE id IN ({format_strings})", tuple(paper_ids))
+    cursor.execute(f"SELECT id, abstract FROM paper WHERE id IN ({format_strings})", tuple(paper_ids))
 
     # 결과를 데이터프레임으로 변환
-    data = pd.DataFrame(cursor.fetchall(), columns=['abstract'])
+    data = pd.DataFrame(cursor.fetchall(), columns=['id', 'abstract'])
 
     # 데이터베이스 연결 종료
     cursor.close()
@@ -79,12 +80,25 @@ def get_abstracts(paper_ids):
 
     return data
 
-def top_5_related_words(query):
+def get_embedding(text, tokenizer, model):
+    inputs = tokenizer(text, return_tensors='pt', truncation=True, padding=True, max_length=512)
+    outputs = model(**inputs)
+    return outputs.last_hidden_state.mean(dim=1).detach().numpy().flatten()
+
+def top_5_keywords(user_keyword):
+    # BERT 모델과 토크나이저 로드
+    tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
+    model = BertModel.from_pretrained('bert-base-uncased')
+
     # 검색 엔진을 통해 논문 ID 가져오기
-    paper_ids = get_paper_ids(query)
+    paper_ids = get_paper_ids(user_keyword)
 
     # 논문 ID를 사용하여 abstract 가져오기
     abstract_data = get_abstracts(paper_ids)
+
+    # 가져온 논문의 수 확인
+    num_papers = len(abstract_data)
+    print(f"가져온 논문의 수: {num_papers}")
 
     # abstract 컬럼 내용 추출
     abstracts = abstract_data["abstract"]
@@ -103,29 +117,43 @@ def top_5_related_words(query):
     tfidf_sums = tfidf_df.sum(axis=0)
 
     # TF-IDF 값으로 정렬하여 상위 20개 단어 선택
-    top_20_words = tfidf_sums.sort_values(ascending=False).head(20).index.tolist()
+    top_20_words = tfidf_sums.sort_values(ascending=False).head(5).index.tolist()
+    print(f"TF-IDF 상위 20개 단어: {top_20_words}")
 
-    # BERT 모델과 토크나이저 로드
-    tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
-    model = BertModel.from_pretrained('bert-base-uncased')
+    # 상위 단어가 포함된 논문 ID 저장
+    containing_paper_ids = []
+    for idx, row in abstract_data.iterrows():
+        if top_20_words[0] in row['abstract']:
+            containing_paper_ids.append(row['id'])
+            print(f"논문 ID {row['id']}에는 상위 단어 '{top_20_words[0]}'가 포함되어 있습니다.")
 
-    # 단어 임베딩 계산 함수
-    def get_word_embedding(word, tokenizer, model):
-        inputs = tokenizer(word, return_tensors='pt')
-        outputs = model(**inputs)
-        return outputs.last_hidden_state.mean(dim=1).detach().numpy()
+    print(f"상위 단어 '{top_20_words[0]}'가 포함된 논문 ID 목록: {containing_paper_ids}")
 
-    # 사용자 입력 키워드의 임베딩 계산
-    user_keyword_embedding = get_word_embedding(query, tokenizer, model)
+    # 사용자 입력 키워드와 상위 단어의 임베딩 계산
+    user_keyword_embedding = get_embedding(user_keyword, tokenizer, model)
+    top_word_embedding = get_embedding(top_20_words[0], tokenizer, model)
 
-    # 상위 단어들의 임베딩 계산 및 유사도 측정
-    word_embeddings = {word: get_word_embedding(word, tokenizer, model) for word in top_20_words}
-    similarities = {word: cosine_similarity(user_keyword_embedding, word_embeddings[word])[0][0] for word in top_20_words if word != query}
+    # 논문들의 abstract 임베딩 계산 및 유사도 측정
+    similarities = []
+    for paper_id in containing_paper_ids:
+        abstract = abstract_data.loc[abstract_data['id'] == paper_id, 'abstract'].values[0]
+        abstract_embedding = get_embedding(abstract, tokenizer, model)
+        similarity = cosine_similarity([user_keyword_embedding], [abstract_embedding])[0][0]
+        similarities.append((paper_id, similarity))
 
-    # 유사도가 높은 상위 5개 단어 선택
-    top_5_related_words = sorted(similarities, key=similarities.get, reverse=True)[:5]
+    # 유사도 기준으로 정렬
+    similarities = sorted(similarities, key=lambda x: x[1], reverse=True)
+    print(f"유사도가 높은 논문 ID와 유사도: {similarities}")
 
-    return top_5_related_words
+    return top_20_words, abstracts, similarities
 
-keywords = top_5_related_words('anti-tampering')
-print(keywords)
+# 사용자 입력 키워드
+user_keyword = "anti"
+
+# 상위 5개의 연관 검색어 선택
+related_words, abstracts, similarities = top_5_keywords(user_keyword)
+
+# 결과 출력
+print("연관 검색어로 사용할 상위 20개 단어:")
+for word in related_words:
+    print(word)
