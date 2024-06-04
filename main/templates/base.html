@@ -15,8 +15,8 @@
             <img src="{% static 'image/cap_logo.png' %}" alt="Logo" class="logo">
         </div>
         <div class="search-container">
-            <form action="{% url 'search' %}" method="get" class="search-form">
-                <input type="text" name="q" placeholder="Search...">
+            <form action="{% url 'search' %}" method="get" class="search-form" id="search-form">
+                <input type="text" name="query" id="search-box" placeholder="Enter search query" value="{{ query }}">
                 <button type="submit">Search</button>
             </form>
         </div>

@@ -34,6 +34,8 @@ body {
 .search-container {
     display: flex;
     align-items: center;
+    position: relative;
+    flex-wrap: wrap;
     /* margin-left: 10px;
     margin-right: 40px;
     margin-top: 20px; 검색 폼을 상단에 위치시킴 */
@@ -70,7 +72,8 @@ body {
 }
 
 .analysis-button-container {
-    margin-right: 15%;
+    display: block;
+    margin-right: 40px;
     margin-left: 20px;
     margin-top: 20px;
 }
@@ -92,45 +95,63 @@ body {
     background-color: #007aab;
 }
 
-.suggestions {
+.content-container {
     display: flex;
-    flex-wrap: wrap;
-    gap: 10px;  /* 추천 검색어들 사이의 간격 */
-    /* margin-top: 30px; */
-    padding: 10px;
-    align-items: center;  /* 항목들을 중앙으로 수직 정렬함 */
-} 
-
-.suggestion-item {
-    padding: 5px;
-    border-radius: 2px;
-    cursor: pointer;
-    color: blue;
-    font-size: 12px;
-    /* margin-top: 30px; */
-}
-
-.suggestion-title {
-    font-weight: bold;
-    color: #000000;
-    font-size: 12px;
-    /* margin-top: 30px; */
+    justify-content: flex-start; /* 자식 요소들을 왼쪽으로 정렬 */
+    align-items: flex-start; /* 자식 요소들을 상단으로 정렬 */
+    margin: 20px; /* 필요에 따라 조절 */
 }
 
 .filter-container {
-    flex: 1;
     padding: 20px;
     box-shadow: 0 0 5px rgba(0,0,0,0.2); /* 박스에 그림자 효과를 줍니다 */
     margin-right: 20px; /* content-container와의 간격 */
     margin-left: 20px;
-    width: 15%;
-  }
-
-.content-container {
-    flex: 3;
-    padding: 20px;
+    width: 200px;
 }
 
 ul, ol {
     list-style: none;
+}
+
+.searchResult {
+    margin-left: 50px;
+    width: 700px;
+    padding: 30px;
+    box-shadow: 0 0 5px rgba(0,0,0,0.2);
+}
+
+.pagination {
+    display: flex;
+    justify-content: center;
+}
+
+.related-terms-container {
+    display: flex;
+    justify-content: center;
+    margin-top: 10px;
+    margin-left: 38%;
+    text-align: center;
+}
+
+.related-terms-list {
+    display: flex;
+    justify-content: center;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    background: #fff;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+.related-term {
+    padding: 5px 10px;
+    font-weight: bold;
+    color: #333;
+    cursor: pointer;
+}
+
+.related-term:hover {
+    background: #f0f0f0;
 }

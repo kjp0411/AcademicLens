@@ -1,14 +1,20 @@
 from django.urls import path
 from . import views
-from .views import country_publications_graph, author_publications_graph, year_publications_graph, affiliation_publication_graph, keyword_counts_graph
 
 urlpatterns = [
     path('', views.home, name='home'),
     path('search/', views.search, name='search'),
     path('analyze/', views.analyze, name='total_graph'),
-    path('country-graph/', country_publications_graph, name='country_graph'),
-    path('author-graph/', author_publications_graph, name='author_graph'),
-    path('year-graph/', year_publications_graph, name='year_graph' ),
-    path('affiliation-graph/', affiliation_publication_graph, name='affiliation_graph' ),
-    path('keyword-graph/', keyword_counts_graph, name='keyword_graph' ),
+    
+    path('author_network/', views.author_network, name='author-network'),
+    path('author-network-view/', views.author_html, name='author_html'),
+
+    path('affiliation_network/',views.affiliation_network,name='affiliation-network'),
+    path('affiliation-network-view/', views.affiliation_html, name='affiliation_html'),
+
+    path('country_network/',views.country_network,name='country-network'),
+    path('country-network-view/', views.country_html, name='country_html'),
+
+    path('country_wordcloud/', views.country_wordcloud, name='country-wordcloud'),
+    path('country-wordcloud-view/', views.country_wordcloud_html, name='country_wordcloud_html'),
 ]
