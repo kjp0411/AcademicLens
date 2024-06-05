@@ -14,6 +14,7 @@ from transformers import BertTokenizer, BertModel
 import torch
 import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
+import requests
 
 
 db_config = {
@@ -38,6 +39,8 @@ def home(request):
 def search(request):
     query = request.GET.get('query', '')
     year = request.GET.get('year', '')
+    search_query = query
+    news_type = request.GET.get('news_type', 'international')  # 기본값을 'international'로 설정
 
     related_terms = []
     if query:
@@ -46,28 +49,43 @@ def search(request):
     paper_ids = get_paper_ids(query)
     
     if year:
-        # 연도 필터를 사용하여 필터링
         papers = Paper.objects.filter(id__in=paper_ids, date__year=year)
     else:
         papers = Paper.objects.filter(id__in=paper_ids)
 
-    # paper_ids 리스트 순서대로 정렬 [ match율 높은 순서 ]
     ordered_papers = sorted(papers, key=lambda paper: paper_ids.index(paper.id))
 
-    # 페이징
-    paginator = Paginator(ordered_papers, 20)  # 페이지당 20개씩 표시
+    paginator = Paginator(ordered_papers, 20)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
-    # 연도별 논문 수 계산
     years = range(2020, datetime.now().year + 1)
     paper_counts_by_year = {str(y): Paper.objects.filter(id__in=paper_ids, date__year=y).count() for y in years}
 
+    # 뉴스 검색 부분
+    api_key = '2f963493ee124210ac91a3b54ebb3c5c'
+    articles = []
+    if search_query:
+        if news_type == 'domestic':
+            url = f'https://newsapi.org/v2/everything?q={search_query}&language=ko&apiKey={api_key}'
+        else:
+            url = f'https://newsapi.org/v2/everything?q={search_query}&language=en&apiKey={api_key}'
+
+        response = requests.get(url)
+        news_data = response.json()
+        articles = news_data.get('articles', [])
+    
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+        return JsonResponse({'articles': articles})
+    
     context = {
         'query': query,
         'papers': page_obj,
         'paper_counts_by_year': paper_counts_by_year,
         'related_terms': related_terms,
+        'articles': articles,
+        'news_type': news_type,
+        'search_query': search_query,
     }
     return render(request, 'search.html', context)
 
@@ -380,12 +398,27 @@ def analyze(request):
 # 저자 네트워크 시각화
 def author_network(request):
     try:
+        original_author_name = 'A. Aguado'  # 중심 노드의 이름을 지정
+
         with connection.cursor() as cursor:
             query = """
+            WITH author_paper_count AS (
+                SELECT 
+                    a.name AS author_name, 
+                    COUNT(pa.paper_id) AS total_papers
+                FROM 
+                    author a
+                JOIN 
+                    paper_author pa ON a.id = pa.author_id
+                GROUP BY 
+                    a.name
+            )
             SELECT 
                 a1.name AS original_author, 
                 a2.name AS co_author,
-                COUNT(p.id) AS num_papers
+                COUNT(p.id) AS num_papers,
+                apc1.total_papers AS original_author_total_papers,
+                apc2.total_papers AS co_author_total_papers
             FROM 
                 author a1
             JOIN 
@@ -396,15 +429,19 @@ def author_network(request):
                 author a2 ON pa2.author_id = a2.id
             JOIN 
                 paper p ON pa1.paper_id = p.id
+            JOIN 
+                author_paper_count apc1 ON a1.name = apc1.author_name
+            JOIN 
+                author_paper_count apc2 ON a2.name = apc2.author_name
             WHERE 
                 a1.name = %s AND a2.name != %s
             GROUP BY 
-                a1.name, a2.name
+                a1.name, a2.name, apc1.total_papers, apc2.total_papers
             ORDER BY 
                 num_papers DESC;
             """
             
-            cursor.execute(query, ['A. Aguado', 'A. Aguado'])
+            cursor.execute(query, [original_author_name, original_author_name])
             rows = cursor.fetchall()
 
         nodes = []
@@ -415,17 +452,19 @@ def author_network(request):
             original_author = row[0]
             co_author = row[1]
             num_papers = row[2]
+            original_author_total_papers = row[3]
+            co_author_total_papers = row[4]
 
             if original_author not in node_set:
-                nodes.append({"id": original_author})
+                nodes.append({"id": original_author, "total_papers": original_author_total_papers})
                 node_set.add(original_author)
             if co_author not in node_set:
-                nodes.append({"id": co_author})
+                nodes.append({"id": co_author, "total_papers": co_author_total_papers})
                 node_set.add(co_author)
             
             links.append({"source": original_author, "target": co_author, "value": num_papers})
 
-        network_data = {"nodes": nodes, "links": links}
+        network_data = {"nodes": nodes, "links": links, "center_node": original_author_name}
         return JsonResponse(network_data)
 
     except Exception as e:
@@ -438,12 +477,28 @@ def author_html(request):
 # 소속 네트워크 시각화
 def affiliation_network(request):
     try:
+        original_affiliation_name = 'University of Florida, Gainesville, FL'  # 중심 노드의 이름을 지정
+
         with connection.cursor() as cursor:
             query = """
+            WITH affiliation_paper_count AS (
+                SELECT 
+                    a.name AS affiliation_name, 
+                    COUNT(DISTINCT pa.paper_id) AS total_papers
+                FROM 
+                    affiliation a
+                JOIN 
+                    paper_affiliation pa ON a.id = pa.affiliation_id
+                GROUP BY 
+                    a.name
+            )
+
             SELECT 
                 a1.name AS original_affiliation, 
                 a2.name AS co_affiliation,
-                COUNT(DISTINCT pa1.paper_id) AS num_papers
+                COUNT(DISTINCT pa1.paper_id) AS num_papers,
+                apc1.total_papers AS original_affiliation_total_papers,
+                apc2.total_papers AS co_affiliation_total_papers
             FROM 
                 affiliation a1
             JOIN 
@@ -452,15 +507,19 @@ def affiliation_network(request):
                 paper_affiliation pa2 ON pa1.paper_id = pa2.paper_id AND pa1.affiliation_id != pa2.affiliation_id
             JOIN 
                 affiliation a2 ON pa2.affiliation_id = a2.id
+            JOIN 
+                affiliation_paper_count apc1 ON a1.name = apc1.affiliation_name
+            JOIN 
+                affiliation_paper_count apc2 ON a2.name = apc2.affiliation_name
             WHERE 
                 a1.name = %s AND a2.name != %s
             GROUP BY 
-                a1.name, a2.name
+                a1.name, a2.name, apc1.total_papers, apc2.total_papers
             ORDER BY 
                 num_papers DESC;
             """
             
-            cursor.execute(query, ['University of Florida, Gainesville, FL', 'University of Florida, Gainesville, FL'])
+            cursor.execute(query, [original_affiliation_name, original_affiliation_name])
             rows = cursor.fetchall()
 
         nodes = []
@@ -471,17 +530,19 @@ def affiliation_network(request):
             original_affiliation = row[0]
             co_affiliation = row[1]
             num_papers = row[2]
+            original_affiliation_total_papers = row[3]
+            co_affiliation_total_papers = row[4]
 
             if original_affiliation not in node_set:
-                nodes.append({"id": original_affiliation})
+                nodes.append({"id": original_affiliation, "total_papers": original_affiliation_total_papers})
                 node_set.add(original_affiliation)
             if co_affiliation not in node_set:
-                nodes.append({"id": co_affiliation})
+                nodes.append({"id": co_affiliation, "total_papers": co_affiliation_total_papers})
                 node_set.add(co_affiliation)
             
             links.append({"source": original_affiliation, "target": co_affiliation, "value": num_papers})
 
-        network_data = {"nodes": nodes, "links": links}
+        network_data = {"nodes": nodes, "links": links, "center_node": original_affiliation_name}
         return JsonResponse(network_data)
 
     except Exception as e:
@@ -493,29 +554,50 @@ def affiliation_html(request):
 # 국가 네트워크 시각화
 def country_network(request):
     try:
+        original_country_name = 'USA'  # 중심 국가의 이름을 지정
+
         with connection.cursor() as cursor:
             query = """
+            WITH country_paper_count AS (
+                SELECT 
+                    c.name AS country_name, 
+                    COUNT(DISTINCT pa.paper_id) AS total_papers
+                FROM 
+                    country c
+                JOIN 
+                    paper_country pa ON c.id = pa.country_id
+                GROUP BY 
+                    c.name
+            )
+
             SELECT 
-                a1.name AS original_country, 
-                a2.name AS co_country,
-                COUNT(DISTINCT pa1.paper_id) AS num_papers
+                c1.name AS original_country, 
+                c2.name AS co_country,
+                COUNT(DISTINCT pa1.paper_id) AS num_papers,
+                cpc1.total_papers AS original_country_total_papers,
+                cpc2.total_papers AS co_country_total_papers
             FROM 
-                country a1
+                country c1
             JOIN 
-                paper_country pa1 ON a1.id = pa1.country_id
+                paper_country pa1 ON c1.id = pa1.country_id
             JOIN 
                 paper_country pa2 ON pa1.paper_id = pa2.paper_id AND pa1.country_id != pa2.country_id
             JOIN 
-                country a2 ON pa2.country_id = a2.id
+                country c2 ON pa2.country_id = c2.id
+            JOIN 
+                country_paper_count cpc1 ON c1.name = cpc1.country_name
+            JOIN 
+                country_paper_count cpc2 ON c2.name = cpc2.country_name
             WHERE 
-                a1.name = %s AND a2.name != %s
+                c1.name = %s AND c2.name != %s
             GROUP BY 
-                a1.name, a2.name
+                c1.name, c2.name, cpc1.total_papers, cpc2.total_papers
             ORDER BY 
-                num_papers DESC;
+                num_papers DESC
+            LIMIT 10;
             """
             
-            cursor.execute(query, ['USA', 'USA'])
+            cursor.execute(query, [original_country_name, original_country_name])
             rows = cursor.fetchall()
 
         nodes = []
@@ -526,17 +608,19 @@ def country_network(request):
             original_country = row[0]
             co_country = row[1]
             num_papers = row[2]
+            original_country_total_papers = row[3]
+            co_country_total_papers = row[4]
 
             if original_country not in node_set:
-                nodes.append({"id": original_country})
+                nodes.append({"id": original_country, "total_papers": original_country_total_papers})
                 node_set.add(original_country)
             if co_country not in node_set:
-                nodes.append({"id": co_country})
+                nodes.append({"id": co_country, "total_papers": co_country_total_papers})
                 node_set.add(co_country)
             
             links.append({"source": original_country, "target": co_country, "value": num_papers})
 
-        network_data = {"nodes": nodes, "links": links}
+        network_data = {"nodes": nodes, "links": links, "center_node": original_country_name}
         return JsonResponse(network_data)
 
     except Exception as e:
@@ -573,12 +657,80 @@ def get_paper_ids_country(country):
 
     return paper_ids_country
 
-def country_wordcloud(country):
-    country = 'USA'
+def country_wordcloud(request):
+    country='USA'
+
     # 키워드 카운트 초기화
     keyword_counts = Counter()
 
+    # 여기서 get_paper_ids_country 함수는 country에 따라 paper_ids를 가져오는 사용자 정의 함수입니다.
     paper_ids = get_paper_ids_country(country)
+
+    if paper_ids:
+        placeholders = ', '.join(['%s'] * len(paper_ids))  # placeholders 생성
+        # MariaDB 연결
+        db = mariadb.connect(**db_config)
+        cursor = db.cursor()
+
+        cursor.execute(f"""
+        SELECT k.keyword_name
+        FROM paper_keyword pk
+        JOIN keyword k ON pk.keyword_id = k.id
+        WHERE pk.paper_id IN ({placeholders});
+        """, paper_ids)
+
+        # 쿼리 결과 가져오기
+        keywords = [row[0] for row in cursor.fetchall()]
+        keyword_counts.update(keywords)
+
+        # 데이터베이스 연결 종료
+        cursor.close()
+        db.close()
+
+    # 빈도수가 높은 top 20 키워드 출력하기
+    top_keywords = keyword_counts.most_common(20)
+    top_keywords_list = [[keyword, count] for keyword, count in top_keywords]
+
+    return JsonResponse(top_keywords_list, safe=False)
+
+def country_wordcloud_html(request):
+    return render(request, 'country_wordcloud.html')
+
+
+def get_paper_ids_author(author):
+    # MariaDB 데이터베이스 연결
+    db = mariadb.connect(**db_config)
+    # 커서 생성
+    cursor = db.cursor(dictionary=True)
+
+    # 파라미터화된 쿼리 사용
+    query = """
+        SELECT DISTINCT p.id
+        FROM paper p
+        JOIN paper_author pa ON p.id = pa.paper_id
+        JOIN author a ON pa.author_id = a.id
+        WHERE a.name = %s;
+    """
+    # 쿼리 실행
+    cursor.execute(query, (author,))
+
+    # 쿼리 결과 가져오기
+    paper_ids_author = [row['id'] for row in cursor.fetchall()]
+    print(paper_ids_author)
+    print(len(paper_ids_author))
+
+    # 데이터베이스 연결 종료
+    cursor.close()
+    db.close()
+
+    return paper_ids_author
+
+def author_wordcloud(request):
+    author = 'Florian Kerschbaum'
+    # 키워드 카운트 초기화
+    keyword_counts = Counter()
+
+    paper_ids = get_paper_ids_author(author)
 
     if paper_ids:
         placeholders = ', '.join(['%s'] * len(paper_ids))  # placeholders 생성
@@ -603,9 +755,75 @@ def country_wordcloud(country):
 
     # 빈도수가 높은 top 10 키워드 출력하기
     top_keywords = keyword_counts.most_common(20)
-    print(top_keywords)
+    top_keywords_list = [[keyword, count] for keyword, count in top_keywords]
 
-    return JsonResponse(top_keywords, safe=False)
+    return JsonResponse(top_keywords_list, safe=False)
 
-def country_wordcloud_html(request):
-    return render(request, 'country_wordcloud.html')
+def author_wordcloud_html(request):
+    return render(request, 'author_wordcloud.html')
+
+
+def get_paper_ids_affiliation(affiliation):
+    # MariaDB 데이터베이스 연결
+    db = mariadb.connect(**db_config)
+    # 커서 생성
+    cursor = db.cursor(dictionary=True)
+
+    # 파라미터화된 쿼리 사용
+    query = """
+        SELECT DISTINCT p.id
+        FROM paper p
+        JOIN paper_affiliation pa ON p.id = pa.paper_id
+        JOIN affiliation a ON pa.affiliation_id = a.id
+        WHERE a.name = %s;
+    """
+    # 쿼리 실행
+    cursor.execute(query, (affiliation,))
+
+    # 쿼리 결과 가져오기
+    paper_ids_affiliation = [row['id'] for row in cursor.fetchall()]
+    print(paper_ids_affiliation)
+    print(len(paper_ids_affiliation))
+
+    # 데이터베이스 연결 종료
+    cursor.close()
+    db.close()
+
+    return paper_ids_affiliation
+
+def affiliation_wordcloud(request):
+    affiliation = 'Technion, Haifa'
+    # 키워드 카운트 초기화
+    keyword_counts = Counter()
+
+    paper_ids = get_paper_ids_affiliation(affiliation)
+
+    if paper_ids:
+        placeholders = ', '.join(['%s'] * len(paper_ids))  # placeholders 생성
+        # MariaDB 연결
+        db = mariadb.connect(**db_config)
+        cursor = db.cursor()
+
+        cursor.execute(f"""
+        SELECT k.keyword_name
+        FROM paper_keyword pk
+        JOIN keyword k ON pk.keyword_id = k.id
+        WHERE pk.paper_id IN ({placeholders});
+        """, paper_ids)
+
+        # 쿼리 결과 가져오기
+        keywords = [row[0] for row in cursor.fetchall()]
+        keyword_counts.update(keywords)
+
+        # 데이터베이스 연결 종료
+        cursor.close()
+        db.close()
+
+    # 빈도수가 높은 top 10 키워드 출력하기
+    top_keywords = keyword_counts.most_common(20)
+    top_keywords_list = [[keyword, count] for keyword, count in top_keywords]
+
+    return JsonResponse(top_keywords_list, safe=False)
+
+def affiliation_wordcloud_html(request):
+    return render(request, 'affiliation_wordcloud.html')

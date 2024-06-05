@@ -1,5 +1,3 @@
-<!-- search.html -->
-
 {% extends 'searchBase.html' %}
 {% load static %}
 
@@ -115,6 +113,71 @@
                 <p>검색 결과가 없습니다.</p>
             {% endif %}
         </div>
+        <div class="news-container">
+            <h2>뉴스 검색 결과</h2>
+        
+            <!-- 국내 뉴스와 국외 뉴스 전환 라디오 버튼 -->
+            <div>
+                <label>
+                    <input type="radio" name="news-type" value="domestic" {% if news_type == 'domestic' %}checked{% endif %}> 국내 뉴스
+                </label>
+                <label>
+                    <input type="radio" name="news-type" value="international" {% if news_type == 'international' %}checked{% endif %}> 국외 뉴스
+                </label>
+            </div>
+        
+            <div class="news-content">
+                {% if articles %}
+                    <ul>
+                    {% for article in articles|slice:":2" %}  <!-- 뉴스 2개만 출력 -->
+                        <li>
+                            <h2><a href="{{ article.url }}">{{ article.title }}</a></h2>
+                            <p>{{ article.description }}</p>
+                        </li>
+                    {% endfor %}
+                    </ul>
+                {% else %}
+                    <p>검색 결과가 없습니다.</p>
+                {% endif %}
+            </div>
+        </div>
     </div>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('input[name="news-type"]').forEach(function(radio) {
+            radio.addEventListener('change', function(event) {
+                const newsType = this.value;
+                const query = '{{ query }}'; // 현재 검색어를 유지합니다.
+
+                fetch(`{% url 'search' %}?query=${query}&news_type=${newsType}`, {
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    const newsContent = document.querySelector('.news-content');
+                    if (data.articles.length > 0) {
+                        let articlesHtml = '<ul>';
+                        data.articles.slice(0, 2).forEach(article => {
+                            articlesHtml += `
+                                <li>
+                                    <h2><a href="${article.url}">${article.title}</a></h2>
+                                    <p>${article.description}</p>
+                                </li>
+                            `;
+                        });
+                        articlesHtml += '</ul>';
+                        newsContent.innerHTML = articlesHtml;
+                    } else {
+                        newsContent.innerHTML = '<p>검색 결과가 없습니다.</p>';
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+            });
+        });
+    });
+</script>
 {% endblock %}

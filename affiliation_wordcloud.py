@@ -39,7 +39,7 @@ def get_paper_ids_affiliation(affiliation):
 
     return paper_ids_affiliation
 
-def make_affiliation_WordCloud(affiliation):
+def zz(affiliation):
     # 키워드 카운트 초기화
     keyword_counts = Counter()
 

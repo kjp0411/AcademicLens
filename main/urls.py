@@ -17,4 +17,10 @@ urlpatterns = [
 
     path('country_wordcloud/', views.country_wordcloud, name='country-wordcloud'),
     path('country-wordcloud-view/', views.country_wordcloud_html, name='country_wordcloud_html'),
+
+    path('author_wordcloud/', views.author_wordcloud, name='author-wordcloud'),
+    path('author-wordcloud-view/', views.author_wordcloud_html, name='author_wordcloud_html'),
+    
+    path('affiliation_wordcloud/', views.affiliation_wordcloud, name='affiliation-wordcloud'),
+    path('affiliation-wordcloud-view/', views.affiliation_wordcloud_html, name='affiliation_wordcloud_html'),
 ]
