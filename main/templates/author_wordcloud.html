@@ -36,7 +36,7 @@
                 list: words,
                 gridSize: 10,
                 weightFactor: function (size) {
-                    return size * 0.5;
+                    return size * 4;
                 },
                 fontFamily: 'Arial, sans-serif',
                 color: function() {
@@ -52,7 +52,7 @@
             });
         }
 
-        fetch('/country_wordcloud/')
+        fetch('/author_wordcloud/')
             .then(response => response.json())
             .then(data => {
                 var words = data.map(function(d) {

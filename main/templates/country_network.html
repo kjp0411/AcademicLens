@@ -1,5 +1,3 @@
-<!-- templates/country_network.html -->
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -7,14 +5,8 @@
     <title>Country Network</title>
     <script src="https://d3js.org/d3.v6.min.js"></script>
     <style>
-        .node circle {
-            stroke: black;  /* 노드 테두리를 검은색으로 설정 */
-            stroke-width: 1.5px;
-            fill: blue;  /* 노드의 색상을 파란색으로 설정 */
-        }
-
         .link {
-            stroke: #666;
+            stroke: #aeaeae;  /* 링크의 색상을 지정 */
             stroke-opacity: 0.8;
         }
 
@@ -49,8 +41,9 @@
                 .append("svg")
                 .attr("width", width)
                 .attr("height", height);
-            
-            
+
+            const centerNode = data.center_node;
+
             const simulation = d3.forceSimulation(data.nodes)
                 .force("link", d3.forceLink(data.links).id(d => d.id).distance(100))
                 .force("charge", d3.forceManyBody().strength(-300))
@@ -74,11 +67,12 @@
                 .attr("class", "node");
 
             node.append("circle")
-                .attr("r", d => Math.sqrt(d.value) * 5)  // 노드의 크기를 논문 수에 따라 설정
+                .attr("r", d => Math.sqrt(d.total_papers))  // 노드의 크기를 총 논문 수에 따라 설정
+                .attr("fill", d => d.id === centerNode ? '#8aaac6' : '#cde2f4');  // 중심 노드와 나머지 노드의 색상을 지정
 
             node.append("text")
                 .attr("dy", ".35em")
-                .text(d => d.id);
+                .text(d => `${d.id}`);  // 노드에 이름과 총 논문 수를 표시
 
             simulation.on("tick", () => {
                 link
@@ -110,14 +104,6 @@
 
         fetchNetworkData().then(data => {
             if (data) {
-                data.nodes.forEach(node => {
-                    node.value = data.links.reduce((acc, link) => {
-                        if (link.source === node.id || link.target === node.id) {
-                            acc += link.value;
-                        }
-                        return acc;
-                    }, 0);
-                });
                 visualizeNetwork(data);
             }
         }).catch(error => {
