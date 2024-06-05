@@ -14,6 +14,7 @@ from transformers import BertTokenizer, BertModel
 import torch
 import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
+import requests
 
 
 db_config = {
@@ -38,6 +39,8 @@ def home(request):
 def search(request):
     query = request.GET.get('query', '')
     year = request.GET.get('year', '')
+    search_query = query
+    news_type = request.GET.get('news_type', 'international')  # 기본값을 'international'로 설정
 
     related_terms = []
     if query:
@@ -46,28 +49,43 @@ def search(request):
     paper_ids = get_paper_ids(query)
     
     if year:
-        # 연도 필터를 사용하여 필터링
         papers = Paper.objects.filter(id__in=paper_ids, date__year=year)
     else:
         papers = Paper.objects.filter(id__in=paper_ids)
 
-    # paper_ids 리스트 순서대로 정렬 [ match율 높은 순서 ]
     ordered_papers = sorted(papers, key=lambda paper: paper_ids.index(paper.id))
 
-    # 페이징
-    paginator = Paginator(ordered_papers, 20)  # 페이지당 20개씩 표시
+    paginator = Paginator(ordered_papers, 20)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
-    # 연도별 논문 수 계산
     years = range(2020, datetime.now().year + 1)
     paper_counts_by_year = {str(y): Paper.objects.filter(id__in=paper_ids, date__year=y).count() for y in years}
 
+    # 뉴스 검색 부분
+    api_key = '2f963493ee124210ac91a3b54ebb3c5c'
+    articles = []
+    if search_query:
+        if news_type == 'domestic':
+            url = f'https://newsapi.org/v2/everything?q={search_query}&language=ko&apiKey={api_key}'
+        else:
+            url = f'https://newsapi.org/v2/everything?q={search_query}&language=en&apiKey={api_key}'
+
+        response = requests.get(url)
+        news_data = response.json()
+        articles = news_data.get('articles', [])
+    
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+        return JsonResponse({'articles': articles})
+    
     context = {
         'query': query,
         'papers': page_obj,
         'paper_counts_by_year': paper_counts_by_year,
         'related_terms': related_terms,
+        'articles': articles,
+        'news_type': news_type,
+        'search_query': search_query,
     }
     return render(request, 'search.html', context)
 
