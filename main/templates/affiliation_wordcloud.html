@@ -52,7 +52,7 @@
             });
         }
 
-        fetch('/country_wordcloud/')
+        fetch('/affiliation_wordcloud/')
             .then(response => response.json())
             .then(data => {
                 var words = data.map(function(d) {
