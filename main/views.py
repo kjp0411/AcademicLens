@@ -18,10 +18,11 @@ import requests
 
 
 db_config = {
-    'host': 'localhost',
-    'user': 'kaihojun',
-    'password': '1234',
-    'database': 'capstone'
+    'host': '127.0.0.1',
+    'user': 'root',
+    'password': '0000',
+    'database': 'capstone',
+    'port':3307
 }
 
 
