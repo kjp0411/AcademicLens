@@ -555,7 +555,7 @@ def affiliation_html(request):
 # 국가 네트워크 시각화
 def country_network(request):
     try:
-        original_country_name = 'USA'  # 중심 국가의 이름을 지정
+        original_country_name = 'Korea'  # 중심 국가의 이름을 지정
 
         with connection.cursor() as cursor:
             query = """
@@ -659,7 +659,7 @@ def get_paper_ids_country(country):
     return paper_ids_country
 
 def country_wordcloud(request):
-    country='USA'
+    country='Korea'
 
     # 키워드 카운트 초기화
     keyword_counts = Counter()
@@ -828,3 +828,64 @@ def affiliation_wordcloud(request):
 
 def affiliation_wordcloud_html(request):
     return render(request, 'affiliation_wordcloud.html')
+
+# 국가 분석 페이지 html 출력 함수
+def country_analyze_html(request):
+    return render(request, 'country_analyze.html')
+
+# 국가의 연도별 논문 수 함수
+def get_paper_counts_by_year(request):
+    with connection.cursor() as cursor:
+        cursor.execute("""
+            SELECT YEAR(p.date) AS year, COUNT(*) AS paper_count
+            FROM paper p
+            JOIN paper_country pc ON p.id = pc.paper_id
+            JOIN country c ON pc.country_id = c.id
+            WHERE c.name = %s
+            GROUP BY YEAR(p.date)
+            ORDER BY YEAR(p.date);
+        """, ['Korea'])
+        
+        rows = cursor.fetchall()
+    
+    # 데이터를 JSON 형식으로 변환
+    data = [{'year': row[0], 'paper_count': row[1]} for row in rows]
+    
+    return JsonResponse(data, safe=False)
+
+# 국가 논문 리스트
+def get_recent_papers(request):
+    with connection.cursor() as cursor:
+        cursor.execute("""
+            SELECT DISTINCT p.title, p.url, p.date, p.citations, p.publisher, p.abstract
+            FROM paper p
+            JOIN paper_country pc ON p.id = pc.paper_id
+            JOIN country c ON pc.country_id = c.id
+            WHERE c.name = %s
+            ORDER BY p.date DESC
+            LIMIT 5;
+        """, ['Korea'])
+        
+        rows = cursor.fetchall()
+    
+    # 데이터를 JSON 형식으로 변환
+    data = [{'title': row[0], 'url': row[1], 'date': row[2], 'citations': row[3], 'publisher': row[4], 'abstract': row[5]} for row in rows]
+    
+    return JsonResponse(data, safe=False)
+
+# 국가 발표 논문 수
+def get_total_papers(request):
+    with connection.cursor() as cursor:
+        cursor.execute("""
+            SELECT COUNT(*) AS total_papers
+            FROM paper_country pc
+            JOIN country c ON pc.country_id = c.id
+            WHERE c.name = %s;
+        """, ['Korea'])
+        
+        row = cursor.fetchone()
+    
+    # 데이터를 JSON 형식으로 변환
+    data = {'total_papers': row[0]}
+    
+    return JsonResponse(data)

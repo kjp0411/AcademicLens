@@ -20,11 +20,6 @@ data = pd.read_csv(csv_file, usecols=selected_columns, encoding='utf-8')
 # "none" 값을 None으로 변경
 data.loc[data['date'] == "none", 'date'] = None
 
-
-
-
-
-
 # 'nan' 값을 NULL로 대체
 data.fillna(value=pd.NA, inplace=True)
 
@@ -79,19 +74,50 @@ for index, row in data.iterrows():
                 else:
                     affiliation = ', '.join(affiliation_list[:])
 
-                
-                sql = "INSERT INTO affiliation (name) VALUES (%s)"
-                cursor.execute(sql, (affiliation,))
-                affiliation_id = cursor.lastrowid  
+                # 소속 삽입 코드
+                # 소속 데이터가 이미 있는지 확인하는 쿼리
+                check_sql = "SELECT id FROM affiliation WHERE name = %s"
+                cursor.execute(check_sql, (affiliation,))
+                result = cursor.fetchone()
 
-                sql = "INSERT INTO author (name, affiliation) VALUES (%s, %s)"
-                cursor.execute(sql, (author, affiliation))
-                author_id = cursor.lastrowid  
+                if result:
+                    # 소속 데이터가 이미 있는 경우 해당 id를 가져옴
+                    affiliation_id = result[0]
+                else:
+                    # 소속 데이터가 없는 경우 삽입하고 lastrowid를 가져옴
+                    insert_sql = "INSERT INTO affiliation (name) VALUES (%s)"
+                    cursor.execute(insert_sql, (affiliation,))
+                    affiliation_id = cursor.lastrowid  
 
+                # 저자 삽입 코드
+                check_sql = "SELECT id FROM author WHERE name = %s AND affiliation = %s"
+                cursor.execute(check_sql, (author, affiliation))
+                result = cursor.fetchone()
+
+                if result:
+                    # 저자 데이터가 이미 있는 경우 해당 id를 가져옴
+                    author_id = result[0]
+                else:
+                    # 저자 데이터가 없는 경우 삽입하고 lastrowid를 가져옴
+                    sql = "INSERT INTO author (name, affiliation) VALUES (%s, %s)"
+                    cursor.execute(sql, (author, affiliation))
+                    author_id = cursor.lastrowid
+
+
+                #국가 삽입 코드
                 if country:  # country가 설정된 경우에만 country 삽입
-                    sql = "INSERT INTO country (name) VALUES (%s)"
-                    cursor.execute(sql, (country,))
-                    country_id = cursor.lastrowid
+                    check_sql = "SELECT id FROM country WHERE name = %s"
+                    cursor.execute(check_sql, (country,))
+                    result = cursor.fetchone()
+
+                    if result:
+                        # 국가 데이터가 이미 있는 경우 해당 id를 가져옴
+                        country_id = result[0]
+                    else:
+                        # 국가 데이터가 없는 경우 삽입하고 lastrowid를 가져옴
+                        sql = "INSERT INTO country (name) VALUES (%s)"
+                        cursor.execute(sql, (country,))
+                        country_id = cursor.lastrowid
 
                     sql = "INSERT INTO paper_country (paper_id, country_id) VALUES (%s, %s)"
                     cursor.execute(sql, (paper_id, country_id))
