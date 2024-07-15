@@ -27,10 +27,10 @@ openai.api_key = ''
 
 db_config = {
     'host': '127.0.0.1',
-    'user': 'root',
-    'password': '0000',
+    'user': 'kaihojun',
+    'password': '1234',
     'database': 'capstone',
-    'port':3307
+    'port':3306
 }
 
 

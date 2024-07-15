@@ -88,6 +88,8 @@ class Author(models.Model):
 
 class Country(models.Model):
     name = models.TextField()
+    alpha_2 = models.CharField(max_length=2)
+    alpha_3 = models.CharField(max_length=3)
 
     class Meta:
         managed = False
