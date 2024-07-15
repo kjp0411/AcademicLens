@@ -6,9 +6,10 @@ import matplotlib.pyplot as plt
 # MariaDB 설정
 db_config = {
     'host': 'localhost',
-    'user': 'kaihojun',
-    'password': '1234',
-    'database': 'capstone'
+    'user': 'root',
+    'password': '123456',
+    'database': 'capstone',
+    'port': 3307
 }
 
 def get_paper_ids_affiliation(affiliation):
@@ -39,7 +40,7 @@ def get_paper_ids_affiliation(affiliation):
 
     return paper_ids_affiliation
 
-def zz(affiliation):
+def make_affiliation_WordCloud(affiliation):
     # 키워드 카운트 초기화
     keyword_counts = Counter()
 

@@ -8,11 +8,11 @@ import mariadb
 
 # 데이터베이스 연결 설정
 db_config = {
-    'host': 'localhost',      # 호스트 주소
-    'user': 'kaihojun',  # 사용자 이름
-    'password': '1234',  # 비밀번호
-    'database': 'capstone',  # 데이터베이스 이름
-    'port': 3306              # 포트 번호
+    'host': 'localhost',
+    'user': 'root',
+    'password': '123456',
+    'database': 'capstone',
+    'port': 3307
 }
 
 # 검색 엔진

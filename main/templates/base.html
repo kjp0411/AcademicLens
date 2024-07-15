@@ -8,11 +8,12 @@
     <link rel="stylesheet" href="{% static 'css/base.css' %}">
     <link rel="stylesheet" href="{% static 'css/home.css' %}">
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="stylesheet" href="{% static 'css/paperDetail.css' %}">
 </head>
 <body>
     <header class="header">
         <div class="logo-container">
-            <img src="{% static 'image/cap_logo.png' %}" alt="Logo" class="logo">
+            <a href="{% url 'home' %}"><img src="{% static 'image/cap_logo.png' %}" alt="Logo" class="logo"></a>
         </div>
         <div class="search-container">
             <form action="{% url 'search' %}" method="get" class="search-form" id="search-form">

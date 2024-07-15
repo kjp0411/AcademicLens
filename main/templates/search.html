@@ -9,84 +9,175 @@
         <div class="filter-container">
             <div class="limSearch">
                 <p> 검색결과 좁혀 보기 </p>
-                <!-- 여기에 선택해제 -->
             </div>
             <form name="group" method="GET" action="{% url 'search' %}">
-                <input type="hidden" name="query" value="{{ query }}"> 
+                <input type="hidden" name="query" value="{{ query }}">
+                {% for year in selected_years %}
+                    <input type="hidden" name="year" value="{{ year }}">
+                {% endfor %}
+                {% for publisher in selected_publishers %}
+                    <input type="hidden" name="publisher" value="{{ publisher }}">
+                {% endfor %}
                 <ul class="filterList">
                     <li class="on">
-                        <a href="#" class="title"> 발행연도 </a>
-                        <div>
-                            <ul class="contList year" data-header="발행연도">
-                                <div id="mCSB_1" class="mCustomScrollBox" tabindex="0" style="max-height: 120px;">
-                                    <div id="mCSB_1_container" class="mCSB_1_container" style="position:relative; top:0; left:0;" dir="ltr">
-                                        <li>
-                                            <input type="checkbox" id="re_a_kor1" name="year" value="2024">
-                                            <label for="re_a_kor1" data-currname="2024" data-currvalue="2024">
-                                                <span class="checkBox"></span>
-                                                2024
-                                                <span class="total"> ({{paper_counts_by_year.2024}}) </span>
-                                            </label>
-                                        </li>
-                                        <li>
-                                            <input type="checkbox" id="re_a_kor2" name="year" value="2023">
-                                            <label for="re_a_kor2" data-currname="2023" data-currvalue="2023">
-                                                <span class="checkBox"></span>
-                                                2023
-                                                <span class="total"> ({{paper_counts_by_year.2023}}) </span>
-                                            </label>
-                                        </li>
-                                        <li>
-                                            <input type="checkbox" id="re_a_kor3" name="year" value="2022">
-                                            <label for="re_a_kor3" data-currname="2022" data-currvalue="2022">
-                                                <span class="checkBox"></span>
-                                                2022
-                                                <span class="total"> ({{paper_counts_by_year.2022}}) </span>
-                                            </label>
-                                        </li>
-                                        <li>
-                                            <input type="checkbox" id="re_a_kor4" name="year" value="2021">
-                                            <label for="re_a_kor4" data-currname="2021" data-currvalue="2021">
-                                                <span class="checkBox"></span>
-                                                2021
-                                                <span class="total"> ({{paper_counts_by_year.2021}}) </span>
-                                            </label>
-                                        </li>
-                                        <li>
-                                            <input type="checkbox" id="re_a_kor5" name="year" value="2020">
-                                            <label for="re_a_kor5" data-currname="2020" data-currvalue="2020">
-                                                <span class="checkBox"></span>
-                                                2020
-                                                <span class="total"> ({{paper_counts_by_year.2020}}) </span>
-                                            </label>
-                                        </li>
+                        <details open>
+                            <summary> 발행연도 </summary>
+                            <div>
+                                <ul class="contList year" data-header="발행연도">
+                                    <div id="mCSB_1" class="mCustomScrollBox" tabindex="0" style="max-height: 120px;">
+                                        <div id="mCSB_1_container" class="mCSB_1_container" style="position:relative; top:0; left:0;" dir="ltr">
+                                            <li>
+                                                <input type="checkbox" id="year_2024" name="year" value="2024" {% if '2024' in selected_years %}checked{% endif %}>
+                                                <label for="year_2024" data-currname="2024" data-currvalue="2024">
+                                                    <span class="checkBox"></span>
+                                                    2024
+                                                    <span class="total"> ({{paper_counts_by_year.2024}}) </span>
+                                                </label>
+                                            </li>
+                                            <li>
+                                                <input type="checkbox" id="year_2023" name="year" value="2023" {% if '2023' in selected_years %}checked{% endif %}>
+                                                <label for="year_2023" data-currname="2023" data-currvalue="2023">
+                                                    <span class="checkBox"></span>
+                                                    2023
+                                                    <span class="total"> ({{paper_counts_by_year.2023}}) </span>
+                                                </label>
+                                            </li>
+                                            <li>
+                                                <input type="checkbox" id="year_2022" name="year" value="2022" {% if '2022' in selected_years %}checked{% endif %}>
+                                                <label for="year_2022" data-currname="2022" data-currvalue="2022">
+                                                    <span class="checkBox"></span>
+                                                    2022
+                                                    <span class="total"> ({{paper_counts_by_year.2022}}) </span>
+                                                </label>
+                                            </li>
+                                            <li>
+                                                <input type="checkbox" id="year_2021" name="year" value="2021" {% if '2021' in selected_years %}checked{% endif %}>
+                                                <label for="year_2021" data-currname="2021" data-currvalue="2021">
+                                                    <span class="checkBox"></span>
+                                                    2021
+                                                    <span class="total"> ({{paper_counts_by_year.2021}}) </span>
+                                                </label>
+                                            </li>
+                                            <li>
+                                                <input type="checkbox" id="year_2020" name="year" value="2020" {% if '2020' in selected_years %}checked{% endif %}>
+                                                <label for="year_2020" data-currname="2020" data-currvalue="2020">
+                                                    <span class="checkBox"></span>
+                                                    2020
+                                                    <span class="total"> ({{paper_counts_by_year.2020}}) </span>
+                                                </label>
+                                            </li>
+                                            <li>
+                                                <input type="checkbox" id="year_2019" name="year" value="2019" {% if '2019' in selected_years %}checked{% endif %}>
+                                                <label for="year_2019" data-currname="2019" data-currvalue="2019">
+                                                    <span class="checkBox"></span>
+                                                    2019
+                                                    <span class="total"> ({{paper_counts_by_year.2019}}) </span>
+                                                </label>
+                                            </li>
+                                        </div>
+                                        <div id="mCSB_1_scrollbar_vertical" class="mCSB_scrollTools" style="display: block;"></div>
                                     </div>
-                                    <div id="mCSB_1_scrollbar_vertical" class="mCSB_scrollTools" style="display: block;"></div>
-                                </div>
-                            </ul>
-                        </div>
+                                </ul>
+                            </div>
+                        </details>
+                        <br><br>
+                        <details open>
+                            <summary> 발행처 </summary>
+                            <div>
+                                <ul class="contList publisher" data-header="발행처">
+                                    <div id="mCSB_2" class="mCustomScrollBox" tabindex="1" style="max-height: 120px;">
+                                        <div id="mCSB_2_container" class="mCSB_2_container" style="position:relative; top:0; left:0;" dir="ltr">
+                                            <li>
+                                                <input type="checkbox" id="publisher_acm" name="publisher" value="ACM" {% if 'ACM' in selected_publishers %}checked{% endif %}>
+                                                <label for="publisher_acm" data-currname="ACM" data-currvalue="ACM">
+                                                    <span class="checkBox"></span>
+                                                    ACM
+                                                    <span class="total"> ({{paper_counts_by_publisher.ACM}}) </span>
+                                                </label>
+                                            </li>
+                                            <li>
+                                                <input type="checkbox" id="publisher_ieee" name="publisher" value="IEEE" {% if 'IEEE' in selected_publishers %}checked{% endif %}>
+                                                <label for="publisher_ieee" data-currname="IEEE" data-currvalue="IEEE">
+                                                    <span class="checkBox"></span>
+                                                    IEEE
+                                                    <span class="total"> ({{paper_counts_by_publisher.IEEE}}) </span>
+                                                </label>
+                                            </li>
+                                            <li>
+                                                <input type="checkbox" id="publisher_springer" name="publisher" value="Springer" {% if 'Springer' in selected_publishers %}checked{% endif %}>
+                                                <label for="publisher_springer" data-currname="Springer" data-currvalue="Springer">
+                                                    <span class="checkBox"></span>
+                                                    Springer
+                                                    <span class="total"> ({{paper_counts_by_publisher.Springer}}) </span>
+                                                </label>
+                                            </li>
+                                        </div>
+                                        <div id="mCSB_2_scrollbar_vertical" class="mCSB_scrollTools" style="display: block;"></div>
+                                    </div>
+                                </ul>
+                            </div>
+                        </details>
+                        <br><br>
+                        <details open>
+                            <summary> 저자 검색 </summary> <br>
+                            <div>
+                                <ul class="contList author" data-header="저자">
+                                    <div id="mCSB_3" class="mCustomScrollBox" tabindex="2" style="max-height: 120px;">
+                                        <div id="mCSB_3_container" class="mCSB_3_container" style="position:relative; top:0; left:0;" dir="ltr">
+                                            <input type="text" id="author" name="author" value="{{ author }}">
+                                        </div>
+                                    </div>
+                                </ul>
+                            </div>
+                        </details>
                     </li>
                 </ul>
                 <button type="submit">검색</button>
             </form>
         </div>
         <div class="searchResult">
-            {% if papers %}
-                {% for paper in papers %}
+            {% if papers_with_authors_and_keywords %}
+                {% for item in papers_with_authors_and_keywords %}
                     <div class="cont">
-                        <p class="title">
-                            <a href="{{ paper.url }}">
-                                <span class="highlight">{{ paper.title }}</span>
-                            </a>
-                        </p>
-                        <p class="etc">
-                            <span class="writer">
-                                {{ paper.author }}
-                            </span>
-                        </p>
-                        <p class="preAbstract">
-                            {{ paper.abstract|truncatechars:250 }}
-                        </p>
+                        <div class="title-container">
+                            <p class="title">
+                                <strong><a href="{% url 'paper_detail' item.paper.id %}">
+                                    <span class="highlight">{{ item.paper.title }}</span>
+                                </a></strong>
+                            </p>
+                            <button class="save-btn">
+                                <img src="{% static 'image/heart-empty.png' %}" alt="save" class="save-icon">
+                            </button>
+                        </div>
+                        <div class="author-container">
+                            <p class="author">
+                                {% for author in item.authors %}
+                                    {{ author.name }}{% if not forloop.last %}, {% endif %}
+                                {% endfor %}
+                            </p>
+                        </div>
+                        <div class="preDate-container">
+                            <p class="preDate">
+                                {{ item.paper.date|date:"Y-m-d" }}
+                            </p>
+                        </div>
+                        <div class="preAbstract-container">
+                            <p class="preAbstract">
+                                <a href="{% url 'paper_detail' item.paper.id %}">{{ item.paper.abstract|truncatechars:250 }}</a>
+                            </p>
+                        </div>
+                        <div class="publisher-container">
+                            <p class="publisher">
+                                {{ item.paper.publisher }}
+                            </p>
+                        </div>  
+                        <div class="keywords-container">
+                            <p class="keyword">
+                                {% for keyword in item.keywords %}
+                                    # {{ keyword.keyword_name }}{% if not forloop.last %} {% endif %}
+                                {% endfor %}
+                            </p>
+                        </div>
                     </div>
                     <hr>
                 {% endfor %}
@@ -94,25 +185,26 @@
                 <!-- 페이징 -->
                 <div class="pagination">
                     <span class="step-links">
-                        {% if papers.has_previous %}
-                            <a href="?query={{ query }}&page=1">&laquo; 첫 페이지</a>
-                            <a href="?query={{ query }}&page={{ papers.previous_page_number }}"> < </a>
+                        {% if page_obj.has_previous %}
+                            <a href="?query={{ query }}{% for year in selected_years %}&year={{ year }}{% endfor %}{% for publisher in selected_publishers %}&publisher={{ publisher }}{% endfor %}&page=1">&laquo; 첫 페이지</a>
+                            <a href="?query={{ query }}{% for year in selected_years %}&year={{ year }}{% endfor %}{% for publisher in selected_publishers %}&publisher={{ publisher }}{% endfor %}&page={{ page_obj.previous_page_number }}"> < </a>
                         {% endif %}
                         
                         <span class="current">
-                            페이지 {{ papers.number }} / {{ papers.paginator.num_pages }}
+                            페이지 {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}
                         </span>
                         
-                        {% if papers.has_next %}
-                            <a href="?query={{ query }}&page={{ papers.next_page_number }}"> > </a>
-                            <a href="?query={{ query }}&page={{ papers.paginator.num_pages }}"> 마지막 페이지 &raquo; </a>
+                        {% if page_obj.has_next %}
+                            <a href="?query={{ query }}{% for year in selected_years %}&year={{ year }}{% endfor %}{% for publisher in selected_publishers %}&publisher={{ publisher }}{% endfor %}&page={{ page_obj.next_page_number }}"> > </a>
+                            <a href="?query={{ query }}{% for year in selected_years %}&year={{ year }}{% endfor %}{% for publisher in selected_publishers %}&publisher={{ publisher }}{% endfor %}&page={{ page_obj.paginator.num_pages }}"> 마지막 페이지 &raquo; </a>
                         {% endif %}
                     </span>
-                </div>
+                </div>        
             {% else %}
                 <p>검색 결과가 없습니다.</p>
             {% endif %}
         </div>
+
         <div class="news-container">
             <h2>뉴스 검색 결과</h2>
         
@@ -176,6 +268,23 @@
                     }
                 })
                 .catch(error => console.error('Error:', error));
+            });
+        });
+    });
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const saveButtons = document.querySelectorAll('.save-btn');
+        saveButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const saveIcon = this.querySelector('.save-icon');
+                const heartEmpty = "{% static 'image/heart-empty.png' %}";
+                const heartFilled = "{% static 'image/heart-filled.png' %}";
+
+                if (saveIcon.src.includes('heart-empty.png')) {
+                    saveIcon.src = heartFilled;
+                } else {
+                    saveIcon.src = heartEmpty;
+                }
             });
         });
     });

@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+
+{% load static %}
+
+{% block title %}AcademicLens{% endblock %}
+
+{% block content %}
+<div class="paper-container">
+    <div class="title-container">
+        <h1 class="paper-title">{{ paper.title }}</h1>
+        <button id="save-btn" class="save-btn">
+            <img id="save-icon" src="{% static 'image/heart-empty.png' %}" alt="save">
+        </button>
+    </div>
+    <hr>
+
+    <div class="paper-metadata">
+        <strong>저자</strong><br> 
+        <p>
+            {% for author in authors %}
+                {{ author.name }}{% if not forloop.last %}, {% endif %}
+            {% endfor %}
+        </p><br>
+        
+        <strong>국가</strong><br>
+        <p>
+            {% for country in countries %}
+                {{ country }}{% if not forloop.last %}, {% endif %}
+            {% endfor %}
+        </p><br>
+
+        <strong>소속기관</strong><br> 
+        <p>
+            {% for affiliation in affiliations %}
+                {{ affiliation.name }}{% if not forloop.last %}<br> {% endif %}
+            {% endfor %}
+        </p><br>
+
+        <strong>발행연도</strong><br>
+        <p>{{ paper.date|date:"Y-m-d" }}</p><br>
+
+        <strong>인용 수</strong><br>
+        <p>{{ paper.citations }}</p><br>
+
+        <strong>출판사</strong><br>
+        <p>{{ paper.publisher }}</p><br>
+    </div>
+
+    <div class="paper-abstract">
+        <h2>부가정보</h2>
+        <strong>초록</strong><br>
+        <p>{{ paper.abstract }}</p>
+    </div>
+    <hr>
+
+    <div class="paper-keywords">
+        <strong>키워드</strong><br>
+        <p>
+            {% for keyword in keywords %}
+                <a href="#" class="keyword">{{ keyword.keyword_name }}</a>{% if not forloop.last %} {% endif %}
+            {% endfor %}
+        </p>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const saveBtn = document.getElementById('save-btn');
+        const saveIcon = document.getElementById('save-icon');
+        const heartEmpty = "{% static 'image/heart-empty.png' %}";
+        const heartFilled = "{% static 'image/heart-filled.png' %}";
+
+        saveBtn.addEventListener('click', function() {
+            if (saveIcon.src.includes('heart-empty.png')) {
+                saveIcon.src = heartFilled;
+            } else {
+                saveIcon.src = heartEmpty;
+            }
+        });
+    });
+</script>
+
+{% endblock %}

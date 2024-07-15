@@ -1,6 +1,6 @@
 import mariadb
-from django.shortcuts import render
-from .models import Paper, Affiliation
+from django.shortcuts import render, get_object_or_404
+from .models import Paper, Author, Keyword, Affiliation, Country, PaperAuthor, PaperAffiliation, PaperKeyword, PaperCountry
 from django.db import connection
 from collections import Counter
 from datetime import datetime
@@ -39,7 +39,9 @@ def home(request):
 # 검색 시 논문 출력 및 필터링
 def search(request):
     query = request.GET.get('query', '')
-    year = request.GET.get('year', '')
+    years = request.GET.getlist('year')
+    publishers = request.GET.getlist('publisher')
+    author = request.GET.get('author')
     search_query = query
     news_type = request.GET.get('news_type', 'international')  # 기본값을 'international'로 설정
 
@@ -49,19 +51,46 @@ def search(request):
     
     paper_ids = get_paper_ids(query)
     
-    if year:
-        papers = Paper.objects.filter(id__in=paper_ids, date__year=year)
-    else:
-        papers = Paper.objects.filter(id__in=paper_ids)
+    # 기본 쿼리셋 생성
+    papers = Paper.objects.filter(id__in=paper_ids)
 
+    # 연도 필터링
+    if years:
+        papers = papers.filter(date__year__in=years)
+    
+    # 발행처 필터링
+    if publishers:
+        papers = papers.filter(publisher__in=publishers)
+    
+    # 저자 필터링
+    if author:
+        paper_ids_by_authors = Author.objects.filter(name__icontains=author).values_list('paperauthor__paper_id', flat=True)
+        papers = papers.filter(id__in=paper_ids_by_authors)
+
+    # 정렬 및 페이징 처리
     ordered_papers = sorted(papers, key=lambda paper: paper_ids.index(paper.id))
-
     paginator = Paginator(ordered_papers, 20)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
+    
+    # 저자 및 키워드 추가
+    papers_with_authors_and_keywords = []
+    for paper in page_obj:
+        authors = Author.objects.filter(paperauthor__paper_id=paper.id)
+        keywords = Keyword.objects.filter(paperkeyword__paper_id=paper.id)
+        papers_with_authors_and_keywords.append({
+            'paper': paper,
+            'authors': authors,
+            'keywords': keywords,
+        })
 
-    years = range(2020, datetime.now().year + 1)
-    paper_counts_by_year = {str(y): Paper.objects.filter(id__in=paper_ids, date__year=y).count() for y in years}
+    # 연도 및 발행처별 논문 수 계산
+    year = range(2019, datetime.now().year + 1)
+    paper_counts_by_year = {str(y): Paper.objects.filter(id__in=paper_ids, date__year=y).count() for y in year}
+    
+    publisher = ['ACM', 'IEEE']
+    paper_counts_by_publisher = {p: Paper.objects.filter(id__in=paper_ids, publisher=p).count() for p in publisher}
+
 
     # 뉴스 검색 부분
     api_key = '2f963493ee124210ac91a3b54ebb3c5c'
@@ -81,12 +110,16 @@ def search(request):
     
     context = {
         'query': query,
-        'papers': page_obj,
+        'papers_with_authors_and_keywords': papers_with_authors_and_keywords,
         'paper_counts_by_year': paper_counts_by_year,
+        'paper_counts_by_publisher': paper_counts_by_publisher,
         'related_terms': related_terms,
         'articles': articles,
         'news_type': news_type,
         'search_query': search_query,
+        'page_obj': page_obj,
+        'selected_years': years,
+        'selected_publishers': publishers,
     }
     return render(request, 'search.html', context)
 
@@ -828,3 +861,34 @@ def affiliation_wordcloud(request):
 
 def affiliation_wordcloud_html(request):
     return render(request, 'affiliation_wordcloud.html')
+
+def get_authors(paper_id):
+    return Author.objects.filter(paperauthor__paper_id=paper_id)
+
+def get_keywords(paper_id):
+    return Keyword.objects.filter(paperkeyword__paper_id=paper_id)
+
+def get_affiliations(paper_id):
+    return Affiliation.objects.filter(paperaffiliation__paper_id=paper_id)
+
+def get_countries(paper_id):
+    return Country.objects.filter(papercountry__paper_id=paper_id)
+
+# 논문 상세 페이지 출력
+def paper_detail(request, paper_id):
+    paper = get_object_or_404(Paper, id=paper_id)
+    authors = get_authors(paper_id)
+    keywords = get_keywords(paper_id)
+    affiliations = get_affiliations(paper_id)
+    countries = get_countries(paper_id)
+    
+    # 중복 제거
+    unique_countries = list(set(countries.values_list('name', flat=True)))
+    context = {
+        'paper': paper,
+        'authors': authors,
+        'keywords': keywords,
+        'affiliations': affiliations,
+        'countries': unique_countries,
+    }
+    return render(request, 'paper_detail.html', context)
