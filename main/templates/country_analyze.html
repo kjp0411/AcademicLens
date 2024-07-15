@@ -1,0 +1,393 @@
+{% extends 'base.html' %}
+
+{% load static %}
+
+{% block title %}AcademicLens{% endblock %}
+
+{% block content %}
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>국가 정보 페이지</title>
+    <script src="https://d3js.org/d3.v6.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/wordcloud2.js/1.0.6/wordcloud2.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        .container {
+            display: flex;
+        }
+        .sidebar {
+            width: 20%;
+            border-right: 1px solid #ccc;
+            padding: 10px;
+        }
+        .main {
+            width: 80%;
+            padding: 10px;
+        }
+        .country-info {
+            border-bottom: 1px solid #ccc;
+            padding-bottom: 10px;
+            margin-bottom: 10px;
+        }
+        .chart, .graph, .paper-list, .keywords {
+            margin-bottom: 20px;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center
+        }
+        .header .search {
+            margin-right: 20px;
+        }
+        .header .login {
+            margin-left: auto;
+        }
+        .link {
+            stroke: #aeaeae;
+            stroke-opacity: 0.8;
+        }
+        .node text {
+            pointer-events: none;
+            font-size: 10px;
+            text-anchor: middle;
+            fill: #000;
+        }
+        #wordcloud {
+            width: 600px;
+            height: 400px;
+            margin: auto;
+            border: 1px solid #ddd;
+            box-shadow: 2px 2px 12px rgba(0, 0, 0, 0.1);
+            position: relative
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="sidebar">
+            <div class="country-info">
+                <h2>대한민국(Korea)</h2>
+                <p>발표 논문 수</p>
+                <p>논문 수 (개): <span id="totalPapers">로딩 중...</span></p>
+            </div>
+        </div>
+        <div class="main">
+            <div class="chart">
+                <h3>대한민국 나라 정보</h3>
+                <div id="network"></div>
+                <button id="analyzeButton">네트워크 데이터 분석</button>
+                <div id="analysisResult"></div>
+            </div>
+            <div class="graph">
+                <h3>연도별 논문 수</h3>
+                <canvas id="paperChart"></canvas>
+            </div>
+            <div class="paper-list">
+                <h3>논문 리스트</h3>
+                <ul id="paperList"></ul>
+            </div>
+            <div class="keywords">
+                <h3>TOP 키워드</h3>
+                <div id="wordcloud"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        const csrftoken = getCookie('csrftoken');
+
+        async function fetchPaperCountsByYear() {
+            const response = await fetch('/api/paper_counts_by_year/');
+            if (!response.ok) {
+                console.error('Network response was not ok', response.statusText);
+                return;
+            }
+            const data = await response.json();
+            return data;
+        }
+
+        function renderPaperChart(data) {
+            const ctx = document.getElementById('paperChart').getContext('2d');
+            const years = data.map(d => d.year);
+            const paperCounts = data.map(d => d.paper_count);
+
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: years,
+                    datasets: [{
+                        label: '논문 수',
+                        data: paperCounts,
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        borderWidth: 1,
+                        fill: false
+                    }]
+                },
+                options: {
+                    scales: {
+                        x: {
+                            beginAtZero: true
+                        },
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+
+        fetchPaperCountsByYear().then(data => {
+            if (data) {
+                renderPaperChart(data);
+            }
+        }).catch(error => {
+            console.error('Error fetching paper counts by year:', error);
+        });
+
+        async function fetchRecentPapers() {
+            const response = await fetch('/api/recent_papers/');
+            if (!response.ok) {
+                console.error('Network response was not ok', response.statusText);
+                return;
+            }
+            const data = await response.json();
+            return data;
+        }
+
+        function truncateText(text, maxLength) {
+            if (text.length > maxLength) {
+                return text.substring(0, maxLength) + '...';
+            }
+            return text;
+        }
+
+        function renderRecentPapers(data) {
+            const paperList = document.getElementById('paperList');
+            paperList.innerHTML = '';
+
+            data.forEach(paper => {
+                const li = document.createElement('li');
+                const title = document.createElement('strong');
+                const abstract = document.createElement('p');
+                const meta = document.createElement('small');
+
+                title.textContent = paper.title;
+                abstract.textContent = truncateText(paper.abstract, 100);
+                meta.textContent = `Published by ${paper.publisher} on ${new Date(paper.date).toLocaleDateString()} - Citations: ${paper.citations}`;
+
+                li.appendChild(title);
+                li.appendChild(document.createElement('br'));
+                li.appendChild(meta);
+                li.appendChild(document.createElement('br'));
+                li.appendChild(abstract);
+
+                paperList.appendChild(li);
+            });
+        }
+
+        fetchRecentPapers().then(data => {
+            if (data) {
+                renderRecentPapers(data);
+            }
+        }).catch(error => {
+            console.error('Error fetching recent papers:', error);
+        });
+
+        async function fetchTotalPapers() {
+            const response = await fetch('/api/total_papers/');
+            if (!response.ok) {
+                console.error('Network response was not ok', response.statusText);
+                return;
+            }
+            const data = await response.json();
+            return data.total_papers;
+        }
+
+        function renderTotalPapers(totalPapers) {
+            const totalPapersElement = document.getElementById('totalPapers');
+            totalPapersElement.textContent = totalPapers.toLocaleString();
+        }
+
+        fetchTotalPapers().then(totalPapers => {
+            if (totalPapers !== null) {
+                renderTotalPapers(totalPapers);
+            }
+        }).catch(error => {
+            console.error('Error fetching total papers:', error);
+        });
+
+        async function fetchNetworkData() {
+            const response = await fetch('/country_network/');
+            if (!response.ok) {
+                console.error('Network response was not ok', response.statusText);
+                return;
+            }
+            const data = await response.json();
+            return data;
+        }
+
+        function visualizeNetwork(data) {
+            const width = 600;
+            const height = 400;
+
+            const svg = d3.select("#network")
+                .append("svg")
+                .attr("width", width)
+                .attr("height", height);
+
+            const centerNode = data.center_node;
+
+            const simulation = d3.forceSimulation(data.nodes)
+                .force("link", d3.forceLink(data.links).id(d => d.id).distance(100))
+                .force("charge", d3.forceManyBody().strength(-300))
+                .force("center", d3.forceCenter(width / 2, height / 2));
+
+            const link = svg.append("g")
+                .attr("class", "links")
+                .selectAll("line")
+                .data(data.links)
+                .enter()
+                .append("line")
+                .attr("class", "link")
+                .attr("stroke-width", d => Math.sqrt(d.value) * 2);
+
+            const node = svg.append("g")
+                .attr("class", "nodes")
+                .selectAll("g")
+                .data(data.nodes)
+                .enter()
+                .append("g")
+                .attr("class", "node");
+
+            node.append("circle")
+                .attr("r", d => Math.sqrt(d.total_papers))
+                .attr("fill", d => d.id === centerNode ? '#8aaac6' : '#cde2f4');
+
+            node.append("text")
+                .attr("dy", ".35em")
+                .text(d => `${d.id}`);
+
+            simulation.on("tick", () => {
+                link
+                    .attr("x1", d => d.source.x)
+                    .attr("y1", d => d.source.y)
+                    .attr("x2", d => d.target.x)
+                    .attr("y2", d => d.target.y);
+
+                node
+                    .attr("transform", d => `translate(${d.x},${d.y})`);
+            });
+
+            node.call(d3.drag()
+                .on("start", (event, d) => {
+                    if (!event.active) simulation.alphaTarget(0.3).restart();
+                    d.fx = d.x;
+                    d.fy = d.y;
+                })
+                .on("drag", (event, d) => {
+                    d.fx = event.x;
+                    d.fy = event.y;
+                })
+                .on("end", (event, d) => {
+                    if (!event.active) simulation.alphaTarget(0);
+                    d.fx = null;
+                    d.fy = null;
+                }));
+
+            document.getElementById('analyzeButton').addEventListener('click', function() {
+                const networkText = JSON.stringify(data);
+                analyzeNetworkData(networkText);
+            });
+        }
+
+        fetchNetworkData().then(data => {
+            if (data) {
+                visualizeNetwork(data);
+            }
+        }).catch(error => {
+            console.error('Error fetching network data:', error);
+        });
+
+        async function analyzeNetworkData(networkData) {
+            const response = await fetch('/api/analyze_network_data/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrftoken
+                },
+                body: JSON.stringify({ network_data: networkData })
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                document.getElementById('analysisResult').textContent = data.analysis_result;
+            } else {
+                console.error('Error analyzing network data', response.statusText);
+            }
+        }
+
+        function getRandomColor() {
+            const letters = '0123456789ABCDEF';
+            let color = '#';
+            for (let i = 0; i < 6; i++) {
+                color += letters[Math.floor(Math.random() * 16)];
+            }
+            return color;
+        }
+
+        function generateWordCloud(words) {
+            WordCloud(document.getElementById('wordcloud'), {
+                list: words,
+                gridSize: 10,
+                weightFactor: function (size) {
+                    return size * 0.5;
+                },
+                fontFamily: 'Arial, sans-serif',
+                color: function() {
+                    return getRandomColor();
+                },
+                rotateRatio: 0.5,
+                rotationSteps: 2,
+                backgroundColor: '#fff',
+                drawOutOfBound: false,
+                click: function(item) {
+                    alert(item[0] + ': ' + item[1]);
+                }
+            });
+        }
+
+        fetch('/country_wordcloud/')
+            .then(response => response.json())
+            .then(data => {
+                var words = data.map(function(d) {
+                    return [d[0], d[1]];
+                });
+                generateWordCloud(words);
+            })
+            .catch(error => console.error('Error fetching data:', error));
+    </script>
+</body>
+</html>
+{% endblock %}

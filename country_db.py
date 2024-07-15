@@ -6,14 +6,14 @@ conn = mariadb.connect(
     host="127.0.0.1",
     port=3307,
     user="root",
-    password="123456",
+    password="0000",
     database="capstone",
 )
 
 cursor = conn.cursor()
 
 # CSV 파일 읽기
-csv_file = r"C:\Users\wlgus\OneDrive\바탕 화면\대학\4-1\캡스톤디자인\csv파일\country.csv"
+csv_file = r"country.csv"
 data = pd.read_csv(csv_file, encoding='utf-8')
 
 # NaN 값을 빈 문자열로 대체하고 문자열로 변환

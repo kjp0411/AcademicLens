@@ -15,14 +15,22 @@ import torch
 import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
 import requests
+# gpt api 라이브러리
+import openai
+from django.conf import settings
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from braces.views import CsrfExemptMixin
 
+
+openai.api_key = ''
 
 db_config = {
-    'host': 'localhost',
+    'host': '127.0.0.1',
     'user': 'root',
-    'password': '123456',
+    'password': '0000',
     'database': 'capstone',
-    'port': 3307
+    'port':3307
 }
 
 
@@ -692,7 +700,7 @@ def get_paper_ids_country(country):
     return paper_ids_country
 
 def country_wordcloud(request):
-    country='USA'
+    country='United States'
 
     # 키워드 카운트 초기화
     keyword_counts = Counter()
@@ -862,6 +870,7 @@ def affiliation_wordcloud(request):
 def affiliation_wordcloud_html(request):
     return render(request, 'affiliation_wordcloud.html')
 
+
 def get_authors(paper_id):
     return Author.objects.filter(paperauthor__paper_id=paper_id)
 
@@ -892,3 +901,86 @@ def paper_detail(request, paper_id):
         'countries': unique_countries,
     }
     return render(request, 'paper_detail.html', context)
+
+# 국가 분석 페이지 html 출력 함수
+def country_analyze_html(request):
+    return render(request, 'country_analyze.html')
+
+# 국가의 연도별 논문 수 함수
+def get_paper_counts_by_year(request):
+    with connection.cursor() as cursor:
+        cursor.execute("""
+            SELECT YEAR(p.date) AS year, COUNT(*) AS paper_count
+            FROM paper p
+            JOIN paper_country pc ON p.id = pc.paper_id
+            JOIN country c ON pc.country_id = c.id
+            WHERE c.name = %s
+            GROUP BY YEAR(p.date)
+            ORDER BY YEAR(p.date);
+        """, ['United States'])
+        
+        rows = cursor.fetchall()
+    
+    # 데이터를 JSON 형식으로 변환
+    data = [{'year': row[0], 'paper_count': row[1]} for row in rows]
+    
+    return JsonResponse(data, safe=False)
+
+# 국가 논문 리스트
+def get_recent_papers(request):
+    with connection.cursor() as cursor:
+        cursor.execute("""
+            SELECT DISTINCT p.title, p.url, p.date, p.citations, p.publisher, p.abstract
+            FROM paper p
+            JOIN paper_country pc ON p.id = pc.paper_id
+            JOIN country c ON pc.country_id = c.id
+            WHERE c.name = %s
+            ORDER BY p.date DESC
+            LIMIT 5;
+        """, ['United States'])
+        
+        rows = cursor.fetchall()
+    
+    # 데이터를 JSON 형식으로 변환
+    data = [{'title': row[0], 'url': row[1], 'date': row[2], 'citations': row[3], 'publisher': row[4], 'abstract': row[5]} for row in rows]
+    
+    return JsonResponse(data, safe=False)
+
+# 국가 발표 논문 수
+def get_total_papers(request):
+    with connection.cursor() as cursor:
+        cursor.execute("""
+            SELECT COUNT(*) AS total_papers
+            FROM paper_country pc
+            JOIN country c ON pc.country_id = c.id
+            WHERE c.name = %s;
+        """, ['United States'])
+        
+        row = cursor.fetchone()
+    
+    # 데이터를 JSON 형식으로 변환
+    data = {'total_papers': row[0]}
+    
+    return JsonResponse(data)
+
+class AnalyzeNetworkData(CsrfExemptMixin, APIView):
+    authentication_classes = []
+
+    def post(self, request, format=None):
+        network_data = request.data.get('network_data', '')
+
+        if network_data:
+            prompt = f"Analyze the following network data in Korean: {network_data}"
+
+            response = openai.ChatCompletion.create(
+                model="gpt-3.5-turbo",  # 또는 gpt-4
+                messages=[
+                    {"role": "system", "content": "You are a helpful assistant."},
+                    {"role": "user", "content": prompt}
+                ]
+            )
+
+            analysis_result = response.choices[0].message['content'].strip()
+
+            return Response({'analysis_result': analysis_result})
+        return Response({'error': 'Invalid request'}, status=400)
