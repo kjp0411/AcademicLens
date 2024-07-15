@@ -21,7 +21,7 @@ db_config = {
     'host': 'localhost',
     'user': 'kaihojun',
     'password': '1234',
-    'database': 'capstone'
+    'database': 'capstone2'
 }
 
 
@@ -554,7 +554,7 @@ def affiliation_html(request):
 # 국가 네트워크 시각화
 def country_network(request):
     try:
-        original_country_name = 'USA'  # 중심 국가의 이름을 지정
+        original_country_name = 'united states'  # 중심 국가의 이름을 지정
 
         with connection.cursor() as cursor:
             query = """
