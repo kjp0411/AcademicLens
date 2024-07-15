@@ -15,7 +15,15 @@ import torch
 import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
 import requests
+# gpt api 라이브러리
+import openai
+from django.conf import settings
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from braces.views import CsrfExemptMixin
 
+
+openai.api_key = ''
 
 db_config = {
     'host': '127.0.0.1',
@@ -889,3 +897,25 @@ def get_total_papers(request):
     data = {'total_papers': row[0]}
     
     return JsonResponse(data)
+
+# class AnalyzeNetworkData(CsrfExemptMixin, APIView):
+#     authentication_classes = []
+
+#     def post(self, request, format=None):
+#         network_data = request.data.get('network_data', '')
+
+#         if network_data:
+#             prompt = f"Analyze the following network data in Korean: {network_data}"
+
+#             response = openai.ChatCompletion.create(
+#                 model="gpt-3.5-turbo",  # 또는 gpt-4
+#                 messages=[
+#                     {"role": "system", "content": "You are a helpful assistant."},
+#                     {"role": "user", "content": prompt}
+#                 ]
+#             )
+
+#             analysis_result = response.choices[0].message['content'].strip()
+
+#             return Response({'analysis_result': analysis_result})
+#         return Response({'error': 'Invalid request'}, status=400)

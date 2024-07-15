@@ -41,7 +41,7 @@
         .header {
             display: flex;
             justify-content: space-between;
-            align-items: center;
+            align-items: center
         }
         .header .search {
             margin-right: 20px;
@@ -50,7 +50,7 @@
             margin-left: auto;
         }
         .link {
-            stroke: #aeaeae;  /* 링크의 색상을 지정 */
+            stroke: #aeaeae;
             stroke-opacity: 0.8;
         }
         .node text {
@@ -65,7 +65,7 @@
             margin: auto;
             border: 1px solid #ddd;
             box-shadow: 2px 2px 12px rgba(0, 0, 0, 0.1);
-            position: relative;
+            position: relative
         }
     </style>
 </head>
@@ -82,6 +82,8 @@
             <div class="chart">
                 <h3>대한민국 나라 정보</h3>
                 <div id="network"></div>
+                <button id="analyzeButton">네트워크 데이터 분석</button>
+                <div id="analysisResult"></div>
             </div>
             <div class="graph">
                 <h3>연도별 논문 수</h3>
@@ -99,7 +101,23 @@
     </div>
 
     <script>
-        <!--연도별 논문 수-->
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        const csrftoken = getCookie('csrftoken');
+
         async function fetchPaperCountsByYear() {
             const response = await fetch('/api/paper_counts_by_year/');
             if (!response.ok) {
@@ -148,7 +166,6 @@
             console.error('Error fetching paper counts by year:', error);
         });
 
-        <!--논문 리스트 출력-->
         async function fetchRecentPapers() {
             const response = await fetch('/api/recent_papers/');
             if (!response.ok) {
@@ -168,7 +185,7 @@
 
         function renderRecentPapers(data) {
             const paperList = document.getElementById('paperList');
-            paperList.innerHTML = ''; // Clear the list first
+            paperList.innerHTML = '';
 
             data.forEach(paper => {
                 const li = document.createElement('li');
@@ -197,7 +214,7 @@
         }).catch(error => {
             console.error('Error fetching recent papers:', error);
         });
-        <!--발표 논문 수-->
+
         async function fetchTotalPapers() {
             const response = await fetch('/api/total_papers/');
             if (!response.ok) {
@@ -220,8 +237,7 @@
         }).catch(error => {
             console.error('Error fetching total papers:', error);
         });
-        
-        <!--네트워크 출력-->
+
         async function fetchNetworkData() {
             const response = await fetch('/country_network/');
             if (!response.ok) {
@@ -299,6 +315,11 @@
                     d.fx = null;
                     d.fy = null;
                 }));
+
+            document.getElementById('analyzeButton').addEventListener('click', function() {
+                const networkText = JSON.stringify(data);
+                analyzeNetworkData(networkText);
+            });
         }
 
         fetchNetworkData().then(data => {
@@ -308,6 +329,24 @@
         }).catch(error => {
             console.error('Error fetching network data:', error);
         });
+
+        async function analyzeNetworkData(networkData) {
+            const response = await fetch('/api/analyze_network_data/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrftoken
+                },
+                body: JSON.stringify({ network_data: networkData })
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                document.getElementById('analysisResult').textContent = data.analysis_result;
+            } else {
+                console.error('Error analyzing network data', response.statusText);
+            }
+        }
 
         function getRandomColor() {
             const letters = '0123456789ABCDEF';
@@ -321,12 +360,10 @@
         function generateWordCloud(words) {
             WordCloud(document.getElementById('wordcloud'), {
                 list: words,
-                <!-- 이 부분의 수치를 바꿔서 출력 크기가 바뀜-->
-                gridSize: 5, // Smaller grid size for better fitting
+                gridSize: 5,
                 weightFactor: function (size) {
-                    return size * 10.0; // Adjusted weight factor for better visibility
+                    return size * 10.0;
                 },
-                <!-- 여기까지 -->
                 fontFamily: 'Arial, sans-serif',
                 color: function() {
                     return getRandomColor();

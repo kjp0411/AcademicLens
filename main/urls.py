@@ -28,4 +28,6 @@ urlpatterns = [
     path('api/paper_counts_by_year/', views.get_paper_counts_by_year, name='paper_counts_by_year'),
     path('api/recent_papers/', views.get_recent_papers, name='recent_papers'),
     path('api/total_papers/', views.get_total_papers, name='total_papers'),
+
+    path('api/analyze_network_data/', views.AnalyzeNetworkData.as_view(), name='analyze_network_data'),
 ]
