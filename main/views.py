@@ -898,24 +898,24 @@ def get_total_papers(request):
     
     return JsonResponse(data)
 
-# class AnalyzeNetworkData(CsrfExemptMixin, APIView):
-#     authentication_classes = []
+class AnalyzeNetworkData(CsrfExemptMixin, APIView):
+    authentication_classes = []
 
-#     def post(self, request, format=None):
-#         network_data = request.data.get('network_data', '')
+    def post(self, request, format=None):
+        network_data = request.data.get('network_data', '')
 
-#         if network_data:
-#             prompt = f"Analyze the following network data in Korean: {network_data}"
+        if network_data:
+            prompt = f"Analyze the following network data in Korean: {network_data}"
 
-#             response = openai.ChatCompletion.create(
-#                 model="gpt-3.5-turbo",  # 또는 gpt-4
-#                 messages=[
-#                     {"role": "system", "content": "You are a helpful assistant."},
-#                     {"role": "user", "content": prompt}
-#                 ]
-#             )
+            response = openai.ChatCompletion.create(
+                model="gpt-3.5-turbo",  # 또는 gpt-4
+                messages=[
+                    {"role": "system", "content": "You are a helpful assistant."},
+                    {"role": "user", "content": prompt}
+                ]
+            )
 
-#             analysis_result = response.choices[0].message['content'].strip()
+            analysis_result = response.choices[0].message['content'].strip()
 
-#             return Response({'analysis_result': analysis_result})
-#         return Response({'error': 'Invalid request'}, status=400)
+            return Response({'analysis_result': analysis_result})
+        return Response({'error': 'Invalid request'}, status=400)
