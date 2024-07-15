@@ -2,20 +2,20 @@ import pandas as pd
 import mariadb
 import ast  # 문자열을 리스트나 딕셔너리로 변환하기 위한 모듈
 
-# mariadb 연결 설정(이건 개인별로 다르게 설정하면 됨)
+# mariadb 연결 설정
 conn = mariadb.connect(
     host="127.0.0.1",
-    port=3306,
-    user="kaihojun",
-    password="1234",
+    port=3307,
+    user="root",
+    password="123456",
     database="capstone",
 )
 cursor = conn.cursor()
 
 # CSV 파일 읽기
-csv_file = r"/home/kaihojun/capstone_file/total_result.csv"
+csv_file = r"C:\Users\wlgus\OneDrive\바탕 화면\대학\4-1\캡스톤디자인\csv파일\total_result.csv"
 selected_columns = ["search", "title", "url", "author", "date", "citations", "publisher", "abstract", "affiliation", "keywords"]
-data = pd.read_csv(csv_file, usecols=selected_columns, encoding='ISO-8859-1')
+data = pd.read_csv(csv_file, usecols=selected_columns, encoding='utf-8')
 
 # "none" 값을 None으로 변경
 data.loc[data['date'] == "none", 'date'] = None
@@ -60,10 +60,10 @@ for index, row in data.iterrows():
                 if affiliation == 'none':
                     continue
 
-                affiliation_list=affiliation.split(',')
+                affiliation_list = affiliation.split(',')
 
                 # 각 항목의 양쪽 공백을 제거
-                affiliation_list=[a.strip() for a in affiliation_list]
+                affiliation_list = [a.strip() for a in affiliation_list]
 
                 country = None
 
@@ -74,37 +74,59 @@ for index, row in data.iterrows():
                 else:
                     affiliation = ', '.join(affiliation_list[:])
 
-                
-                sql = "INSERT INTO affiliation (name) VALUES (%s)"
-                cursor.execute(sql, (affiliation,))
-                affiliation_id = cursor.lastrowid  
+                # 소속 삽입 코드
+                # 소속 데이터가 이미 있는지 확인하는 쿼리
+                check_sql = "SELECT id FROM affiliation WHERE name = %s"
+                cursor.execute(check_sql, (affiliation,))
+                result = cursor.fetchone()
 
-                sql = "INSERT INTO author (name, affiliation) VALUES (%s, %s)"
-                cursor.execute(sql, (author, affiliation))
-                author_id = cursor.lastrowid  
+                if result:
+                    # 소속 데이터가 이미 있는 경우 해당 id를 가져옴
+                    affiliation_id = result[0]
+                else:
+                    # 소속 데이터가 없는 경우 삽입하고 lastrowid를 가져옴
+                    insert_sql = "INSERT INTO affiliation (name) VALUES (%s)"
+                    cursor.execute(insert_sql, (affiliation,))
+                    affiliation_id = cursor.lastrowid  
+
+                # 저자 삽입 코드
+                check_sql = "SELECT id FROM author WHERE name = %s AND affiliation = %s"
+                cursor.execute(check_sql, (author, affiliation))
+                result = cursor.fetchone()
+
+                if result:
+                    # 저자 데이터가 이미 있는 경우 해당 id를 가져옴
+                    author_id = result[0]
+                else:
+                    # 저자 데이터가 없는 경우 삽입하고 lastrowid를 가져옴
+                    sql = "INSERT INTO author (name, affiliation) VALUES (%s, %s)"
+                    cursor.execute(sql, (author, affiliation))
+                    author_id = cursor.lastrowid
 
                 if country:  # country가 설정된 경우에만 country 삽입
-                    sql = "INSERT INTO country (name) VALUES (%s)"
-                    cursor.execute(sql, (country,))
-                    country_id = cursor.lastrowid
+                    # country 테이블에서 해당 country의 id를 가져옴
+                    sql = "SELECT id FROM country WHERE name = %s OR alpha_2 = %s OR alpha_3 = %s"
+                    cursor.execute(sql, (country, country, country))
+                    country_result = cursor.fetchone()
 
-                    sql = "INSERT INTO paper_country (paper_id, country_id) VALUES (%s, %s)"
-                    cursor.execute(sql, (paper_id, country_id))
+                    if country_result:
+                        country_id = country_result[0]
+                        sql = "INSERT INTO paper_country (paper_id, country_id) VALUES (%s, %s)"
+                        cursor.execute(sql, (paper_id, country_id))
 
                 sql = "INSERT INTO paper_author (paper_id, author_id) VALUES (%s, %s)"
                 cursor.execute(sql, (paper_id, author_id))
-                
+
                 sql = "INSERT INTO paper_affiliation (paper_id, affiliation_id) VALUES (%s, %s)"
                 cursor.execute(sql, (paper_id, affiliation_id))
 
-            
             # keyword 테이블과 paper_keyword 테이블에 데이터 삽입
             for keyword in keywords:
                 # 먼저 keyword 테이블에 키워드가 존재하는지 확인
                 sql = "SELECT id FROM keyword WHERE keyword_name = %s"
                 cursor.execute(sql, (keyword,))
                 result = cursor.fetchone()
-                
+
                 if result:
                     keyword_id = result[0]
                 else:
@@ -112,7 +134,7 @@ for index, row in data.iterrows():
                     sql = "INSERT INTO keyword (keyword_name) VALUES (%s)"
                     cursor.execute(sql, (keyword,))
                     keyword_id = cursor.lastrowid
-                
+
                 # paper_keyword 테이블에 paper_id와 keyword_id를 삽입
                 sql = "INSERT INTO paper_keyword (paper_id, keyword_id) VALUES (%s, %s)"
                 cursor.execute(sql, (paper_id, keyword_id))

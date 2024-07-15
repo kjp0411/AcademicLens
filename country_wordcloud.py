@@ -6,9 +6,10 @@ import matplotlib.pyplot as plt
 # MariaDB 설정
 db_config = {
     'host': 'localhost',
-    'user': 'kaihojun',
-    'password': '1234',
-    'database': 'capstone'
+    'user': 'root',
+    'password': '123456',
+    'database': 'capstone',
+    'port': 3307
 }
 
 def get_paper_ids_country(country):

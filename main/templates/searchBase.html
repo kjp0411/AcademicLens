@@ -11,7 +11,7 @@
     <header class="header">
         <div class="search-container">
             <div class="logo-container">
-                <img src="{% static 'image/cap_logo.png' %}" alt="Logo" class="logo">
+                <a href="{% url 'home' %}"><img src="{% static 'image/cap_logo.png' %}" alt="Logo" class="logo"></a>
             </div>
             <form action="{% url 'search' %}" method="get" class="search-form" id="search-form">
                 <input type="text" name="query" id="search-box" placeholder="Enter search query" value="{{ query }}">
