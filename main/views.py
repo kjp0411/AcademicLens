@@ -39,13 +39,9 @@ def home(request):
 # 검색 시 논문 출력 및 필터링
 def search(request):
     query = request.GET.get('query', '')
-<<<<<<< HEAD
-    year = request.GET.get('year', '')
-=======
     years = request.GET.getlist('year')
     publishers = request.GET.getlist('publisher')
     author = request.GET.get('author')
->>>>>>> develop_jihyun
     search_query = query
     news_type = request.GET.get('news_type', 'international')  # 기본값을 'international'로 설정
 
@@ -55,15 +51,6 @@ def search(request):
     
     paper_ids = get_paper_ids(query)
     
-<<<<<<< HEAD
-    if year:
-        papers = Paper.objects.filter(id__in=paper_ids, date__year=year)
-    else:
-        papers = Paper.objects.filter(id__in=paper_ids)
-
-    ordered_papers = sorted(papers, key=lambda paper: paper_ids.index(paper.id))
-
-=======
     # 기본 쿼리셋 생성
     papers = Paper.objects.filter(id__in=paper_ids)
 
@@ -82,7 +69,6 @@ def search(request):
 
     # 정렬 및 페이징 처리
     ordered_papers = sorted(papers, key=lambda paper: paper_ids.index(paper.id))
->>>>>>> develop_jihyun
     paginator = Paginator(ordered_papers, 20)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
@@ -98,11 +84,6 @@ def search(request):
             'keywords': keywords,
         })
 
-<<<<<<< HEAD
-    years = range(2020, datetime.now().year + 1)
-    paper_counts_by_year = {str(y): Paper.objects.filter(id__in=paper_ids, date__year=y).count() for y in years}
-
-=======
     # 연도 및 발행처별 논문 수 계산
     year = range(2019, datetime.now().year + 1)
     paper_counts_by_year = {str(y): Paper.objects.filter(id__in=paper_ids, date__year=y).count() for y in year}
@@ -111,7 +92,6 @@ def search(request):
     paper_counts_by_publisher = {p: Paper.objects.filter(id__in=paper_ids, publisher=p).count() for p in publisher}
 
 
->>>>>>> develop_jihyun
     # 뉴스 검색 부분
     api_key = '2f963493ee124210ac91a3b54ebb3c5c'
     articles = []
@@ -137,12 +117,9 @@ def search(request):
         'articles': articles,
         'news_type': news_type,
         'search_query': search_query,
-<<<<<<< HEAD
-=======
         'page_obj': page_obj,
         'selected_years': years,
         'selected_publishers': publishers,
->>>>>>> develop_jihyun
     }
     return render(request, 'search.html', context)
 
@@ -611,7 +588,7 @@ def affiliation_html(request):
 # 국가 네트워크 시각화
 def country_network(request):
     try:
-        original_country_name = 'USA'  # 중심 국가의 이름을 지정
+        original_country_name = 'United States'  # 중심 국가의 이름을 지정
 
         with connection.cursor() as cursor:
             query = """

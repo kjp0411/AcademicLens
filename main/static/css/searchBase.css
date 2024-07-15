@@ -21,11 +21,7 @@ body {
 
 .logo-container {
     margin-top: 20px;
-<<<<<<< HEAD
-    margin-left: 20%;
-=======
     margin-left: 30%;
->>>>>>> develop_jihyun
 }
 
 .logo {
@@ -106,35 +102,14 @@ body {
 .filter-container {
     padding: 20px;
     box-shadow: 0 0 5px rgba(0,0,0,0.2);
-<<<<<<< HEAD
-    margin-right: 20px;
-    margin-left: 20px;
-=======
     margin-right: 10px;
     margin-left: 10px;
->>>>>>> develop_jihyun
     width: 200px;
 }
 
 ul, ol {
     list-style: none;
     padding: 0;
-<<<<<<< HEAD
-}
-
-.searchResult {
-    margin-left: 20px;
-    width: 600px;
-    padding: 30px;
-    box-shadow: 0 0 5px rgba(0,0,0,0.2);
-    flex-grow: 1;
-}
-
-.pagination {
-    display: flex;
-    justify-content: center;
-=======
->>>>>>> develop_jihyun
 }
 
 .related-terms-container {
@@ -167,10 +142,6 @@ ul, ol {
     background: #f0f0f0;
 }
 
-<<<<<<< HEAD
-.news-container {
-    margin-left: 20px;
-=======
 .searchResult {
     margin-left: 10px;
     width: 600px;
@@ -187,7 +158,6 @@ ul, ol {
 .news-container {
     margin-left: 20px;
     margin-right: 20px;
->>>>>>> develop_jihyun
     padding: 20px;
     box-shadow: 0 0 5px rgba(0,0,0,0.2);
     width: 200px;
@@ -195,48 +165,26 @@ ul, ol {
     background-color: #f9f9f9;
     overflow-y: auto;
     flex-shrink: 0;
-<<<<<<< HEAD
-    margin-right: 20px;
-}
-=======
 }
 
->>>>>>> develop_jihyun
 .news-container h2 {
     font-size: 1.2em;
     margin-bottom: 10px;
 }
-<<<<<<< HEAD
-=======
 
->>>>>>> develop_jihyun
 .news-container ul {
     list-style: none;
     padding: 0;
 }
-<<<<<<< HEAD
-.news-container li {
-    margin-bottom: 15px;
-}
-=======
 
 .news-container li {
     margin-bottom: 15px;
 }
 
->>>>>>> develop_jihyun
 .news-container li h2 {
     margin: 0;
     font-size: 1em;
 }
-<<<<<<< HEAD
-.news-container li p {
-    margin: 5px 0 0 0;
-}
-.news-container .active {
-    font-weight: bold;
-}
-=======
 
 .news-container li p {
     margin: 5px 0 0 0;
@@ -295,4 +243,3 @@ ul, ol {
 .keyword:hover {
     color: #0056b3;
 }
->>>>>>> develop_jihyun
