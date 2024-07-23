@@ -28,10 +28,10 @@ openai.api_key = ''
 
 db_config = {
     'host': '127.0.0.1',
-    'user': 'root',
-    'password': '0000',
-    'database': 'capstone',
-    'port':3307
+    'user': 'kaihojun',
+    'password': '1234',
+    'database': 'capstone2',
+    'port':3306
 }
 
 # 메인 화면 논문 수, 소속 수
