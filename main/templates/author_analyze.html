@@ -30,7 +30,7 @@
             width: 80%;
             padding: 10px;
         }
-        .country-info {
+        .author-info {
             border-bottom: 1px solid #ccc;
             padding-bottom: 10px;
             margin-bottom: 10px;
@@ -72,15 +72,15 @@
 <body>
     <div class="container">
         <div class="sidebar">
-            <div class="country-info">
-                <h2>대한민국(Korea)</h2>
+            <div class="author-info">
+                <h2>A. aguado</h2>
                 <p>발표 논문 수</p>
                 <p>논문 수 (개): <span id="totalPapers">로딩 중...</span></p>
             </div>
         </div>
         <div class="main">
             <div class="chart">
-                <h3>대한민국 나라 정보</h3>
+                <h3>저자 정보</h3>
                 <div id="network"></div>
                 <button id="analyzeButton">네트워크 데이터 분석</button>
                 <div id="analysisResult"></div>
@@ -119,7 +119,7 @@
         const csrftoken = getCookie('csrftoken');
 
         async function fetchPaperCountsByYear() {
-            const response = await fetch('/api/country_paper_counts_by_year/');
+            const response = await fetch('/api/author_paper_counts_by_year/');
             if (!response.ok) {
                 console.error('Network response was not ok', response.statusText);
                 return;
@@ -167,7 +167,7 @@
         });
 
         async function fetchRecentPapers() {
-            const response = await fetch('/api/country_recent_papers/');
+            const response = await fetch('/api/author_recent_papers/');
             if (!response.ok) {
                 console.error('Network response was not ok', response.statusText);
                 return;
@@ -216,7 +216,7 @@
         });
 
         async function fetchTotalPapers() {
-            const response = await fetch('/api/country_total_papers/');
+            const response = await fetch('/api/author_total_papers/');
             if (!response.ok) {
                 console.error('Network response was not ok', response.statusText);
                 return;
@@ -239,7 +239,7 @@
         });
 
         async function fetchNetworkData() {
-            const response = await fetch('/country_network/');
+            const response = await fetch('/author_network/');
             if (!response.ok) {
                 console.error('Network response was not ok', response.statusText);
                 return;
@@ -360,9 +360,9 @@
         function generateWordCloud(words) {
             WordCloud(document.getElementById('wordcloud'), {
                 list: words,
-                gridSize: 10,
+                gridSize: 5,
                 weightFactor: function (size) {
-                    return size * 0.5;
+                    return size * 10;
                 },
                 fontFamily: 'Arial, sans-serif',
                 color: function() {
@@ -378,7 +378,7 @@
             });
         }
 
-        fetch('/country_wordcloud/')
+        fetch('/author_wordcloud/')
             .then(response => response.json())
             .then(data => {
                 var words = data.map(function(d) {

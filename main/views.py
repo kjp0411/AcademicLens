@@ -27,10 +27,10 @@ openai.api_key = ''
 
 db_config = {
     'host': '127.0.0.1',
-    'user': 'kaihojun',
-    'password': '1234',
+    'user': 'root',
+    'password': '0000',
     'database': 'capstone',
-    'port':3306
+    'port':3307
 }
 
 
@@ -834,7 +834,7 @@ def get_paper_ids_affiliation(affiliation):
     return paper_ids_affiliation
 
 def affiliation_wordcloud(request):
-    affiliation = 'Technion, Haifa'
+    affiliation = 'University of Florida, Gainesville, FL'
     # 키워드 카운트 초기화
     keyword_counts = Counter()
 
@@ -907,7 +907,7 @@ def country_analyze_html(request):
     return render(request, 'country_analyze.html')
 
 # 국가의 연도별 논문 수 함수
-def get_paper_counts_by_year(request):
+def country_get_paper_counts_by_year(request):
     with connection.cursor() as cursor:
         cursor.execute("""
             SELECT YEAR(p.date) AS year, COUNT(*) AS paper_count
@@ -927,7 +927,7 @@ def get_paper_counts_by_year(request):
     return JsonResponse(data, safe=False)
 
 # 국가 논문 리스트
-def get_recent_papers(request):
+def country_get_recent_papers(request):
     with connection.cursor() as cursor:
         cursor.execute("""
             SELECT DISTINCT p.title, p.url, p.date, p.citations, p.publisher, p.abstract
@@ -947,7 +947,7 @@ def get_recent_papers(request):
     return JsonResponse(data, safe=False)
 
 # 국가 발표 논문 수
-def get_total_papers(request):
+def country_get_total_papers(request):
     with connection.cursor() as cursor:
         cursor.execute("""
             SELECT COUNT(*) AS total_papers
@@ -984,3 +984,120 @@ class AnalyzeNetworkData(CsrfExemptMixin, APIView):
 
             return Response({'analysis_result': analysis_result})
         return Response({'error': 'Invalid request'}, status=400)
+
+
+# 기관 분석 페이지 html 출력 함수
+def affiliation_analyze_html(request):
+    return render(request, 'affiliation_analyze.html')
+
+# 기관 연도별 논문 수
+def affiliation_get_paper_counts_by_year(request):
+    with connection.cursor() as cursor:
+        cursor.execute("""
+            SELECT YEAR(p.date) AS year, COUNT(*) AS paper_count
+            FROM paper p
+            JOIN paper_affiliation pa ON p.id = pa.paper_id
+            JOIN affiliation a ON pa.affiliation_id = a.id
+            WHERE a.name = %s
+            GROUP BY YEAR(p.date)
+            ORDER BY YEAR(p.date);
+        """, ['University of Florida, Gainesville, FL'])
+        
+        rows = cursor.fetchall()
+    
+    data = [{'year': row[0], 'paper_count': row[1]} for row in rows]
+    
+    return JsonResponse(data, safe=False)
+
+#소속 논문 리스트 함수
+def affiliation_get_recent_papers(request):
+    with connection.cursor() as cursor:
+        cursor.execute("""
+            SELECT DISTINCT p.title, p.url, p.date, p.citations, p.publisher, p.abstract
+            FROM paper p
+            JOIN paper_affiliation pa ON p.id = pa.paper_id
+            JOIN affiliation a ON pa.affiliation_id = a.id
+            WHERE a.name = %s
+            ORDER BY p.date DESC
+            LIMIT 5;
+        """, ['University of Florida, Gainesville, FL'])
+        
+        rows = cursor.fetchall()
+    
+    data = [{'title': row[0], 'url': row[1], 'date': row[2], 'citations': row[3], 'publisher': row[4], 'abstract': row[5]} for row in rows]
+    
+    return JsonResponse(data, safe=False)
+
+#소속 발표 논문 수
+def affiliation_get_total_papers(request):
+    with connection.cursor() as cursor:
+        cursor.execute("""
+            SELECT COUNT(*) AS total_papers
+            FROM paper_affiliation pa
+            JOIN affiliation a ON pa.affiliation_id = a.id
+            WHERE a.name = %s;
+        """, ['University of Florida, Gainesville, FL'])
+        
+        row = cursor.fetchone()
+    
+    data = {'total_papers': row[0]}
+    
+    return JsonResponse(data)
+
+# 저자 분석 페이지 html 출력 함수
+def author_analyze_html(request):
+    return render(request, 'author_analyze.html')
+
+# 저자 연도별 논문 수
+def author_get_paper_counts_by_year(request):
+    with connection.cursor() as cursor:
+        cursor.execute("""
+            SELECT YEAR(p.date) AS year, COUNT(*) AS paper_count
+            FROM paper p
+            JOIN paper_author pa ON p.id = pa.paper_id
+            JOIN author a ON pa.author_id = a.id
+            WHERE a.name = %s
+            GROUP BY YEAR(p.date)
+            ORDER BY YEAR(p.date);
+        """, ['A. Aguado'])
+        
+        rows = cursor.fetchall()
+    
+    data = [{'year': row[0], 'paper_count': row[1]} for row in rows]
+    
+    return JsonResponse(data, safe=False)
+
+#저자 논문 리스트 함수
+def author_get_recent_papers(request):
+    with connection.cursor() as cursor:
+        cursor.execute("""
+            SELECT DISTINCT p.title, p.url, p.date, p.citations, p.publisher, p.abstract
+            FROM paper p
+            JOIN paper_author pa ON p.id = pa.paper_id
+            JOIN author a ON pa.author_id = a.id
+            WHERE a.name = %s
+            ORDER BY p.date DESC
+            LIMIT 5;
+        """, ['A. Aguado'])
+        
+        rows = cursor.fetchall()
+    
+    data = [{'title': row[0], 'url': row[1], 'date': row[2], 'citations': row[3], 'publisher': row[4], 'abstract': row[5]} for row in rows]
+    
+    return JsonResponse(data, safe=False)
+
+#저자 발표 논문 수
+def author_get_total_papers(request):
+    with connection.cursor() as cursor:
+        cursor.execute("""
+            SELECT COUNT(*) AS total_papers
+            FROM paper_author pa
+            JOIN author a ON pa.author_id = a.id
+            WHERE a.name = %s;
+        """, ['A. Aguado'])
+        
+        row = cursor.fetchone()
+    
+    data = {'total_papers': row[0]}
+    
+    return JsonResponse(data)

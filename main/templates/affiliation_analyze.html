@@ -10,7 +10,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>국가 정보 페이지</title>
+    <title>소속 정보 페이지</title>
     <script src="https://d3js.org/d3.v6.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/wordcloud2.js/1.0.6/wordcloud2.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -30,7 +30,7 @@
             width: 80%;
             padding: 10px;
         }
-        .country-info {
+        .affiliation-info {
             border-bottom: 1px solid #ccc;
             padding-bottom: 10px;
             margin-bottom: 10px;
@@ -41,7 +41,7 @@
         .header {
             display: flex;
             justify-content: space-between;
-            align-items: center
+            align-items: center;
         }
         .header .search {
             margin-right: 20px;
@@ -65,22 +65,22 @@
             margin: auto;
             border: 1px solid #ddd;
             box-shadow: 2px 2px 12px rgba(0, 0, 0, 0.1);
-            position: relative
+            position: relative;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="sidebar">
-            <div class="country-info">
-                <h2>대한민국(Korea)</h2>
+            <div class="affiliation-info">
+                <h2>University of Florida, Gainesville, FL</h2>
                 <p>발표 논문 수</p>
                 <p>논문 수 (개): <span id="totalPapers">로딩 중...</span></p>
             </div>
         </div>
         <div class="main">
             <div class="chart">
-                <h3>대한민국 나라 정보</h3>
+                <h3>소속 정보</h3>
                 <div id="network"></div>
                 <button id="analyzeButton">네트워크 데이터 분석</button>
                 <div id="analysisResult"></div>
@@ -101,6 +101,8 @@
     </div>
 
     <script>
+        const affiliation = '소속 이름';  // 소속 이름을 여기에 설정
+
         function getCookie(name) {
             let cookieValue = null;
             if (document.cookie && document.cookie !== '') {
@@ -119,7 +121,7 @@
         const csrftoken = getCookie('csrftoken');
 
         async function fetchPaperCountsByYear() {
-            const response = await fetch('/api/country_paper_counts_by_year/');
+            const response = await fetch(`/api/affiliation_paper_counts_by_year/?affiliation=${affiliation}`);
             if (!response.ok) {
                 console.error('Network response was not ok', response.statusText);
                 return;
@@ -167,7 +169,7 @@
         });
 
         async function fetchRecentPapers() {
-            const response = await fetch('/api/country_recent_papers/');
+            const response = await fetch(`/api/affiliation_recent_papers/?affiliation=${affiliation}`);
             if (!response.ok) {
                 console.error('Network response was not ok', response.statusText);
                 return;
@@ -216,7 +218,7 @@
         });
 
         async function fetchTotalPapers() {
-            const response = await fetch('/api/country_total_papers/');
+            const response = await fetch(`/api/affiliation_total_papers/?affiliation=${affiliation}`);
             if (!response.ok) {
                 console.error('Network response was not ok', response.statusText);
                 return;
@@ -239,7 +241,7 @@
         });
 
         async function fetchNetworkData() {
-            const response = await fetch('/country_network/');
+            const response = await fetch(`/affiliation_network/`);
             if (!response.ok) {
                 console.error('Network response was not ok', response.statusText);
                 return;
@@ -360,9 +362,9 @@
         function generateWordCloud(words) {
             WordCloud(document.getElementById('wordcloud'), {
                 list: words,
-                gridSize: 10,
+                gridSize: 5,
                 weightFactor: function (size) {
-                    return size * 0.5;
+                    return size * 10;
                 },
                 fontFamily: 'Arial, sans-serif',
                 color: function() {
@@ -378,7 +380,7 @@
             });
         }
 
-        fetch('/country_wordcloud/')
+        fetch(`/affiliation_wordcloud/`)
             .then(response => response.json())
             .then(data => {
                 var words = data.map(function(d) {
