@@ -28,10 +28,10 @@ openai.api_key = ''
 
 db_config = {
     'host': '127.0.0.1',
-    'user': 'root',
+    'user': 'goorm',
     'password': '123456',
     'database': 'capstone',
-    'port':3307
+    'port':3306
 }
 
 # 메인 화면 논문 수, 소속 수
