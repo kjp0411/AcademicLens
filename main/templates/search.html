@@ -130,6 +130,29 @@
                                 </ul>
                             </div>
                         </details>
+                        <br><br>
+                        <details open>
+                            <summary> 국가 </summary> <br>
+                            <div>
+                                <ul class="contList country" data-header="국가">
+                                    <div id="mCSB_4" class="mCustomScrollBox" tabindex="3">
+                                        <div id="mCSB_4_container" class="mCSB_4_container" style="position:relative; top:0; left:0;" dir="ltr">
+                                            {% for country, count in paper_counts_by_country.items %}
+                                            <li>
+                                                <input type="checkbox" id="country_{{ country }}" name="country" value="{{ country }}" {% if country in selected_countries %}checked{% endif %}>
+                                                <label for="country_{{ country }}" data-currname="{{ country }}" data-currvalue="{{ country }}">
+                                                    <span class="checkBox"></span>
+                                                    {{ country }}
+                                                    <span class="total"> ({{ count }}) </span>
+                                                </label>
+                                            </li>
+                                            {% endfor %}
+                                        </div>
+                                        <div id="mCSB_4_scrollbar_vertical" class="mCSB_scrollTools" style="display: block;"></div>
+                                    </div>
+                                </ul>
+                            </div>
+                        </details>
                     </li>
                 </ul>
                 <button type="submit">검색</button>
@@ -151,14 +174,11 @@
                         </div>
                         <div class="author-container">
                             <p class="author">
-                                {% for author in item.authors %}
-                                    {{ author.name }}{% if not forloop.last %}, {% endif %}
-                                {% endfor %}
-                            </p>
-                        </div>
-                        <div class="preDate-container">
-                            <p class="preDate">
-                                {{ item.paper.date|date:"Y-m-d" }}
+                                {% if item.authors|length > 1 %}
+                                    {{ item.authors.0.name }} 외 {{ item.authors|length|add:"-1" }}인
+                                {% else %}
+                                    {{ item.authors.0.name }}
+                                {% endif %}
                             </p>
                         </div>
                         <div class="preAbstract-container">
@@ -166,11 +186,12 @@
                                 <a href="{% url 'paper_detail' item.paper.id %}">{{ item.paper.abstract|truncatechars:250 }}</a>
                             </p>
                         </div>
-                        <div class="publisher-container">
-                            <p class="publisher">
-                                {{ item.paper.publisher }}
+                        <div class="date-publisher-container">
+                            <p class="preDate">
+                                {{ item.paper.date|date:"Y-m-d" }}&nbsp;&nbsp;|&nbsp;&nbsp;{{ item.paper.publisher }}
                             </p>
-                        </div>  
+                        </div> 
+                        {% if item.keywords %}
                         <div class="keywords-container">
                             <p class="keyword">
                                 {% for keyword in item.keywords %}
@@ -178,6 +199,7 @@
                                 {% endfor %}
                             </p>
                         </div>
+                        {% endif%}
                     </div>
                     <hr>
                 {% endfor %}

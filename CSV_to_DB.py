@@ -7,7 +7,7 @@ conn = mariadb.connect(
     host="127.0.0.1",
     port=3307,
     user="root",
-    password="0000",
+    password="123456",
     database="capstone",
 )
 cursor = conn.cursor()
@@ -62,17 +62,24 @@ for index, row in data.iterrows():
 
                 affiliation_list = affiliation.split(',')
 
-                # 각 항목의 양쪽 공백을 제거
-                affiliation_list = [a.strip() for a in affiliation_list]
+                # 각 항목의 양쪽 공백을 제거하고 소문자로 변환
+                affiliation_list = [a.strip().lower() for a in affiliation_list]
 
                 country = None
 
-                if len(affiliation_list) >= 3:
-                    affiliation = ', '.join(affiliation_list[:-1])
-                    if ' ' not in affiliation_list[-1]:
-                        country = affiliation_list[-1]
-                else:
-                    affiliation = ', '.join(affiliation_list[:])
+                # affiliation_list의 각 항목을 맨 뒤에서부터 country 테이블의 name, alpha_2, alpha_3와 비교
+                for item in reversed(affiliation_list):
+                    if 'korea' in item:
+                        cursor.execute("SELECT id FROM country WHERE name = %s", ('South Korea',))
+                    else:
+                        cursor.execute("SELECT id FROM country WHERE name = %s OR alpha_2 = %s OR alpha_3 = %s", (item, item, item))
+                    country_result = cursor.fetchone()
+                    if country_result:
+                        country = item
+                        country_id = country_result[0]
+                        break
+
+                affiliation = ', '.join(affiliation_list)
 
                 # 소속 삽입 코드
                 # 소속 데이터가 이미 있는지 확인하는 쿼리
@@ -103,16 +110,9 @@ for index, row in data.iterrows():
                     cursor.execute(sql, (author, affiliation))
                     author_id = cursor.lastrowid
 
-                if country:  # country가 설정된 경우에만 country 삽입
-                    # country 테이블에서 해당 country의 id를 가져옴
-                    sql = "SELECT id FROM country WHERE name = %s OR alpha_2 = %s OR alpha_3 = %s"
-                    cursor.execute(sql, (country, country, country))
-                    country_result = cursor.fetchone()
-
-                    if country_result:
-                        country_id = country_result[0]
-                        sql = "INSERT INTO paper_country (paper_id, country_id) VALUES (%s, %s)"
-                        cursor.execute(sql, (paper_id, country_id))
+                if country:  # country가 설정된 경우에만 country 연결
+                    sql = "INSERT INTO paper_country (paper_id, country_id) VALUES (%s, %s)"
+                    cursor.execute(sql, (paper_id, country_id))
 
                 sql = "INSERT INTO paper_author (paper_id, author_id) VALUES (%s, %s)"
                 cursor.execute(sql, (paper_id, author_id))

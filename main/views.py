@@ -23,16 +23,16 @@ from rest_framework.response import Response
 from braces.views import CsrfExemptMixin
 
 
+
 openai.api_key = ''
 
 db_config = {
     'host': '127.0.0.1',
-    'user': 'kaihojun',
-    'password': '1234',
+    'user': 'root',
+    'password': '123456',
     'database': 'capstone',
-    'port':3306
+    'port':3307
 }
-
 
 # 메인 화면 논문 수, 소속 수
 def home(request):
@@ -50,6 +50,7 @@ def search(request):
     years = request.GET.getlist('year')
     publishers = request.GET.getlist('publisher')
     author = request.GET.get('author')
+    countries = request.GET.getlist('country')
     search_query = query
     news_type = request.GET.get('news_type', 'international')  # 기본값을 'international'로 설정
 
@@ -74,6 +75,11 @@ def search(request):
     if author:
         paper_ids_by_authors = Author.objects.filter(name__icontains=author).values_list('paperauthor__paper_id', flat=True)
         papers = papers.filter(id__in=paper_ids_by_authors)
+        
+    # 국가 필터링
+    if countries:
+        paper_ids_by_countries = PaperCountry.objects.filter(country__name__in=countries).values_list('paper_id', flat=True)
+        papers = papers.filter(id__in=paper_ids_by_countries)
 
     # 정렬 및 페이징 처리
     ordered_papers = sorted(papers, key=lambda paper: paper_ids.index(paper.id))
@@ -99,6 +105,15 @@ def search(request):
     publisher = ['ACM', 'IEEE']
     paper_counts_by_publisher = {p: Paper.objects.filter(id__in=paper_ids, publisher=p).count() for p in publisher}
 
+    paper_countries = PaperCountry.objects.filter(paper_id__in=paper_ids).values_list('country__name', 'paper_id')
+    country_paper_map = {}
+    for country, paper in paper_countries:
+        if country not in country_paper_map:
+            country_paper_map[country] = set()
+        country_paper_map[country].add(paper)
+
+    paper_counts_by_country = {country: len(papers) for country, papers in country_paper_map.items()}
+
 
     # 뉴스 검색 부분
     api_key = '2f963493ee124210ac91a3b54ebb3c5c'
@@ -121,6 +136,7 @@ def search(request):
         'papers_with_authors_and_keywords': papers_with_authors_and_keywords,
         'paper_counts_by_year': paper_counts_by_year,
         'paper_counts_by_publisher': paper_counts_by_publisher,
+        'paper_counts_by_country': paper_counts_by_country,
         'related_terms': related_terms,
         'articles': articles,
         'news_type': news_type,
@@ -128,6 +144,7 @@ def search(request):
         'page_obj': page_obj,
         'selected_years': years,
         'selected_publishers': publishers,
+        'selected_countries': countries,
     }
     return render(request, 'search.html', context)
 

@@ -6,7 +6,7 @@ conn = mariadb.connect(
     host="127.0.0.1",
     port=3307,
     user="root",
-    password="0000",
+    password="123456",
     database="capstone",
 )
 
