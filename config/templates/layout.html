@@ -1,0 +1,78 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <title>ITstagram</title>
+    <link rel="stylesheet" href="{% static 'css/reset.css' %}">
+    <link rel="stylesheet" href="{% static 'css/common.css' %}">
+    <link rel="shortcut icon" href="{% static 'imgs/Lens_logo.png' %}">
+
+    {% block head %}
+    {% endblock %}
+
+
+</head>
+<body>
+<section id="container">
+    <header id="header">
+        <section class="h_inner">
+            <h1 class="logo">
+                <a href="{% url 'post:post_list' %}">
+                    <div>
+                        <img src="{% static '/imgs/Lens.png' %}" alt="Lens Logo" width="103px" height="29px">
+                    </div>
+                    <div>
+                        <img src="{% static '/imgs/ITsta_logo.png' %}" alt="ITsta Logo" width="103px" height="29px">
+                    </div>
+                </a>
+            </h1>
+            <div class="search_field">
+                <form class="search-form" action="{% url "post:post_list" %}" method="post">
+                    {% csrf_token %}
+                    <input class="tag-search" type="text" name="tag" placeholder="태그검색" pattern="#?[\wㄱ-ㅎ|ㅏ-ㅣ|가-힣]+" title="특수문자, 공백 입력불가" required >
+                    <div class="fake_field">
+                        <span class=sprite_small_search_icon></span>
+                        <span>태그검색</span>
+                    </div>
+                </form>
+            </div>
+            <div class="right_icons">
+                    <a href="{% url 'post:post_new' %}">
+                        <img src="{% static 'imgs/upload.png' %}" alt="Upload Logo" width="30px" height="30px">
+                    </a>
+                    <a href="{% url 'board:index' %}">
+                        <img src="{% static 'imgs/q_a.png' %}" alt="Q_A Logo" width="30px" height="30px">
+                    </a>
+
+                {% if user.is_authenticated %}
+                <a href="{% url 'post:my_post_list' user.username %}">
+                    <img src="{% static 'imgs/mypage.png' %}" alt="Mypage Logo" width="30px" height="30px">
+                </a>
+                {% else %}
+                <a href="{% url 'accounts:login' %}">
+                    <img src="{% static 'imgs/mypage.png' %}" alt="Mypage Logo" width="30px" height="30px">
+                </a>
+                {% endif %}
+            </div>
+        </section>
+    </header>
+
+    {% block content %}
+    {% endblock %}
+
+</section>
+    <!-- jQuery (부트스트랩의 자바스크립트 플러그인을 위해 필요합니다) -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
+    <!-- <script src="{% static 'js/insta.js' %}"></script> -->
+    {% block js %}
+    {% endblock %}
+
+</body>
+</html>

@@ -1,0 +1,145 @@
+{% extends "layout.html" %}
+{% block title %}
+Edit Question
+{% endblock %}
+{% block content %}
+<style>
+    .header {
+        z-index: 1000;
+        position: fixed;
+        width: 100%;
+        top: 0;
+        background-color: white;
+        border-bottom: 1px solid #ddd;
+        padding: 10px 20px;
+    }
+
+    .main-content {
+        margin-top: 70px;
+        padding: 20px;
+        display: flex;
+        justify-content: center;
+    }
+
+    .form-container {
+        width: 100%;
+        max-width: 900px;
+        padding: 20px;
+        border: 1px solid #ced4da;
+        border-radius: 0.25rem;
+        background-color: #f8f9fa;
+    }
+
+    .form-group {
+        margin-bottom: 15px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .form-group.flex-row {
+        flex-direction: row;
+        justify-content: center;
+    }
+
+    .form-control {
+        display: block;
+        width: 80%;
+        padding: 10px;
+        font-size: 16px;
+        line-height: 1.5;
+        color: #495057;
+        background-color: #fff;
+        background-clip: padding-box;
+        border: 1px solid #ced4da;
+        border-radius: 0.25rem;
+        box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.075);
+        transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+    }
+
+    .form-control:focus {
+        border-color: #80bdff;
+        outline: 0;
+        box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+    }
+
+    .form-control.textarea-fixed {
+        height: 250px;
+    }
+
+    .btn-primary {
+        color: #fff;
+        background-color: #007bff;
+        border-color: #007bff;
+        display: inline-block;
+        width: auto;
+        padding: 10px;
+        font-size: 16px;
+        font-weight: 600;
+        text-align: center;
+        border-radius: 0.25rem;
+        transition: background-color 0.15s ease-in-out, border-color 0.15s ease-in-out;
+        margin-right: 10px;
+    }
+
+    .btn-primary:hover {
+        background-color: #0056b3;
+        border-color: #004085;
+    }
+
+    h1 {
+        font-size: 24px;
+        margin-bottom: 20px;
+        text-align: center;
+    }
+</style>
+
+<header class="header">
+    <h1>ITstagram</h1>
+</header>
+
+<div class="main-content">
+    <div class="form-container">
+        <h1>질문 수정 하기</h1>
+        <hr>
+        <br>
+        <form method="post" enctype="multipart/form-data" class="mt-4">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="questionTitle"></label>
+                <input type="text" id="questionTitle" class="form-control" name="title"
+                    placeholder="질문할 내용의 제목을 입력해주세요..." value="{{ question.title }}">
+            </div>
+            <div class="form-group">
+                <label for="questionContent"></label>
+                <textarea id="questionContent" class="form-control textarea-fixed" name="content"
+                    placeholder="질문할 내용을 입력해주세요...">{{ question.content }}</textarea>
+            </div>
+            <br>
+            <h1>이미지 수정 하기</h1>
+            <hr>
+            <div class="form-group">
+                <label for="questionImage"></label>
+                <input type="file" id="questionImage" class="form-control" name="image">
+                <br>
+                <h1>현재 이미지</h1>
+                {% if question.image %}
+                <p style="text-align: center;">
+                    <img src="{{ question.image.url }}" alt="Question Image"
+                        style="max-width: 50%; height: auto; border: 1px solid #ced4da; border-radius: 0.25rem;">
+                </p>
+                {% endif %}
+            </div>
+            <div class="form-group flex-row">
+                <button type="submit" class="btn btn-primary">수정하기</button>
+                <button type="button" class="btn btn-primary" id="backButton">뒤로가기</button>
+            </div>
+        </form>
+    </div>
+</div>
+<script>
+    document.getElementById('backButton').addEventListener('click', function () {
+        window.location.href = "{% url 'board:question_detail' question.pk %}";
+    });
+</script>
+{% endblock %}

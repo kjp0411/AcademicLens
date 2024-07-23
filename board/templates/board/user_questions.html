@@ -1,0 +1,290 @@
+{% extends "layout.html" %}
+
+{% block title %}
+ITstagram - My Q&A
+{% endblock %}
+
+{% block head %}
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+    }
+
+    .navbar {
+        background-color: #f8f9fa;
+        padding: 1rem;
+        border-bottom: 1px solid #ddd;
+    }
+
+    .navbar-brand {
+        font-size: 1.5rem;
+        margin-right: 1rem;
+    }
+
+    .navbar-nav {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        display: flex;
+    }
+
+    .nav-item {
+        margin-right: 1rem;
+    }
+
+    .nav-link {
+        text-decoration: none;
+        color: #000;
+    }
+
+    .nav-link.active {
+        font-weight: bold;
+    }
+
+    .form-control {
+        padding: 0.5rem;
+        margin-right: 0.5rem;
+    }
+
+    .btn {
+        padding: 0.5rem 1rem;
+        cursor: pointer;
+        border: 1px solid #28a745;
+        background-color: #28a745;
+        color: #fff;
+        transition: background-color 0.3s;
+    }
+
+    .btn-outline-success {
+        background-color: #fff;
+        color: #28a745;
+    }
+
+    .btn-outline-success:hover {
+        background-color: #28a745;
+        color: #fff;
+    }
+
+    .container-fluid {
+        padding: 1rem;
+    }
+
+    .d-grid {
+        display: grid;
+        gap: 1rem;
+    }
+
+    .btn-primary {
+        background-color: #007bff;
+        border: none;
+    }
+
+    .btn-secondary {
+        background-color: #6c757d;
+        border: none;
+    }
+
+    .list-group {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .list-group-item {
+        padding: 1rem;
+        border: 1px solid #ddd;
+        margin-bottom: 0.5rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background-color: #fff;
+        transition: background-color 0.3s;
+    }
+
+    .list-group-item:hover {
+        background-color: #f8f9fa;
+    }
+
+    .list-group-item .content {
+        flex-grow: 1;
+    }
+
+    .list-group-item a {
+        text-decoration: none;
+        color: #000;
+        display: block;
+        font-weight: bold;
+        font-size: 1.1rem;
+    }
+
+    .badge {
+        padding: 0.5rem 1rem;
+        background-color: #6c757d;
+        color: #fff;
+        border-radius: 1rem;
+        margin-left: 1rem;
+        font-size: 0.9rem;
+    }
+
+    h3,
+    h4 {
+        margin-top: 1rem;
+        color: #007bff;
+        font-weight: bold;
+    }
+
+    .sidebar {
+        position: fixed;
+        top: 70px;
+        /* adjust based on your navbar height */
+        left: 0;
+        width: 16.6667%;
+        height: calc(100% - 70px);
+        /* adjust based on your navbar height */
+        background-color: #f8f9fa;
+        padding: 1rem;
+        border-right: 1px solid #ddd;
+    }
+
+    .main-content {
+        margin-left: 18%;
+        /* ensure it does not overlap with sidebar */
+        padding: 1rem;
+        padding-top: 70px;
+        /* adjust based on your navbar height */
+    }
+
+    .small-text {
+        font-size: 0.875rem;
+        color: #6c757d;
+        display: block;
+        margin-top: 0.5rem;
+    }
+
+    .pagination {
+        display: flex;
+        justify-content: center;
+        gap: 0.5rem;
+        /* 각 페이지 링크 사이에 간격 추가 */
+    }
+
+    .pagination .page-item {
+        display: inline;
+    }
+
+    .pagination .page-link {
+        text-decoration: none;
+        color: #007bff;
+        border: 1px solid #dee2e6;
+        padding: 0.5rem 0.75rem;
+        margin-left: -1px;
+        line-height: 1.25;
+    }
+
+    .pagination .page-item.active .page-link {
+        background-color: #007bff;
+        border-color: #007bff;
+        color: #fff;
+    }
+
+    .pagination .page-item.disabled .page-link {
+        color: #6c757d;
+        pointer-events: none;
+        background-color: #fff;
+        border-color: #dee2e6;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- 사이드바 -->
+<div class="sidebar">
+    <div class="d-grid gap-2">
+        <form class="d-flex" method="get" action="{% url 'board:index' %}">
+            <input class="form-control me-2" type="search" name="q" value="{{ query|default_if_none:'' }}"
+                placeholder="제목으로 질문 검색" aria-label="Search">
+            <button class="btn btn-outline-success" type="submit">검색</button>
+        </form>
+        <button class="btn btn-primary mb-3" id="createQuestionButton">질문하기</button>
+        <button class="btn btn-secondary" id="userQuestionsButton">내 Q&A 보기</button>
+    </div>
+</div>
+
+<!-- 메인 컨테이너 -->
+<div class="container-fluid mt-3 main-content">
+    <div class="row">
+        <!-- 메인 컨텐츠 영역 -->
+        <div class="col-md-12">
+            <h3>내가 작성한 Q&A</h3>
+            <hr>
+            <br>
+            <ul class="list-group mb-4">
+                {% for question in user_questions %}
+                <li class="list-group-item">
+                    <a href="{% url 'board:question_detail' question.pk %}" class="text-decoration-none">
+                        {{ question.title }}
+                        <span class="small-text">작성일: {{ question.pub_date }}</span>
+                    </a>
+                    <span class="badge bg-secondary float-end">♥ {{ question.likes }}</span>
+                </li>
+                {% endfor %}
+            </ul>
+            <br><br>
+            <!-- 페이지네이션 -->
+            <nav aria-label="Page navigation">
+                <ul class="pagination justify-content-center">
+                    {% if user_questions.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ user_questions.previous_page_number }}"
+                            aria-label="Previous">
+                            <span aria-hidden="true">&laquo;</span>
+                        </a>
+                    </li>
+                    {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link" aria-label="Previous">
+                            <span aria-hidden="true">&laquo;</span>
+                        </span>
+                    </li>
+                    {% endif %}
+                    {% for num in user_questions.paginator.page_range %}
+                    {% if user_questions.number == num %}
+                    <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                    {% elif num > user_questions.number|add:'-3' and num < user_questions.number|add:'3' %} <li
+                        class="page-item"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
+                        {% endif %}
+                        {% endfor %}
+                        {% if user_questions.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ user_questions.next_page_number }}" aria-label="Next">
+                                <span aria-hidden="true">&raquo;</span>
+                            </a>
+                        </li>
+                        {% else %}
+                        <li class="page-item disabled">
+                            <span class="page-link" aria-label="Next">
+                                <span aria-hidden="true">&raquo;</span>
+                            </span>
+                        </li>
+                        {% endif %}
+                </ul>
+            </nav>
+        </div>
+    </div>
+</div>
+<script>
+    document.getElementById('createQuestionButton').addEventListener('click', function () {
+        window.location.href = "{% url 'board:create_question' %}";
+    });
+
+    document.getElementById('userQuestionsButton').addEventListener('click', function () {
+        window.location.href = "{% url 'board:user_questions' %}";
+    });
+</script>
+{% endblock %}
+
+{% block js %}
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js"></script>
+{% endblock %}

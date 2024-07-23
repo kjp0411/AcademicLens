@@ -1,0 +1,140 @@
+{% extends "layout.html" %}
+{% block title %}
+Create Question
+{% endblock %}
+{% block content %}
+<style>
+    .header {
+        z-index: 1000;
+        position: fixed;
+        width: 100%;
+        top: 0;
+        background-color: white;
+        border-bottom: 1px solid #ddd;
+        padding: 10px 20px;
+    }
+
+    .main-content {
+        margin-top: 70px;
+        /* 헤더 높이 만큼의 margin 추가 */
+        padding: 20px;
+        display: flex;
+        justify-content: center;
+    }
+
+    .form-container {
+        width: 100%;
+        max-width: 900px;
+        /* 최대 너비 설정 */
+        padding: 20px;
+        border: 1px solid #ced4da;
+        border-radius: 0.25rem;
+        background-color: #f8f9fa;
+    }
+
+    .form-group {
+        margin-bottom: 15px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .form-group.flex-row {
+        flex-direction: row;
+        /* 버튼 컨테이너의 방향을 가로로 설정 */
+        justify-content: center;
+        /* 버튼을 컨테이너의 중앙으로 정렬 */
+    }
+
+    .form-control {
+        display: block;
+        width: 80%;
+        padding: 10px;
+        font-size: 16px;
+        line-height: 1.5;
+        color: #495057;
+        background-color: #fff;
+        background-clip: padding-box;
+        border: 1px solid #ced4da;
+        border-radius: 0.25rem;
+        box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.075);
+        transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+    }
+
+    .form-control:focus {
+        border-color: #80bdff;
+        outline: 0;
+        box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+    }
+
+    .form-control.textarea-fixed {
+        height: 250px;
+        /* 텍스트 영역의 고정 높이 설정 */
+    }
+
+    .btn-primary {
+        color: #fff;
+        background-color: #007bff;
+        border-color: #007bff;
+        display: inline-block;
+        width: auto;
+        padding: 10px;
+        font-size: 16px;
+        font-weight: 600;
+        text-align: center;
+        border-radius: 0.25rem;
+        transition: background-color 0.15s ease-in-out, border-color 0.15s ease-in-out;
+        margin-right: 10px;
+    }
+
+    .btn-primary:hover {
+        background-color: #0056b3;
+        border-color: #004085;
+    }
+
+    h1 {
+        font-size: 24px;
+        margin-bottom: 20px;
+        text-align: center;
+    }
+</style>
+
+<header class="header">
+    <h1>ITstagram</h1>
+</header>
+
+<div class="main-content">
+    <div class="form-container">
+        <h1>질문 작성 하기</h1>
+        <hr>
+        <br>
+        <form method="post" enctype="multipart/form-data" class="mt-4">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="questionTitle"></label>
+                <input type="text" id="questionTitle" class="form-control" name="title"
+                    placeholder="질문할 내용의 제목을 입력해주세요...">
+            </div>
+            <div class="form-group">
+                <label for="questionContent"></label>
+                <textarea id="questionContent" class="form-control textarea-fixed" name="content"
+                    placeholder="질문할 내용을 입력해주세요..."></textarea>
+            </div>
+            <div class="form-group">
+                <label for="questionImage"></label>
+                <input type="file" id="questionImage" class="form-control" name="image">
+            </div>
+            <div class="form-group flex-row">
+                <button type="submit" class="btn btn-primary">질문하기</button>
+                <button type="button" class="btn btn-primary" id="backButton">뒤로가기</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    document.getElementById('backButton').addEventListener('click', function () {
+        window.location.href = "{% url 'board:index' %}";
+    });
+</script>
+{% endblock %}
