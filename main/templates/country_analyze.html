@@ -73,14 +73,14 @@
     <div class="container">
         <div class="sidebar">
             <div class="country-info">
-                <h2>대한민국(Korea)</h2>
+                <h2 id="countryName"></h2>
                 <p>발표 논문 수</p>
                 <p>논문 수 (개): <span id="totalPapers">로딩 중...</span></p>
             </div>
         </div>
         <div class="main">
             <div class="chart">
-                <h3>대한민국 나라 정보</h3>
+                <h3>국가 정보</h3>
                 <div id="network"></div>
                 <button id="analyzeButton">네트워크 데이터 분석</button>
                 <div id="analysisResult"></div>
@@ -118,8 +118,21 @@
 
         const csrftoken = getCookie('csrftoken');
 
+        function getParameterByName(name) {
+            const url = window.location.href;
+            name = name.replace(/[\[\]]/g, '\\$&');
+            const regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)');
+            const results = regex.exec(url);
+            if (!results) return null;
+            if (!results[2]) return '';
+            return decodeURIComponent(results[2].replace(/\+/g, ' '));
+        }
+
+        const countryName = getParameterByName('name');
+        document.getElementById('countryName').textContent = countryName;
+
         async function fetchPaperCountsByYear() {
-            const response = await fetch('/api/country_paper_counts_by_year/');
+            const response = await fetch(`/api/country_paper_counts_by_year/?name=${encodeURIComponent(countryName)}`);
             if (!response.ok) {
                 console.error('Network response was not ok', response.statusText);
                 return;
@@ -167,7 +180,7 @@
         });
 
         async function fetchRecentPapers() {
-            const response = await fetch('/api/country_recent_papers/');
+            const response = await fetch(`/api/country_recent_papers/?name=${encodeURIComponent(countryName)}`);
             if (!response.ok) {
                 console.error('Network response was not ok', response.statusText);
                 return;
@@ -216,7 +229,7 @@
         });
 
         async function fetchTotalPapers() {
-            const response = await fetch('/api/country_total_papers/');
+            const response = await fetch(`/api/country_total_papers/?name=${encodeURIComponent(countryName)}`);
             if (!response.ok) {
                 console.error('Network response was not ok', response.statusText);
                 return;
@@ -239,7 +252,7 @@
         });
 
         async function fetchNetworkData() {
-            const response = await fetch('/country_network/');
+            const response = await fetch(`/country_network/?name=${encodeURIComponent(countryName)}`);
             if (!response.ok) {
                 console.error('Network response was not ok', response.statusText);
                 return;
@@ -378,7 +391,7 @@
             });
         }
 
-        fetch('/country_wordcloud/')
+        fetch(`/country_wordcloud/?name=${encodeURIComponent(countryName)}`)
             .then(response => response.json())
             .then(data => {
                 var words = data.map(function(d) {

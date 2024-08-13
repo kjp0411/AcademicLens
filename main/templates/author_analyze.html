@@ -10,7 +10,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>국가 정보 페이지</title>
+    <title>저자 정보 페이지</title>
     <script src="https://d3js.org/d3.v6.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/wordcloud2.js/1.0.6/wordcloud2.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -73,7 +73,7 @@
     <div class="container">
         <div class="sidebar">
             <div class="author-info">
-                <h2>A. aguado</h2>
+                <h2 id="authorName"></h2>
                 <p>발표 논문 수</p>
                 <p>논문 수 (개): <span id="totalPapers">로딩 중...</span></p>
             </div>
@@ -118,8 +118,21 @@
 
         const csrftoken = getCookie('csrftoken');
 
+        function getParameterByName(name) {
+            const url = window.location.href;
+            name = name.replace(/[\[\]]/g, '\\$&');
+            const regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)');
+            const results = regex.exec(url);
+            if (!results) return null;
+            if (!results[2]) return '';
+            return decodeURIComponent(results[2].replace(/\+/g, ' '));
+        }
+
+        const authorName = getParameterByName('name');
+        document.getElementById('authorName').textContent = authorName;
+
         async function fetchPaperCountsByYear() {
-            const response = await fetch('/api/author_paper_counts_by_year/');
+            const response = await fetch(`/api/author_paper_counts_by_year/?name=${encodeURIComponent(authorName)}`);
             if (!response.ok) {
                 console.error('Network response was not ok', response.statusText);
                 return;
@@ -167,7 +180,7 @@
         });
 
         async function fetchRecentPapers() {
-            const response = await fetch('/api/author_recent_papers/');
+            const response = await fetch(`/api/author_recent_papers/?name=${encodeURIComponent(authorName)}`);
             if (!response.ok) {
                 console.error('Network response was not ok', response.statusText);
                 return;
@@ -216,7 +229,7 @@
         });
 
         async function fetchTotalPapers() {
-            const response = await fetch('/api/author_total_papers/');
+            const response = await fetch(`/api/author_total_papers/?name=${encodeURIComponent(authorName)}`);
             if (!response.ok) {
                 console.error('Network response was not ok', response.statusText);
                 return;
@@ -239,7 +252,7 @@
         });
 
         async function fetchNetworkData() {
-            const response = await fetch('/author_network/');
+            const response = await fetch(`/author_network/?name=${encodeURIComponent(authorName)}`);
             if (!response.ok) {
                 console.error('Network response was not ok', response.statusText);
                 return;
@@ -378,7 +391,7 @@
             });
         }
 
-        fetch('/author_wordcloud/')
+        fetch(`/author_wordcloud/?name=${encodeURIComponent(authorName)}`)
             .then(response => response.json())
             .then(data => {
                 var words = data.map(function(d) {

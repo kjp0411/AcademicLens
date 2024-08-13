@@ -73,7 +73,7 @@
     <div class="container">
         <div class="sidebar">
             <div class="affiliation-info">
-                <h2>University of Florida, Gainesville, FL</h2>
+                <h2 id="affiliationName"></h2>
                 <p>발표 논문 수</p>
                 <p>논문 수 (개): <span id="totalPapers">로딩 중...</span></p>
             </div>
@@ -101,8 +101,6 @@
     </div>
 
     <script>
-        const affiliation = '소속 이름';  // 소속 이름을 여기에 설정
-
         function getCookie(name) {
             let cookieValue = null;
             if (document.cookie && document.cookie !== '') {
@@ -120,8 +118,21 @@
 
         const csrftoken = getCookie('csrftoken');
 
+        function getParameterByName(name) {
+            const url = window.location.href;
+            name = name.replace(/[\[\]]/g, '\\$&');
+            const regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)');
+            const results = regex.exec(url);
+            if (!results) return null;
+            if (!results[2]) return '';
+            return decodeURIComponent(results[2].replace(/\+/g, ' '));
+        }
+
+        const affiliationName = getParameterByName('name');
+        document.getElementById('affiliationName').textContent = affiliationName;
+
         async function fetchPaperCountsByYear() {
-            const response = await fetch(`/api/affiliation_paper_counts_by_year/?affiliation=${affiliation}`);
+            const response = await fetch(`/api/affiliation_paper_counts_by_year/?name=${encodeURIComponent(affiliationName)}`);
             if (!response.ok) {
                 console.error('Network response was not ok', response.statusText);
                 return;
@@ -169,7 +180,7 @@
         });
 
         async function fetchRecentPapers() {
-            const response = await fetch(`/api/affiliation_recent_papers/?affiliation=${affiliation}`);
+            const response = await fetch(`/api/affiliation_recent_papers/?name=${encodeURIComponent(affiliationName)}`);
             if (!response.ok) {
                 console.error('Network response was not ok', response.statusText);
                 return;
@@ -218,7 +229,7 @@
         });
 
         async function fetchTotalPapers() {
-            const response = await fetch(`/api/affiliation_total_papers/?affiliation=${affiliation}`);
+            const response = await fetch(`/api/affiliation_total_papers/?name=${encodeURIComponent(affiliationName)}`);
             if (!response.ok) {
                 console.error('Network response was not ok', response.statusText);
                 return;
@@ -241,7 +252,7 @@
         });
 
         async function fetchNetworkData() {
-            const response = await fetch(`/affiliation_network/`);
+            const response = await fetch(`/affiliation_network/?name=${encodeURIComponent(affiliationName)}`);
             if (!response.ok) {
                 console.error('Network response was not ok', response.statusText);
                 return;
@@ -380,7 +391,7 @@
             });
         }
 
-        fetch(`/affiliation_wordcloud/`)
+        fetch(`/affiliation_wordcloud/?name=${encodeURIComponent(affiliationName)}`)
             .then(response => response.json())
             .then(data => {
                 var words = data.map(function(d) {

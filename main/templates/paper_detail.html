@@ -18,21 +18,21 @@
         <strong>저자</strong><br> 
         <p>
             {% for author in authors %}
-                {{ author.name }}{% if not forloop.last %}, {% endif %}
+                <a href="#" class="author-link">{{ author.name }}</a>{% if not forloop.last %}, {% endif %}
             {% endfor %}
         </p><br>
         
         <strong>국가</strong><br>
         <p>
             {% for country in countries %}
-                {{ country }}{% if not forloop.last %}, {% endif %}
+                <a href="#" class="country-link">{{ country }}</a>{% if not forloop.last %}, {% endif %}
             {% endfor %}
         </p><br>
 
         <strong>소속기관</strong><br> 
         <p>
             {% for affiliation in affiliations %}
-                {{ affiliation.name }}{% if not forloop.last %}<br> {% endif %}
+                <a href="#" class="affiliation-link">{{ affiliation.name }}</a>{% if not forloop.last %}<br> {% endif %}
             {% endfor %}
         </p><br>
 
@@ -77,7 +77,43 @@
                 saveIcon.src = heartEmpty;
             }
         });
+
+        document.querySelectorAll('.author-link').forEach(link => {
+            link.addEventListener('click', function(event) {
+                event.preventDefault();
+                const authorName = event.target.textContent;
+                window.location.href = `/author-analyze/?name=${encodeURIComponent(authorName)}`;
+            });
+        });
+
+        document.querySelectorAll('.country-link').forEach(link => {
+            link.addEventListener('click', function(event) {
+                event.preventDefault();
+                const countryName = event.target.textContent;
+                window.location.href = `/country-analyze/?name=${encodeURIComponent(countryName)}`;
+            });
+        });
+
+        document.querySelectorAll('.affiliation-link').forEach(link => {
+            link.addEventListener('click', function(event) {
+                event.preventDefault();
+                const affiliationName = event.target.textContent;
+                window.location.href = `/affiliation-analyze/?name=${encodeURIComponent(affiliationName)}`;
+            });
+        });
     });
 </script>
+
+<style>
+    .author-link, .country-link, .affiliation-link, .keyword {
+        text-decoration: none;
+        color: #000;
+        transition: font-weight 0.3s ease;
+    }
+
+    .author-link:hover, .country-link:hover, .affiliation-link:hover, .keyword:hover {
+        font-weight: bold;
+    }
+</style>
 
 {% endblock %}
