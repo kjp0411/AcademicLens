@@ -739,7 +739,7 @@ def country_get_total_papers(request):
     country_name = request.GET.get('name')
     with connection.cursor() as cursor:
         cursor.execute("""
-            SELECT COUNT(DISTINCT pa.paper_id) AS total_papers
+            SELECT COUNT(DISTINCT pc.paper_id) AS total_papers
             FROM paper_country pc
             JOIN country c ON pc.country_id = c.id
             WHERE c.name = %s;
