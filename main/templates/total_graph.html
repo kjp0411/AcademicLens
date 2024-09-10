@@ -1,85 +1,173 @@
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-    <meta charset="UTF-8">
-    <title>연도별 논문 수 및 저자별 논문 수</title>
-    <!-- Chart.js 라이브러리 불러오기 -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- Google Charts 라이브러리 불러오기 -->
-    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+{% extends 'base.html' %}
+
+{% block title %}연도별 논문 수 및 저자별 논문 수{% endblock %}
+
+{% block content %}
     <style>
-        #papersChart, #authorsChart {
-            width: 600px; /* 원하는 너비로 조절 */
-            height: 400px; /* 원하는 높이로 조절 */
-            display: block; /* 이 부분을 추가 */
+        #papersChart, #authorsChart, #affiliationChart, #countryChart, #keywordChart {
+            width: 100%; /* 차트가 페이지 전체 너비를 차지하도록 설정 */
+            max-width: 1200px; /* 원하는 최대 너비를 지정 */
+            height: 500px; /* 차트의 높이 조정 */
+            display: block;
             margin: auto; /* 중앙 정렬을 위해 추가 */
         }
+
+        /* 페이지의 전체 폭을 넓히기 위한 컨테이너 설정 */
+        main {
+            width: 90%; /* 페이지의 너비를 90%로 설정 */
+            max-width: 1400px; /* 최대 너비 설정 */
+            margin: 0 auto; /* 페이지 중앙 정렬 */
+        }
+
+        .chart-container {
+            position: relative;
+            margin-bottom: 20px;
+        }
+        
+        .chart-buttons {
+            position: absolute;
+            right: 20px;
+            top: 20px;
+            z-index: 10; /* 그래프 위에 버튼이 위치하도록 설정 */
+        }
+        
+        .chart-buttons button {
+            padding: 5px 10px;
+            margin: 0 5px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        
+        .chart-buttons .like-btn {
+            background-color: #28a745; /* 초록색 버튼 */
+        }
     </style>
-</head>
-<body>
-    <h2>Searched Keyword: "{{ keyword }}"</h2>
+    <br><br><br>
+    <div style="text-align: center;">
+        <h2 style="display: inline;">
+            "<span style="color: blue;">{{ keyword }}</span>" 검색 결과 분석
+        </h2>
+        <h3 style="display: inline;"> ( 검색결과 {{ total_papers_count }} 건 )</h3>
+    </div>
+    <br>
+    <div style="text-align: center; padding: 20px;">
+        <form method="GET" action="{% url 'total_graph' %}" style="display: inline-flex; align-items: center; gap: 10px; background-color: #f0f0f0; padding: 10px; border-radius: 8px;">
+            <label for="start_year" style="margin-right: 10px; white-space: nowrap;">기간 설정:</label>
+    
+            <!-- Start Year Dropdown -->
+            <select name="start_year" id="start_year" style="padding: 5px; border-radius: 5px; border: 1px solid #ccc; width: 100px;">
+                {% for year in year_range %}
+                    <option value="{{ year }}" {% if start_year == year|stringformat:"s" %}selected{% endif %}>{{ year }}</option>
+                {% endfor %}
+            </select>
+    
+            <!-- Tilde separator for range -->
+            <label for="end_year" style="margin: 0 10px;"> ~ </label>
+    
+            <!-- End Year Dropdown -->
+            <select name="end_year" id="end_year" style="padding: 5px; border-radius: 5px; border: 1px solid #ccc; width: 100px;">
+                {% for year in year_range %}
+                    <option value="{{ year }}" {% if end_year == year|stringformat:"s" %}selected{% endif %}>{{ year }}</option>
+                {% endfor %}
+            </select>
+    
+            <!-- Search Button -->
+            <button type="submit" style="padding: 5px 10px; background-color: #007BFF; color: white; border: none; border-radius: 5px; cursor: pointer; width: 80px;">
+                검색
+            </button>
+        </form>
+    </div>
 
-    <ul>
-        {% for item in papers_count %}
-            <li>{{ item.year }}년: {{ item.count }}개</li>
-        {% endfor %}
-    </ul>
-    <canvas id="papersChart"></canvas>
+    <br>
 
-    <div id="authorsChart"></div>
+    <!-- Papers Chart -->
+    <div class="chart-container">
+        <div id="papersChart"></div>
+        <div class="chart-buttons">
+            <button class="gpt-analysis-btn">GPT 분석</button>
+            <button class="like-btn">좋아요</button>
+        </div>
+    </div>
 
-    <div id="affiliationChart"></div>
+    <!-- Authors Chart -->
+    <div class="chart-container">
+        <div id="authorsChart"></div>
+        <div class="chart-buttons">
+            <button class="gpt-analysis-btn">GPT 분석</button>
+            <button class="like-btn">좋아요</button>
+        </div>
+    </div>
 
-    <div id="countryChart"></div>
+    <!-- Affiliation Chart -->
+    <div class="chart-container">
+        <div id="affiliationChart"></div>
+        <div class="chart-buttons">
+            <button class="gpt-analysis-btn">GPT 분석</button>
+            <button class="like-btn">좋아요</button>
+        </div>
+    </div>
 
-    <div id="keywordChart"></div>
+    <!-- Country Chart -->
+    <div class="chart-container">
+        <div id="countryChart"></div>
+        <div class="chart-buttons">
+            <button class="gpt-analysis-btn">GPT 분석</button>
+            <button class="like-btn">좋아요</button>
+        </div>
+    </div>
 
-    <!-- 연도별 논문 수 차트를 그리는 스크립트 -->
-    <script>
-        var ctx = document.getElementById('papersChart').getContext('2d');
-        var papersChart = new Chart(ctx, {
-            type: 'line', // 차트의 형태
-            data: {
-                labels: [{% for item in papers_count %} "{{ item.year }}", {% endfor %}], // X 축 레이블
-                datasets: [{
-                    label: '연도별 논문 수',
-                    data: [{% for item in papers_count %} {{ item.count }}, {% endfor %}], // Y 축 데이터
-                    backgroundColor: 'rgba(255, 99, 132, 0.2)',
-                    borderColor: 'rgba(255, 99, 132, 1)',
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                scales: {
-                    y: {
-                        beginAtZero: true
-                    }
-                },
-                plugins: {
-                    title: {
-                        display: true,
-                        text: '연도별 논문 수',
-                        font: {
-                            size: 20
-                        },
-                        color: '#333'
-                    }
-                }
-            }
-        });
-    </script>
+    <!-- Keyword Chart -->
+    <div class="chart-container">
+        <div id="keywordChart"></div>
+        <div class="chart-buttons">
+            <button class="gpt-analysis-btn">GPT 분석</button>
+            <button class="like-btn">좋아요</button>
+        </div>
+    </div>
 
-    <!-- 저자별 논문 수 차트를 그리는 스크립트 -->
+    <!-- Google Charts 차트 그리기 스크립트 -->
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
     <script type="text/javascript">
         google.charts.load('current', {'packages':['corechart']});
+        google.charts.setOnLoadCallback(drawPapersChart);
+        google.charts.setOnLoadCallback(drawAuthorChart);
+        google.charts.setOnLoadCallback(drawAffiliationChart);
+        google.charts.setOnLoadCallback(drawCountryChart);
+        google.charts.setOnLoadCallback(drawKeywordChart);
 
-        google.charts.setOnLoadCallback(drawChart);
+        function drawPapersChart() {
+            var data = new google.visualization.DataTable();
+            data.addColumn('string', 'Year');
+            data.addColumn('number', '논문 수');
+            
+            // 데이터를 추가
+            data.addRows([
+                {% for item in papers_count %}
+                    ['{{ item.year }}', {{ item.count }}],
+                {% endfor %}
+            ]);
+    
+            var options = {
+                title: '연도별 논문 수',
+                legend: { position: 'bottom' },
+                chartArea: {width: '70%', height: '70%'},  // 차트 영역을 조정
+                pointSize: 5,  // 데이터 포인트에 동그라미 추가
+                series: {
+                    0: { lineWidth: 2 }  // 선의 두께 설정
+                }
+            };
+    
+            var chart = new google.visualization.LineChart(document.getElementById('papersChart'));
+            chart.draw(data, options);
+        }
 
-        function drawChart() {
+        function drawAuthorChart() {
             var data = new google.visualization.DataTable();
             data.addColumn('string', 'Author');
-            data.addColumn('number', 'Number of Papers');
-
+            data.addColumn('number', '논문 수');
             data.addRows([
                 {% for author_name, paper_count in author_data %}
                     ['{{ author_name }}', {{ paper_count }}],
@@ -87,14 +175,7 @@
             ]);
 
             var options = {
-                title: 'Number of Papers per Author',
-                hAxis: {
-                    title: 'Number of Papers',
-                    minValue: 0,
-                },
-                vAxis: {
-                    title: 'Author'
-                },
+                title: '저자별 논문 수',
                 chartArea: {width: '50%'},
                 legend: 'none'
             };
@@ -102,54 +183,42 @@
             var chart = new google.visualization.BarChart(document.getElementById('authorsChart'));
             chart.draw(data, options);
         }
-    </script>
 
-    <!-- 소속별 논문 수 차트를 그리는 스크립트 -->
-    <script type="text/javascript">
-        google.charts.load('current', {'packages':['corechart']});
-
-        google.charts.setOnLoadCallback(drawChart);
-
-        function drawChart() {
+        function drawAffiliationChart() {
             var data = new google.visualization.DataTable();
             data.addColumn('string', 'Affiliation');
-            data.addColumn('number', 'Number of Papers');
-
+            data.addColumn('number', '논문 수');
             data.addRows([
                 {% for affiliation_name, paper_count in affiliation_data %}
                     ['{{ affiliation_name }}', {{ paper_count }}],
                 {% endfor %}
             ]);
-
+        
             var options = {
-                title: 'Number of Papers per Affiliation',
+                title: '소속 기관별 논문 수',
+                chartArea: {width: '50%'},
+                legend: 'none',
                 hAxis: {
-                    title: 'Number of Papers',
-                    minValue: 0,
+                    textStyle: {
+                        fontSize: 10  // 축 레이블의 글씨 크기를 축소
+                    },
                 },
                 vAxis: {
-                    title: 'Affiliation'
-                },
-                chartArea: {width: '50%'},
-                legend: 'none'
+                    textStyle: {
+                        fontSize: 10  // 세로축 레이블 크기 설정
+                    }
+                }
             };
-
+        
             var chart = new google.visualization.BarChart(document.getElementById('affiliationChart'));
             chart.draw(data, options);
         }
-    </script>
+        
 
-    <!-- 나라별 논문 수 차트를 그리는 스크립트 -->
-    <script type="text/javascript">
-        google.charts.load('current', {'packages':['corechart']});
-
-        google.charts.setOnLoadCallback(drawChart);
-
-        function drawChart() {
+        function drawCountryChart() {
             var data = new google.visualization.DataTable();
             data.addColumn('string', 'Country');
-            data.addColumn('number', 'Number of Papers');
-
+            data.addColumn('number', '논문 수');
             data.addRows([
                 {% for country_name, paper_count in country_data %}
                     ['{{ country_name }}', {{ paper_count }}],
@@ -157,14 +226,7 @@
             ]);
 
             var options = {
-                title: 'Number of Papers per Country',
-                hAxis: {
-                    title: 'Number of Papers',
-                    minValue: 0,
-                },
-                vAxis: {
-                    title: 'Country'
-                },
+                title: '국가별 논문 수',
                 chartArea: {width: '50%'},
                 legend: 'none'
             };
@@ -172,19 +234,11 @@
             var chart = new google.visualization.BarChart(document.getElementById('countryChart'));
             chart.draw(data, options);
         }
-    </script>
 
-    <!-- 키워드 탑 10 -->
-    <script type="text/javascript">
-        google.charts.load('current', {'packages':['corechart']});
-
-        google.charts.setOnLoadCallback(drawChart);
-
-        function drawChart() {
+        function drawKeywordChart() {
             var data = new google.visualization.DataTable();
             data.addColumn('string', 'Keyword');
             data.addColumn('number', 'Count');
-
             data.addRows([
                 {% for keyword, count in top_keywords %}
                     ['{{ keyword }}', {{ count }}],
@@ -192,14 +246,7 @@
             ]);
 
             var options = {
-                title: 'Top 10 Keywords',
-                hAxis: {
-                    title: 'Count',
-                    minValue: 0,
-                },
-                vAxis: {
-                    title: 'Keyword'
-                },
+                title: '많이 사용된 Top 10 키워드',
                 chartArea: {width: '50%'},
                 legend: 'none'
             };
@@ -208,5 +255,4 @@
             chart.draw(data, options);
         }
     </script>
-</body>
-</html>
+{% endblock %}
