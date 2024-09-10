@@ -4,13 +4,13 @@ python manage.py runserver
 migrate
 python manage.py migrate
 
-메인으로 옮기기
+깃
+-----------------
 git checkout main
-
-현재 브랜치 확인
-git branch
-
-메인꺼 가져오기
 git pull origin main
-
+git merge develop_jh
 git add .
+git commit
+git push origin main
+
+git branch

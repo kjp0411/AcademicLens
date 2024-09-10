@@ -15,6 +15,7 @@ import torch
 import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
 import requests
+from django.db.models import Count, Q
 # gpt api 라이브러리
 import openai
 from django.conf import settings
@@ -49,11 +50,14 @@ def search(request):
     query = request.GET.get('query', '')
     years = request.GET.getlist('year')
     publishers = request.GET.getlist('publisher')
-    author = request.GET.get('author')
+    author = request.GET.get('author-search')
     countries = request.GET.getlist('country')
     search_query = query
     news_type = request.GET.get('news_type', 'international')  # 기본값을 'international'로 설정
-
+    order = request.GET.get('order', 'desc')
+    sort_by = request.GET.get('sort_by', 'title')
+    items_per_page = int(request.GET.get('items_per_page', 10)) # 기본값 10
+    
     related_terms = []
     if query:
         related_terms = top_5_related_words(query)
@@ -62,7 +66,16 @@ def search(request):
     
     # 기본 쿼리셋 생성
     papers = Paper.objects.filter(id__in=paper_ids)
-
+    
+    # 정렬 처리
+    if sort_by == 'title':
+        # 정확도순: 제목에 검색어가 포함된 횟수로 정렬
+        papers = papers.annotate(search_rank=Count('title', filter=Q(title__icontains=query)))
+        papers = papers.order_by('-search_rank' if order == 'desc' else 'search_rank')
+    elif sort_by == 'latest':
+        # 최신순
+        papers = papers.order_by('date' if order == 'asc' else '-date')
+        
     # 연도 필터링
     if years:
         papers = papers.filter(date__year__in=years)
@@ -81,21 +94,39 @@ def search(request):
         paper_ids_by_countries = PaperCountry.objects.filter(country__name__in=countries).values_list('paper_id', flat=True)
         papers = papers.filter(id__in=paper_ids_by_countries)
 
-    # 정렬 및 페이징 처리
-    ordered_papers = sorted(papers, key=lambda paper: paper_ids.index(paper.id))
-    paginator = Paginator(ordered_papers, 20)
+    # 필터링된 논문 개수
+    total_results = papers.count()
+    
+    # 페이징 처리
+    paginator = Paginator(papers, items_per_page)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
+    
+    # 현재 페이지 그룹 계산 (10개 단위)
+    current_page = page_obj.number
+    current_group_start = (current_page - 1) // 10 * 10 + 1
+    current_group_end = min(current_group_start + 9, paginator.num_pages)
+    
+    # 페이지 그룹 리스트 생성
+    current_group_pages = list(range(current_group_start, current_group_end + 1))
     
     # 저자 및 키워드 추가
     papers_with_authors_and_keywords = []
     for paper in page_obj:
         authors = Author.objects.filter(paperauthor__paper_id=paper.id)
         keywords = Keyword.objects.filter(paperkeyword__paper_id=paper.id)
+        affiliations = Affiliation.objects.filter(paperaffiliation__paper_id=paper.id)
+        
+        # 논문 내 국가 정보 수집 및 중복 제거
+        countries = PaperCountry.objects.filter(paper_id=paper.id).select_related('country')
+        unique_countries = list(set([country.country.name for country in countries]))
+        
         papers_with_authors_and_keywords.append({
             'paper': paper,
             'authors': authors,
             'keywords': keywords,
+            'affiliations': affiliations,
+            'countries': unique_countries,  # 중복 제거된 국가 목록 추가
         })
 
     # 연도 및 발행처별 논문 수 계산
@@ -145,6 +176,12 @@ def search(request):
         'selected_years': years,
         'selected_publishers': publishers,
         'selected_countries': countries,
+        'total_results': total_results,
+        'author': author,
+        'order': order,
+        'sort_by': sort_by,
+        'items_per_page': items_per_page,
+        'current_group_pages': current_group_pages,
     }
     return render(request, 'search.html', context)
 

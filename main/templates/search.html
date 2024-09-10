@@ -1,5 +1,6 @@
 {% extends 'searchBase.html' %}
 {% load static %}
+{% load highlight %}
 
 {% block title %}AcademicLens{% endblock %}
 
@@ -8,7 +9,8 @@
     <div class="content-container">
         <div class="filter-container">
             <div class="limSearch">
-                <p> 검색결과 좁혀 보기 </p>
+                <p> 필터 </p>
+                <button type="button" class="reset-btn" id="reset-filters">초기화</button>
             </div>
             <form name="group" method="GET" action="{% url 'search' %}">
                 <input type="hidden" name="query" value="{{ query }}">
@@ -24,7 +26,7 @@
                             <summary> 발행연도 </summary>
                             <div>
                                 <ul class="contList year" data-header="발행연도">
-                                    <div id="mCSB_1" class="mCustomScrollBox" tabindex="0" style="max-height: 120px;">
+                                    <div id="mCSB_1" class="mCustomScrollBox" tabindex="0" style="max-height: 250px;">
                                         <div id="mCSB_1_container" class="mCSB_1_container" style="position:relative; top:0; left:0;" dir="ltr">
                                             <li>
                                                 <input type="checkbox" id="year_2024" name="year" value="2024" {% if '2024' in selected_years %}checked{% endif %}>
@@ -75,7 +77,6 @@
                                                 </label>
                                             </li>
                                         </div>
-                                        <div id="mCSB_1_scrollbar_vertical" class="mCSB_scrollTools" style="display: block;"></div>
                                     </div>
                                 </ul>
                             </div>
@@ -119,12 +120,12 @@
                         </details>
                         <br><br>
                         <details open>
-                            <summary> 저자 검색 </summary> <br>
+                            <summary> 저자 검색 </summary>
                             <div>
                                 <ul class="contList author" data-header="저자">
                                     <div id="mCSB_3" class="mCustomScrollBox" tabindex="2" style="max-height: 120px;">
                                         <div id="mCSB_3_container" class="mCSB_3_container" style="position:relative; top:0; left:0;" dir="ltr">
-                                            <input type="text" id="author" name="author" value="{{ author }}">
+                                            <input type="text" id="author-search" name="author-search" {% if author %} value="{{ author }}" {% endif %}>
                                         </div>
                                     </div>
                                 </ul>
@@ -132,7 +133,7 @@
                         </details>
                         <br><br>
                         <details open>
-                            <summary> 국가 </summary> <br>
+                            <summary> 국가 </summary>
                             <div>
                                 <ul class="contList country" data-header="국가">
                                     <div id="mCSB_4" class="mCustomScrollBox" tabindex="3">
@@ -155,51 +156,116 @@
                         </details>
                     </li>
                 </ul>
-                <button type="submit">검색</button>
+                <button type="submit" class="filter-search">검색</button>
             </form>
         </div>
         <div class="searchResult">
+            <div class="search-header">
+                <div class="search-query-container">
+                    <span class="search-query">
+                        검색키워드 &nbsp;&nbsp;&nbsp; <span class="highlight">{{ query }}</span>&nbsp;&nbsp;&nbsp; (검색결과 {{ total_results }}건)
+                    </span>
+                    <div class="analysis-button-container">
+                        <form action="{% url 'total_graph' %}" method="get" id="analysis-form">
+                            <input type="hidden" name="query" id="analysis-query">
+                            <button type="submit"> 분석결과보기 </button>
+                        </form>
+                    </div>
+                </div>
+                <div class="search-options">
+                    <div class="left-options">
+                        <input type="checkbox" name="select_all" id="select-all"> &nbsp;&nbsp;&nbsp;
+                        <button type="button" class="check-save-btn" id="check-save-btn">저장하기</button>
+                    </div>
+                    <div class="right-options">
+                        <select id="sort-by" name="sort_by">
+                            <option value="title" {% if sort_by == 'title' %}selected{% endif %}>정확도순</option>
+                            <option value="latest" {% if sort_by == 'latest' %}selected{% endif %}>최신순</option>
+                        </select>
+                        <select id="sort-order" name="order">
+                            <option value="desc" {% if order == 'desc' %}selected{% endif %}>내림차순</option>
+                            <option value="asc" {% if order == 'asc' %}selected{% endif %}>오름차순</option>
+                        </select>
+                        <select id="items-per-page" name="items_per_page">
+                            <option value="10" {% if items_per_page == 10 %}selected{% endif %}>10개씩</option>
+                            <option value="20" {% if items_per_page == 20 %}selected{% endif %}>20개씩</option>
+                            <option value="30" {% if items_per_page == 30 %}selected{% endif %}>30개씩</option>
+                            <option value="40" {% if items_per_page == 40 %}selected{% endif %}>40개씩</option>
+                            <option value="50" {% if items_per_page == 50 %}selected{% endif %}>50개씩</option>
+                        </select>
+                    </div>
+                    
+                </div>
+            </div>
+            <!-- 검색 결과 -->
             {% if papers_with_authors_and_keywords %}
                 {% for item in papers_with_authors_and_keywords %}
                     <div class="cont">
-                        <div class="title-container">
-                            <p class="title">
-                                <strong><a href="{% url 'paper_detail' item.paper.id %}">
-                                    <span class="highlight">{{ item.paper.title }}</span>
-                                </a></strong>
-                            </p>
-                            <button class="save-btn">
-                                <img src="{% static 'image/heart-empty.png' %}" alt="save" class="save-icon">
-                            </button>
+                        <div class="checkbox-container">
+                            <input type="checkbox" name="selected_papers" value="{{ item.paper.id }}" class="paper-checkbox">
                         </div>
-                        <div class="author-container">
-                            <p class="author">
-                                {% if item.authors|length > 1 %}
-                                    {{ item.authors.0.name }} 외 {{ item.authors|length|add:"-1" }}인
-                                {% else %}
-                                    {{ item.authors.0.name }}
+                        <div class="cont-container">
+
+                            <div class="title-container">
+                                <p class="title">
+                                    <strong><a href="{% url 'paper_detail' item.paper.id %}">
+                                        {{ item.paper.title|highlight:query }}
+                                    </a></strong>                                                                
+                                </p>
+                                <button class="save-btn">
+                                    <img src="{% static 'image/heart-empty.png' %}" alt="save" class="save-icon">
+                                </button>
+                            </div>
+                            <div class="preAbstract-container">
+                                <p class="preAbstract">
+                                    <a href="{% url 'paper_detail' item.paper.id %}">{{ item.paper.abstract|truncatechars:250 }}</a>
+                                </p>
+                            </div>
+                            {% if item.keywords %}
+                            <div class="keywords-container">
+                                <p class="keyword">
+                                    {% for keyword in item.keywords %}
+                                        # {{ keyword.keyword_name }}{% if not forloop.last %} {% endif %}
+                                    {% endfor %}
+                                </p>
+                            </div>
+                            {% endif%}
+                            <div class="etc-container">
+                                <!-- 저자 -->
+                                {% if item.authors %}
+                                    {% if item.authors|length > 1 %}
+                                        {{ item.authors.0.name }} 외 {{ item.authors|length|add:"-1" }}인
+                                    {% else %}
+                                        {{ item.authors.0.name }}
+                                    {% endif %}
+                                    &nbsp;&nbsp;|&nbsp;&nbsp;
                                 {% endif %}
-                            </p>
+                                
+                                <!-- 연도 -->
+                                {{ item.paper.date|date:"Y" }}
+                                
+                                <!-- 소속 -->
+                                {% comment %} {% if item.affiliations %}
+                                    &nbsp;&nbsp;|&nbsp;&nbsp;
+                                    {% for affiliation in item.affiliations %}
+                                        {{ affiliation.name }}{% if not forloop.last %} , {% endif %}
+                                    {% endfor %}
+                                {% endif %} {% endcomment %}
+                                
+                                <!-- 국가 -->
+                                {% if item.countries %}
+                                    &nbsp;&nbsp;|&nbsp;&nbsp;
+                                    {% for country in item.countries %}
+                                        {{ country }}{% if not forloop.last %} , {% endif %}
+                                    {% endfor %}
+                                {% endif %}
+                                
+                                <!-- 발행처 -->
+                                {% if item.paper.publisher %}
+                                    &nbsp;&nbsp;|&nbsp;&nbsp;{{ item.paper.publisher }}
+                                {% endif %}
+                            </div>
                         </div>
-                        <div class="preAbstract-container">
-                            <p class="preAbstract">
-                                <a href="{% url 'paper_detail' item.paper.id %}">{{ item.paper.abstract|truncatechars:250 }}</a>
-                            </p>
-                        </div>
-                        <div class="date-publisher-container">
-                            <p class="preDate">
-                                {{ item.paper.date|date:"Y-m-d" }}&nbsp;&nbsp;|&nbsp;&nbsp;{{ item.paper.publisher }}
-                            </p>
-                        </div> 
-                        {% if item.keywords %}
-                        <div class="keywords-container">
-                            <p class="keyword">
-                                {% for keyword in item.keywords %}
-                                    # {{ keyword.keyword_name }}{% if not forloop.last %} {% endif %}
-                                {% endfor %}
-                            </p>
-                        </div>
-                        {% endif%}
                     </div>
                     <hr>
                 {% endfor %}
@@ -208,17 +274,21 @@
                 <div class="pagination">
                     <span class="step-links">
                         {% if page_obj.has_previous %}
-                            <a href="?query={{ query }}{% for year in selected_years %}&year={{ year }}{% endfor %}{% for publisher in selected_publishers %}&publisher={{ publisher }}{% endfor %}&page=1">&laquo; 첫 페이지</a>
-                            <a href="?query={{ query }}{% for year in selected_years %}&year={{ year }}{% endfor %}{% for publisher in selected_publishers %}&publisher={{ publisher }}{% endfor %}&page={{ page_obj.previous_page_number }}"> < </a>
+                            <a href="?query={{ query }}{% for year in selected_years %}&year={{ year }}{% endfor %}{% for publisher in selected_publishers %}&publisher={{ publisher }}{% endfor %}&page=1">&laquo;</a>
+                            <a href="?query={{ query }}{% for year in selected_years %}&year={{ year }}{% endfor %}{% for publisher in selected_publishers %}&publisher={{ publisher }}{% endfor %}&page={{ page_obj.previous_page_number }}">&lsaquo;</a>
                         {% endif %}
                         
-                        <span class="current">
-                            페이지 {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}
-                        </span>
+                        {% for num in current_group_pages %}
+                            {% if page_obj.number == num %}
+                                <a href="#" class="current">{{ num }}</a>
+                            {% else %}
+                                <a href="?query={{ query }}{% for year in selected_years %}&year={{ year }}{% endfor %}{% for publisher in selected_publishers %}&publisher={{ publisher }}{% endfor %}&page={{ num }}">{{ num }}</a>
+                            {% endif %}
+                        {% endfor %}
                         
                         {% if page_obj.has_next %}
-                            <a href="?query={{ query }}{% for year in selected_years %}&year={{ year }}{% endfor %}{% for publisher in selected_publishers %}&publisher={{ publisher }}{% endfor %}&page={{ page_obj.next_page_number }}"> > </a>
-                            <a href="?query={{ query }}{% for year in selected_years %}&year={{ year }}{% endfor %}{% for publisher in selected_publishers %}&publisher={{ publisher }}{% endfor %}&page={{ page_obj.paginator.num_pages }}"> 마지막 페이지 &raquo; </a>
+                            <a href="?query={{ query }}{% for year in selected_years %}&year={{ year }}{% endfor %}{% for publisher in selected_publishers %}&publisher={{ publisher }}{% endfor %}&page={{ page_obj.next_page_number }}">&rsaquo;</a>
+                            <a href="?query={{ query }}{% for year in selected_years %}&year={{ year }}{% endfor %}{% for publisher in selected_publishers %}&publisher={{ publisher }}{% endfor %}&page={{ page_obj.paginator.num_pages }}">&raquo;</a>
                         {% endif %}
                     </span>
                 </div>
@@ -226,17 +296,13 @@
                 <p>검색 결과가 없습니다.</p>
             {% endif %}
         </div>
+
+        <!-- 뉴스 -->
         <div class="news-container">
-            <h2>뉴스 검색 결과</h2>
-        
-            <!-- 국내 뉴스와 국외 뉴스 전환 라디오 버튼 -->
-            <div>
-                <label>
-                    <input type="radio" name="news-type" value="domestic" {% if news_type == 'domestic' %}checked{% endif %}> 국내 뉴스
-                </label>
-                <label>
-                    <input type="radio" name="news-type" value="international" {% if news_type == 'international' %}checked{% endif %}> 국외 뉴스
-                </label>
+            <!-- 국내 뉴스 국외 뉴스 전환 버튼 -->
+            <div class="news-type">
+                <button class="type_button" id="button_kor">국내</button>
+				<button class="type_button type_active" id="button_inter">국외</button>
             </div>
         
             <div class="news-content">
@@ -244,9 +310,14 @@
                     <ul>
                     {% for article in articles|slice:":2" %}  <!-- 뉴스 2개만 출력 -->
                         <li>
-                            <h2><a href="{{ article.url }}">{{ article.title }}</a></h2>
-                            <p>{{ article.description }}</p>
+                            <div class="news-title">
+                                <a href="{{ article.url }}" target="_blank">{{ article.title }}</a>
+                            </div>
+                            <div class="news-cont">
+                                {{ article.description }}
+                            </div>
                         </li>
+                        <br>
                     {% endfor %}
                     </ul>
                 {% else %}
@@ -258,41 +329,7 @@
 </div>
 
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        document.querySelectorAll('input[name="news-type"]').forEach(function(radio) {
-            radio.addEventListener('change', function(event) {
-                const newsType = this.value;
-                const query = '{{ query }}'; // 현재 검색어를 유지합니다.
-
-                fetch(`{% url 'search' %}?query=${query}&news_type=${newsType}`, {
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest'
-                    }
-                })
-                .then(response => response.json())
-                .then(data => {
-                    const newsContent = document.querySelector('.news-content');
-                    if (data.articles.length > 0) {
-                        let articlesHtml = '<ul>';
-                        data.articles.slice(0, 2).forEach(article => {
-                            articlesHtml += `
-                                <li>
-                                    <h2><a href="${article.url}">${article.title}</a></h2>
-                                    <p>${article.description}</p>
-                                </li>
-                            `;
-                        });
-                        articlesHtml += '</ul>';
-                        newsContent.innerHTML = articlesHtml;
-                    } else {
-                        newsContent.innerHTML = '<p>검색 결과가 없습니다.</p>';
-                    }
-                })
-                .catch(error => console.error('Error:', error));
-            });
-        });
-    });
-
+    // 하트 저장 버튼 전환
     document.addEventListener('DOMContentLoaded', function() {
         const saveButtons = document.querySelectorAll('.save-btn');
         saveButtons.forEach(button => {
@@ -308,6 +345,202 @@
                 }
             });
         });
+    });
+
+    // 필터 초기화 버튼
+    document.getElementById('reset-filters').addEventListener('click', function() {
+        // 모든 체크박스를 해제
+        document.querySelectorAll('.filter-container input[type="checkbox"]').forEach(function(checkbox) {
+            checkbox.checked = false;
+        });
+    
+        // 저자 검색 필드 비우기
+        document.getElementById('author-search').value = '';
+    
+        // 필터링 관련된 파라미터를 URL에서 제거
+        const url = new URL(window.location.href);
+    
+        // 필터링 관련된 쿼리 파라미터 제거
+        url.searchParams.delete('year');
+        url.searchParams.delete('publisher');
+        url.searchParams.delete('author-search');
+        url.searchParams.delete('country');
+    
+        // URL을 새로 고침 없이 업데이트
+        window.history.replaceState(null, '', url.toString());
+    });
+    
+    
+    // 체크박스 해제 시 파라미터 제거
+    document.querySelectorAll('.filter-container input[type="checkbox"]').forEach(function(checkbox) {
+        checkbox.addEventListener('change', function() {
+            const url = new URL(window.location.href);
+            const paramName = this.name;
+    
+            // 현재 필터에서 선택된 모든 체크박스 값을 가져옴
+            const selectedValues = Array.from(document.querySelectorAll(`.filter-container input[name="${paramName}"]:checked`))
+                .map(checkedBox => checkedBox.value);
+    
+            // 기존 파라미터를 모두 삭제
+            url.searchParams.delete(paramName);
+    
+            // 선택된 값이 있는 경우만 파라미터 추가
+            selectedValues.forEach(value => {
+                url.searchParams.append(paramName, value);
+            });
+    
+            // URL을 새로 고침 없이 업데이트
+            window.history.replaceState(null, '', url.toString());
+        });
+    });
+    
+    document.querySelector('form[name="group"]').addEventListener('submit', function(event) {
+        const url = new URL(window.location.href);
+    
+        // 선택되지 않은 파라미터를 제거
+        ['year', 'publisher', 'country'].forEach(paramName => {
+            const selectedValues = Array.from(document.querySelectorAll(`.filter-container input[name="${paramName}"]:checked`))
+                .map(checkedBox => checkedBox.value);
+    
+            url.searchParams.delete(paramName);
+    
+            selectedValues.forEach(value => {
+                url.searchParams.append(paramName, value);
+            });
+        });
+    
+        // 저자 검색 필드가 비어있다면 파라미터 제거
+        if (!document.getElementById('author-search').value) {
+            url.searchParams.delete('author-search');
+        }
+    
+        // URL을 새로 고침 없이 업데이트
+        window.history.replaceState(null, '', url.toString());
+    
+        // submit을 진행하도록 하기 위해 event.preventDefault()를 호출하지 않습니다.
+    });
+    
+    document.querySelector('.filter-search').addEventListener('click', function(event) {
+        event.preventDefault(); // 기본 폼 제출 동작을 막습니다.
+    
+        const url = new URL(window.location.href);
+    
+        // 필터링 관련된 모든 체크박스를 수집합니다.
+        document.querySelectorAll('.filter-container input[type="checkbox"]').forEach(function(checkbox) {
+            const paramName = checkbox.name;
+    
+            // 현재 필터에서 선택된 모든 체크박스 값을 가져옴
+            const selectedValues = Array.from(document.querySelectorAll(`.filter-container input[name="${paramName}"]:checked`))
+                .map(checkedBox => checkedBox.value);
+    
+            // 기존 파라미터를 모두 삭제하고, 새로운 값을 추가합니다.
+            url.searchParams.delete(paramName);
+            selectedValues.forEach(value => {
+                url.searchParams.append(paramName, value);
+            });
+        });
+    
+        // 저자 검색 필드 값 갱신
+        const authorSearch = document.getElementById('author-search').value;
+        url.searchParams.delete('author-search');
+        if (authorSearch) {
+            url.searchParams.set('author-search', authorSearch);
+        }
+    
+        // 갱신된 URL로 폼을 제출합니다.
+        window.location.href = url.toString();
+    });
+    
+    // 체크박스 선택
+    document.getElementById('select-all').addEventListener('change', function() {
+        const checkboxes = document.querySelectorAll('.paper-checkbox');
+        const isChecked = this.checked;
+        checkboxes.forEach(function(checkbox) {
+            checkbox.checked = isChecked;
+        });
+    });
+
+    // 정렬
+    document.addEventListener('DOMContentLoaded', function() {
+        // 오름차순/내림차순 콤보박스 이벤트 리스너
+        document.getElementById('sort-order').addEventListener('change', function() {
+            const url = new URL(window.location.href);
+            url.searchParams.set('order', this.value);
+            window.location.href = url.toString();
+        });
+    
+        // 정렬 기준 콤보박스 이벤트 리스너
+        document.getElementById('sort-by').addEventListener('change', function() {
+            const url = new URL(window.location.href);
+            url.searchParams.set('sort_by', this.value);
+            window.location.href = url.toString();
+        });
+    
+        // 페이지당 항목 수 콤보박스 이벤트 리스너
+        document.getElementById('items-per-page').addEventListener('change', function() {
+            const url = new URL(window.location.href);
+            url.searchParams.set('items_per_page', this.value);
+            window.location.href = url.toString();
+        });
+    });
+    
+
+    // 뉴스 국내 국외 전환 함수
+    document.addEventListener('DOMContentLoaded', function() {
+        // 버튼 요소를 가져옴
+        const buttonKor = document.getElementById('button_kor');
+        const buttonInter = document.getElementById('button_inter');
+        const newsContent = document.querySelector('.news-content');
+        const query = '{{ query }}'; // 현재 검색어를 유지합니다.
+    
+        // 버튼 클릭 이벤트 핸들러
+        if (buttonKor && buttonInter) {
+            buttonKor.addEventListener('click', function() {
+                buttonKor.classList.add('type_active');
+                buttonInter.classList.remove('type_active');
+                loadNews('domestic');
+            });
+    
+            buttonInter.addEventListener('click', function() {
+                buttonKor.classList.remove('type_active');
+                buttonInter.classList.add('type_active');
+                loadNews('international');
+            });
+        }
+    
+        // 뉴스 로드 함수
+        function loadNews(type) {
+            fetch(`{% url 'search' %}?query=${query}&news_type=${type}`, {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                let articlesHtml = '';
+                if (data.articles.length > 0) {
+                    articlesHtml = '<ul>';
+                    data.articles.slice(0, 2).forEach(article => {
+                        articlesHtml += `
+                            <li>
+                                <div class="news-title">
+                                    <a href="${article.url}" target="_blank">${article.title}</a>
+                                </div>
+                                <div class="news-cont">
+                                    ${article.description}
+                                </div>
+                            </li>
+                            <br>
+                        `;
+                    });
+                    articlesHtml += '</ul>';
+                } else {
+                    articlesHtml = '<p>검색 결과가 없습니다.</p>';
+                }
+                newsContent.innerHTML = articlesHtml;
+            })
+            .catch(error => console.error('Error:', error));
+        }
     });
 </script>
 {% endblock %}

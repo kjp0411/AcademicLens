@@ -1,26 +1,21 @@
-body {
-    font-family: Arial, sans-serif;
-    margin: 0;
-    padding: 0;
-}
-
 .paper-container {
-    max-width: 96%;
-    margin: 20px auto;
+    max-width: 80%;
+    margin: 30px auto;
     padding: 20px;
-    background-color: #fff;
-}
-
-.paper-title {
-    font-size: 2em;
-    margin-bottom: 20px;
-    color: #333;
 }
 
 .title-container {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    margin-bottom: 20px;
+}
+
+.paper-title {
+    font-size: 1.8em;
+    font-weight: bold;
+    color: #333;
+    margin: 0;
 }
 
 .save-btn {
@@ -35,47 +30,80 @@ body {
 }
 
 .paper-metadata {
+    display: flex;
+    flex-direction: column;
     margin-bottom: 20px;
 }
 
+.paper-metadata strong {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 8px;
+}
+
 .paper-metadata p {
-    margin: 5px 0;
+    margin: 0 0 10px;
     color: #333;
 }
 
 .paper-abstract {
     margin-bottom: 20px;
+    padding: 10px;
+    background-color: #f2f2f2;
+    border-radius: 4px;
 }
 
 .paper-abstract h2 {
-    font-size: 1.5em;
+    font-size: 1.4em;
+    font-weight: bold;
     margin-bottom: 10px;
-    color: #333;
 }
 
 .paper-abstract p {
     color: #333;
+    line-height: 1.6;
 }
 
 .paper-keywords {
     margin-top: 20px;
 }
 
+.paper-keywords strong {
+    font-weight: bold;
+}
+
 .paper-keywords p {
     margin: 5px 0;
-    color: #333;
 }
 
 .keyword {
     display: inline-block;
-    margin-right: 5px;
+    margin-right: 10px;
+    margin-bottom: 5px;
     padding: 5px 10px;
     background-color: #007BFF;
-    color: #fff;
-    border-radius: 3px;
+    color: #fff !important;
+    border-radius: 20px;
     text-decoration: none;
+    font-size: 0.9em;
 }
 
 .keyword:hover {
-    background-color: #0056b3;
+    background-color: #0061c8;
+}
+
+.author-link, .country-link, .affiliation-link {
+    text-decoration: none;
+    color: #007BFF;
+    transition: font-weight 0.3s ease;
+}
+
+.author-link:hover, .country-link:hover, .affiliation-link:hover {
+    font-weight: bold;
+}
+
+hr {
+    border: none;
+    border-top: 1px solid #ccc;
+    margin: 20px 0;
 }
