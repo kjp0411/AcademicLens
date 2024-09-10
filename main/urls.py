@@ -42,5 +42,8 @@ urlpatterns = [
     path('post/', include('post.urls', namespace='post')),
     path('', lambda r: redirect('accounts:login'), name='root'),
     path('board/', include('board.urls')),
+
+    path('login/', views.login_html, name='login'),
+    path('signup/', views.signup_html, name='signup'),
 ]
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

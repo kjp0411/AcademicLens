@@ -1153,3 +1153,11 @@ def author_get_total_papers(request):
     data = {'total_papers': row[0]}
     
     return JsonResponse(data)
+
+# 로그인 html 출력 함수
+def login_html(request):
+    return render(request, 'login.html')
+
+# 회원가입 html 출력 함수
+def signup_html(request):
+    return render(request, 'signup.html')

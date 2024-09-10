@@ -14,6 +14,7 @@
     <script src="https://d3js.org/d3.v6.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/wordcloud2.js/1.0.6/wordcloud2.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -41,7 +42,7 @@
         .header {
             display: flex;
             justify-content: space-between;
-            align-items: center
+            align-items: center;
         }
         .header .search {
             margin-right: 20px;
@@ -60,12 +61,110 @@
             fill: #000;
         }
         #wordcloud {
-            width: 600px;
-            height: 400px;
-            margin: auto;
             border: 1px solid #ddd;
             box-shadow: 2px 2px 12px rgba(0, 0, 0, 0.1);
-            position: relative
+            position: relative;
+        }
+        #network-container {
+            display: flex;
+            gap: 20px;
+        }
+        #network {
+            flex: 1;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 10px;
+            background-color: #fff;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+        #analysisBox {
+            flex: 1;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            background-color: #f9f9f9;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .chart-title {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #333;
+        }
+        .analyze-btn {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 10px 15px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        .analyze-btn:hover {
+            background-color: #0056b3;
+        }
+        .analyze-btn i {
+            margin-right: 5px;
+        }
+        .analysis-title {
+            font-size: 1.25em;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .analysis-result {
+            font-size: 1em;
+            color: #666;
+        }
+        .analysis-result p {
+            margin: 0;
+        }
+
+        /* 워드클라우드와 네트워크 분석 결과를 나란히 배치하기 위한 flexbox 설정 */
+        .keyword-container {
+            display: flex;
+            justify-content: space-between;
+            gap: 20px; /* 워드클라우드와 분석 결과 사이의 간격 */
+            margin-top: 20px;
+        }
+
+        #wordcloud {
+            width: 100%;
+            /* 부모 요소의 100% 너비를 사용 */
+            max-width: 400px;
+            /* 최대 너비를 400px로 제한 */
+            height: 400px;
+            /* 높이는 400px로 고정 */
+            margin: 0 auto;
+            /* 자동으로 좌우 가운데 정렬 */
+            border: 1px solid #ddd;
+            box-shadow: 2px 2px 12px rgba(0, 0, 0, 0.1);
+            position: relative;
+        }
+
+        #analysisBoxKeywords {
+            width: 50%; /* 네트워크 분석 결과가 차지할 비율 */
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background-color: #f9f9f9;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        @media screen and (max-width: 768px) {
+            .keyword-container {
+                flex-direction: column; /* 작은 화면에서는 세로로 배치 */
+            }
+
+            #wordcloud, #analysisBoxKeywords {
+                width: 100%; /* 작은 화면에서 두 요소가 100% 차지 */
+                margin-bottom: 20px;
+            }
         }
     </style>
 </head>
@@ -80,10 +179,21 @@
         </div>
         <div class="main">
             <div class="chart">
-                <h3>저자 정보</h3>
-                <div id="network"></div>
-                <button id="analyzeButton">네트워크 데이터 분석</button>
-                <div id="analysisResult"></div>
+                <div class="chart-header">
+                    <h3 class="chart-title">저자 정보</h3>
+                    <button id="analyzeButton" class="analyze-btn">
+                        <i class="fas fa-chart-network"></i> 네트워크 데이터 분석
+                    </button>
+                </div>
+                <div id="network-container">
+                    <div id="network"></div>
+                    <div id="analysisBox">
+                        <h4 class="analysis-title">네트워크 데이터 분석 결과</h4>
+                        <div id="analysisResult" class="analysis-result">
+                            <p>분석 결과가 여기에 표시됩니다.</p>
+                        </div>
+                    </div>
+                </div>
             </div>
             <div class="graph">
                 <h3>연도별 논문 수</h3>
@@ -94,11 +204,26 @@
                 <ul id="paperList"></ul>
             </div>
             <div class="keywords">
-                <h3>TOP 키워드</h3>
-                <div id="wordcloud"></div>
+                <div class="chart-header">
+                    <h3 class="chart-title">TOP 키워드</h3>
+                    <button id="analyzeButtonKeywords" class="analyze-btn">
+                        <i class="fas fa-chart-network"></i> 네트워크 데이터 분석
+                    </button>
+                </div>
+                <div class="keyword-container">
+                    <div id="wordcloud"></div>
+                    <div id="analysisBoxKeywords">
+                        <h4 class="analysis-title">네트워크 데이터 분석 결과</h4>
+                        <div id="analysisResultKeywords" class="analysis-result">
+                            <p>분석 결과가 여기에 표시됩니다.</p>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
+
+
 
     <script>
         function getCookie(name) {
@@ -134,7 +259,7 @@
         async function fetchPaperCountsByYear() {
             const response = await fetch(`/api/author_paper_counts_by_year/?name=${encodeURIComponent(authorName)}`);
             if (!response.ok) {
-                console.error('Network response was not ok', response.statusText);
+                console.error('네트워크 응답이 올바르지 않습니다', response.statusText);
                 return;
             }
             const data = await response.json();
@@ -176,13 +301,13 @@
                 renderPaperChart(data);
             }
         }).catch(error => {
-            console.error('Error fetching paper counts by year:', error);
+            console.error('연도별 논문 수 데이터를 가져오는 중 오류 발생:', error);
         });
 
         async function fetchRecentPapers() {
             const response = await fetch(`/api/author_recent_papers/?name=${encodeURIComponent(authorName)}`);
             if (!response.ok) {
-                console.error('Network response was not ok', response.statusText);
+                console.error('네트워크 응답이 올바르지 않습니다', response.statusText);
                 return;
             }
             const data = await response.json();
@@ -225,13 +350,13 @@
                 renderRecentPapers(data);
             }
         }).catch(error => {
-            console.error('Error fetching recent papers:', error);
+            console.error('최근 논문 데이터를 가져오는 중 오류 발생:', error);
         });
 
         async function fetchTotalPapers() {
             const response = await fetch(`/api/author_total_papers/?name=${encodeURIComponent(authorName)}`);
             if (!response.ok) {
-                console.error('Network response was not ok', response.statusText);
+                console.error('네트워크 응답이 올바르지 않습니다', response.statusText);
                 return;
             }
             const data = await response.json();
@@ -248,13 +373,13 @@
                 renderTotalPapers(totalPapers);
             }
         }).catch(error => {
-            console.error('Error fetching total papers:', error);
+            console.error('총 논문 수 데이터를 가져오는 중 오류 발생:', error);
         });
 
         async function fetchNetworkData() {
             const response = await fetch(`/author_network/?name=${encodeURIComponent(authorName)}`);
             if (!response.ok) {
-                console.error('Network response was not ok', response.statusText);
+                console.error('네트워크 응답이 올바르지 않습니다', response.statusText);
                 return;
             }
             const data = await response.json();
@@ -262,7 +387,7 @@
         }
 
         function visualizeNetwork(data) {
-            const width = 600;
+            const width = 400;
             const height = 400;
 
             const svg = d3.select("#network")
@@ -340,7 +465,7 @@
                 visualizeNetwork(data);
             }
         }).catch(error => {
-            console.error('Error fetching network data:', error);
+            console.error('네트워크 데이터를 가져오는 중 오류 발생:', error);
         });
 
         async function analyzeNetworkData(networkData) {
@@ -357,7 +482,7 @@
                 const data = await response.json();
                 document.getElementById('analysisResult').textContent = data.analysis_result;
             } else {
-                console.error('Error analyzing network data', response.statusText);
+                console.error('네트워크 데이터 분석 중 오류 발생:', response.statusText);
             }
         }
 
@@ -371,11 +496,13 @@
         }
 
         function generateWordCloud(words) {
+            const wordCount = words.length;
+
             WordCloud(document.getElementById('wordcloud'), {
                 list: words,
                 gridSize: 5,
                 weightFactor: function (size) {
-                    return size * 10;
+                    return Math.max(12, size * (wordCount > 50 ? 1 : 10 / wordCount) * 10); // 데이터가 적을수록 글씨가 커짐
                 },
                 fontFamily: 'Arial, sans-serif',
                 color: function() {
@@ -399,7 +526,7 @@
                 });
                 generateWordCloud(words);
             })
-            .catch(error => console.error('Error fetching data:', error));
+            .catch(error => console.error('키워드 데이터를 가져오는 중 오류 발생:', error));
     </script>
 </body>
 </html>
