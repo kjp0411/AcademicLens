@@ -4,8 +4,8 @@ import mariadb
 # mariadb 연결 설정
 conn = mariadb.connect(
     host="127.0.0.1",
-    port=3307,
-    user="root",
+    port=3306,
+    user="goorm",
     password="123456",
     database="capstone",
 )

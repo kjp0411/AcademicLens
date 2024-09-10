@@ -5,15 +5,15 @@ import ast  # 문자열을 리스트나 딕셔너리로 변환하기 위한 모�
 # mariadb 연결 설정(이건 개인별로 다르게 설정하면 됨)
 conn = mariadb.connect(
     host="127.0.0.1",
-    port=3307,
-    user="root",
+    port=3306,
+    user="goorm",
     password="123456",
     database="capstone",
 )
 cursor = conn.cursor()
 
 # CSV 파일 읽기
-csv_file = r"total_result.csv"
+csv_file = r"/home/kaihojun/capstone_file/total_result.csv"
 selected_columns = ["search", "title", "url", "author", "date", "citations", "publisher", "abstract", "affiliation", "keywords"]
 data = pd.read_csv(csv_file, usecols=selected_columns, encoding='utf-8')
 
