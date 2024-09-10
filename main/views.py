@@ -32,7 +32,7 @@ db_config = {
     'user': 'goorm',
     'password': '123456',
     'database': 'capstone',
-    'port':3307
+    'port':3306
 }
 
 # 메인 화면 논문 수, 소속 수
