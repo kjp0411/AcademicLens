@@ -24,7 +24,6 @@ from rest_framework.response import Response
 from braces.views import CsrfExemptMixin
 
 
-
 openai.api_key = ''
 
 db_config = {
@@ -32,7 +31,7 @@ db_config = {
     'user': 'goorm',
     'password': '123456',
     'database': 'capstone',
-    'port':3306
+    'port':3307
 }
 
 # 메인 화면 논문 수, 소속 수
