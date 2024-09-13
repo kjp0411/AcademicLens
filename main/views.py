@@ -302,6 +302,8 @@ def analyze(request):
     if 'query' in request.GET:
         user_keyword = request.GET['query']
         paper_ids = get_paper_ids(user_keyword)
+        papers = Paper.objects.filter(id__in=paper_ids)
+        total_results = papers.count()
 
         # MariaDB 데이터베이스 연결
         db = mariadb.connect(**db_config)
@@ -421,7 +423,8 @@ def analyze(request):
             'affiliation_data': affiliation_data,
             'country_data': country_data,
             'top_keywords': top_keywords,
-            'keyword': user_keyword
+            'keyword': user_keyword,
+            'total_results': total_results,
         }
 
         return render(request, 'total_graph.html', context)
