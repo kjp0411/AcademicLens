@@ -180,8 +180,8 @@
             <a href="{% url 'home' %}"><img src="{% static 'image/cap_logo.png' %}" alt="Logo" class="logo"></a>
         </div>
         <div class="auth-buttons">
-            <a href="{% url 'login' %}" class="btn-login">로그인</a>
-            <a href="{% url 'signup' %}" class="btn-signup">회원가입</a>
+            <a href="{% url 'accounts:login' %}" class="btn-login">로그인</a>
+            <a href="{% url 'accounts:signup' %}" class="btn-signup">회원가입</a>
         </div>
     </header>
     <main>

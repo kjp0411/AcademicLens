@@ -54,7 +54,7 @@ def login_check(request):
         
         if user is not None:
             login(request, user)
-            return redirect("post:post_list")
+            return redirect("/")
         else:
             messages.error(request, "로그인에 실패하셨습니다.")
             return redirect('accounts:login')
