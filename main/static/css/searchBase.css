@@ -98,6 +98,45 @@ body {
     background: #f0f0f0;
 }
 
+/* 네비게이션바 */
+.navbar {
+    background-color: #1E90FF; /* 네비게이션 바 배경색 */
+    overflow: hidden;
+    display: flex;
+    justify-content: center; /* 가운데 정렬 */
+    margin-bottom: 10px; /* 하단 여백 제거 */
+    width: 100%;
+}
+
+.navbar ul {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+}
+
+.navbar ul li {
+    float: left;
+}
+
+.navbar ul li a {
+    display: block;
+    color: white; /* 글자 색상 */
+    text-align: center;
+    padding: 10px 20px; /* 좀 더 넉넉한 padding */
+    text-decoration: none;
+}
+
+.navbar ul li a:hover {
+    background-color: #4682B4; /* 호버 시 배경색 */
+    color: white;
+}
+
+/* 메인 콘텐츠에 네비게이션바 높이만큼 여백 추가 */
+.main-content {
+    margin-top: 50px; /* 네비게이션바 높이만큼 여백 설정 */
+}
+
 /* 본문 */
 .content-container {
     display: flex;

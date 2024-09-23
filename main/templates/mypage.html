@@ -1,0 +1,136 @@
+{% extends 'base.html' %}
+
+{% load static %}
+
+{% block title %}AcademicLens{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- 사이드 메뉴 -->
+    <div class="sidebar">
+        <div class="sidebar-title">
+            <h2>마이페이지</h2>
+        </div>
+        <ul>
+            <li><a href="#" onclick="showContent('recommended')">추천논문</a></li><hr>
+            <li><a href="#" onclick="showContent('recent')">최근 본 논문</a></li><hr>
+            <li><a href="#" onclick="showContent('saved')">저장 논문</a></li><hr>
+            <li>
+                <button class="dropdown-btn" onclick="toggleAnalysis()">
+                    <span>분석저장소</span>
+                    <span class="icon">&#9660;</span> <!-- 아이콘을 오른쪽에 배치 -->
+                </button><hr>
+                <ul id="analysis-folder" class="dropdown-container" style="display: none;">
+                    <!-- 새 폴더 추가 버튼은 항상 마지막 -->
+                    <li id="add-folder-btn">
+                        <button class="new-folder" onclick="createNewFolder()">+ 새 폴더</button>
+                    </li>
+                </ul>
+            </li>
+        </ul>
+    </div>
+
+    <!-- 메인 콘텐츠 -->
+    <div class="main-content" id="content-area">
+        <!-- 기본 콘텐츠가 여기에 로드됩니다 -->
+        <h2>메인 콘텐츠를 여기에 표시</h2>
+        <p>왼쪽 메뉴에서 항목을 선택해주세요.</p>
+    </div>
+</div>
+
+<script>
+    function showContent(contentType) {
+        let url = "";
+    
+        if (contentType === "recommended") {
+            url = "/mypage/recommended-papers/";  // 추천 논문 URL
+        }
+        if (contentType === "recent") {
+            url = "/mypage/recent-papers/";  // 최근 본 논문 URL
+        }
+        if (contentType === "saved") {
+            url = "/mypage/saved-papers/";  // 저장 논문 URL
+        }
+        if (contentType === "analysis") {
+            url = "/mypage/analysis-file/";  // 분석 저장소 URL
+        }
+    
+        fetch(url)
+            .then(response => response.text())
+            .then(html => {
+                document.getElementById('content-area').innerHTML = html;
+                setupSaveButtons(); // 저장 버튼 클릭 이벤트 재설정
+            })
+            .catch(error => console.error('Error loading the content:', error));
+    }
+    
+    function toggleAnalysis() {
+        const folderContainer = document.getElementById('analysis-folder');
+        const icon = document.querySelector('.dropdown-btn .icon'); // 아이콘 요소만 선택
+    
+        if (folderContainer.style.display === 'none' || folderContainer.style.display === '') {
+            folderContainer.style.display = 'block';
+            icon.innerHTML = '&#9650;';  // ▲ 아이콘으로 변경
+        } else {
+            folderContainer.style.display = 'none';
+            icon.innerHTML = '&#9660;';  // ▼ 아이콘으로 변경
+        }
+    }
+    
+    function createNewFolder() {
+        const folderContainer = document.getElementById('analysis-folder');
+        const newFolder = document.createElement('li');
+        const folderName = prompt("새 폴더 이름을 입력하세요:");
+    
+        if (folderName && folderName.trim() !== "") {
+            // 새 폴더의 HTML 구조
+            newFolder.innerHTML = `
+                <div class="folder">
+                    <span class="folder-name">${folderName}</span>
+                    <button class="edit-btn" onclick="editFolderName(this)">&#9998;</button>
+                </div><hr>
+            `;
+    
+            // 새 폴더를 추가 버튼 바로 위에 추가
+            folderContainer.insertBefore(newFolder, document.getElementById('add-folder-btn'));
+        } else {
+            alert("폴더 이름을 입력해주세요.");
+        }
+    }
+    
+    function editFolderName(button) {
+        const folderNameElement = button.previousElementSibling;
+        const newFolderName = prompt("새 폴더 이름을 입력하세요:", folderNameElement.textContent);
+    
+        if (newFolderName && newFolderName.trim() !== "") {
+            folderNameElement.textContent = newFolderName;
+        } else {
+            alert("폴더 이름이 유효하지 않습니다.");
+        }
+    }
+    
+    // 하트 저장 버튼
+    function setupSaveButtons() {
+        const saveButtons = document.querySelectorAll('.save-btn');
+        
+        saveButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const saveIcon = this.querySelector('.save-icon');
+                const heartEmpty = "{% static 'image/heart-empty.png' %}";
+                const heartFilled = "{% static 'image/heart-filled.png' %}";
+    
+                if (saveIcon.src.includes('heart-empty.png')) {
+                    saveIcon.src = heartFilled;
+                } else {
+                    saveIcon.src = heartEmpty;
+                }
+            });
+        });
+    }
+    
+    // 페이지 로드 시 필요한 이벤트 리스너 설정
+    document.addEventListener('DOMContentLoaded', function() {
+        setupSaveButtons();
+    });
+</script>
+{% endblock %}
