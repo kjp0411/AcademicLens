@@ -1,23 +1,122 @@
-{% extends "accounts/layout.html" %}
-{% load static %}
-{% block head %}
-<link rel="stylesheet" href="{% static 'css/signup.css' %}">
-{% endblock%}
-{% block content %}
-<div id="main_container">
-        <div class="form_container">
-            <div class="form">
-                <form action="" method="post" enctype="multipart/form-data">
-                    {% csrf_token %}
-                        {{ form.as_p }}
-                    <input class="submit_btn" type="submit" value="가입">
-                </form>
-            </div>
-            <div class="bottom_box">
-                <div>
-                    <span>계정이 있으신가요?</span><a href="{% url 'accounts:login' %}">로그인</a>
-                </div>
-            </div>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AcademicLens - 회원가입</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/signup.css' %}">
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: flex-start; /* 컨테이너를 화면 맨 위에 배치 */
+            height: 100vh;
+            background-color: #f5f5f5;
+            margin: 0;
+            font-size: 14px;
+            padding-top: 20px; /* 컨테이너가 화면 맨 위에 붙지 않도록 여백 추가 */
+            box-sizing: border-box;
+        }
+
+        .signup-container {
+            width: 320px; /* 컨테이너 너비 */
+            height: auto;
+            padding: 20px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            overflow: visible; /* 컨테이너 내부 내용이 잘리지 않도록 설정 */
+        }
+
+        .signup-container img {
+            max-width: 100%; /* 이미지가 컨테이너의 너비에 맞춰 조정되도록 설정 */
+            height: auto; /* 높이를 자동으로 설정하여 이미지 비율을 유지 */
+            margin-bottom: 15px;
+        }
+
+        .signup-container input[type="text"],
+        .signup-container input[type="email"],
+        .signup-container input[type="password"],
+        .signup-container input[type="file"] {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        .signup-container label {
+            font-weight: bold;
+            margin-bottom: 5px;
+            display: block;
+            text-align: left;
+            font-size: 13px;
+        }
+
+        .signup-container .help-text {
+            font-size: 11px;
+            color: #666;
+            margin-bottom: 10px;
+            text-align: left;
+        }
+
+        .signup-container button {
+            width: 100%;
+            padding: 10px;
+            background-color: #87CEEB;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 15px;
+        }
+
+        .signup-container button:hover {
+            background-color: #1E90FF;
+        }
+
+        .signup-links {
+            display: block; /* 링크를 아래로 표시 */
+            font-size: 12px;
+            color: #777;
+            margin-top: 15px;
+            text-align: center; /* 중앙 정렬 */
+        }
+
+        .signup-links a {
+            color: #777;
+            text-decoration: none;
+        }
+
+        .signup-links a:hover {
+            text-decoration: underline;
+        }
+
+        .bottom_box {
+            margin-top: 20px; /* 가입 폼과 로그인 링크 사이에 간격 추가 */
+            text-align: center;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="signup-container">
+        <div class="form">
+        <img src="{% static 'image/cap_logo.png' %}" alt="Academic Lens Logo">
+        <form action="" method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+                {{ form.as_p }}
+            <input class="submit_btn" type="submit" value="가입">
+        </form>
         </div>
+        <br>
+        <span>계정이 있으신가요?</span><br>
+        <a href="{% url 'accounts:login' %}">로그인</a>
     </div>
-{% endblock %}
+
+</body>
+</html>
