@@ -132,7 +132,7 @@ def search(request):
     year = range(2019, datetime.now().year + 1)
     paper_counts_by_year = {str(y): Paper.objects.filter(id__in=paper_ids, date__year=y).count() for y in year}
     
-    publisher = ['ACM', 'IEEE']
+    publisher = ['ACM', 'IEEE', 'Springer']
     paper_counts_by_publisher = {p: Paper.objects.filter(id__in=paper_ids, publisher=p).count() for p in publisher}
 
     paper_countries = PaperCountry.objects.filter(paper_id__in=paper_ids).values_list('country__name', 'paper_id')
