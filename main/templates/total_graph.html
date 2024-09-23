@@ -83,53 +83,59 @@
 
     <br>
 
-    <!-- Papers Chart -->
+    <!-- Papers Chart (연도별 논문 수) -->
     <div class="chart-container">
         <div id="papersChart"></div>
         <div class="chart-buttons">
             <button class="gpt-analysis-btn">GPT 분석</button>
             <button class="like-btn">좋아요</button>
+            <button class="pdf-btn" data-chart="papersChart">PDF로 저장</button> <!-- PDF 저장 버튼 추가 -->
         </div>
     </div>
 
-    <!-- Authors Chart -->
+    <!-- Authors Chart (저자별 논문 수) -->
     <div class="chart-container">
         <div id="authorsChart"></div>
         <div class="chart-buttons">
             <button class="gpt-analysis-btn">GPT 분석</button>
             <button class="like-btn">좋아요</button>
+            <button class="pdf-btn" data-chart="authorsChart">PDF로 저장</button> <!-- PDF 저장 버튼 추가 -->
         </div>
     </div>
 
-    <!-- Affiliation Chart -->
+    <!-- Affiliation Chart (소속 기관별 논문 수) -->
     <div class="chart-container">
         <div id="affiliationChart"></div>
         <div class="chart-buttons">
             <button class="gpt-analysis-btn">GPT 분석</button>
             <button class="like-btn">좋아요</button>
+            <button class="pdf-btn" data-chart="affiliationChart">PDF로 저장</button> <!-- PDF 저장 버튼 추가 -->
         </div>
     </div>
 
-    <!-- Country Chart -->
+    <!-- Country Chart (국가별 논문 수) -->
     <div class="chart-container">
         <div id="countryChart"></div>
         <div class="chart-buttons">
             <button class="gpt-analysis-btn">GPT 분석</button>
             <button class="like-btn">좋아요</button>
+            <button class="pdf-btn" data-chart="countryChart">PDF로 저장</button> <!-- PDF 저장 버튼 추가 -->
         </div>
     </div>
 
-    <!-- Keyword Chart -->
+    <!-- Keyword Chart (많이 사용된 키워드) -->
     <div class="chart-container">
         <div id="keywordChart"></div>
         <div class="chart-buttons">
             <button class="gpt-analysis-btn">GPT 분석</button>
             <button class="like-btn">좋아요</button>
+            <button class="pdf-btn" data-chart="keywordChart">PDF로 저장</button> <!-- PDF 저장 버튼 추가 -->
         </div>
     </div>
 
     <!-- Google Charts 차트 그리기 스크립트 -->
     <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.2/html2pdf.bundle.min.js"></script>
     <script type="text/javascript">
         google.charts.load('current', {'packages':['corechart']});
         google.charts.setOnLoadCallback(drawPapersChart);
@@ -142,14 +148,12 @@
             var data = new google.visualization.DataTable();
             data.addColumn('string', 'Year');
             data.addColumn('number', '논문 수');
-            
-            // 데이터를 추가
             data.addRows([
                 {% for item in papers_count %}
                     ['{{ item.year }}', {{ item.count }}],
                 {% endfor %}
             ]);
-    
+
             var options = {
                 title: '연도별 논문 수',
                 legend: { position: 'bottom' },
@@ -159,7 +163,7 @@
                     0: { lineWidth: 2 }  // 선의 두께 설정
                 }
             };
-    
+
             var chart = new google.visualization.LineChart(document.getElementById('papersChart'));
             chart.draw(data, options);
         }
@@ -213,7 +217,6 @@
             var chart = new google.visualization.BarChart(document.getElementById('affiliationChart'));
             chart.draw(data, options);
         }
-        
 
         function drawCountryChart() {
             var data = new google.visualization.DataTable();
@@ -254,5 +257,19 @@
             var chart = new google.visualization.BarChart(document.getElementById('keywordChart'));
             chart.draw(data, options);
         }
+
+        // PDF 저장 버튼 클릭 이벤트 처리
+        document.querySelectorAll('.pdf-btn').forEach(function(button) {
+            button.addEventListener('click', function() {
+                var chartId = this.getAttribute('data-chart');
+                var element = document.getElementById(chartId);
+                html2pdf().from(element).set({
+                    margin: 1,
+                    filename: chartId + '.pdf',
+                    html2canvas: { scale: 2 },
+                    jsPDF: { orientation: 'landscape' }
+                }).save();
+            });
+        });
     </script>
 {% endblock %}
