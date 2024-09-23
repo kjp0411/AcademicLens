@@ -9,6 +9,7 @@
     <link rel="stylesheet" href="{% static 'css/home.css' %}">
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
     <link rel="stylesheet" href="{% static 'css/paperDetail.css' %}">
+    <link rel="stylesheet" href="{% static 'css/mypage.css' %}">
 </head>
 <body>
     <header class="header">
@@ -23,6 +24,13 @@
         </div>
     </header>
     <main>
+        <nav class="navbar">
+            <ul>
+                <li><a href="#">소개</a></li>
+                <li><a href="#">버튼 1</a></li>
+                <li><a href="{% url 'mypage' %}">마이페이지</a></li>
+            </ul>
+        </nav>
         {% block content %}{% endblock %}
     </main>
 </body>

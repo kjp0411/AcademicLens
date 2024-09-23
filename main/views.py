@@ -1163,3 +1163,81 @@ def login_html(request):
 # 회원가입 html 출력 함수
 def signup_html(request):
     return render(request, 'signup.html')
+
+def mypage_html(request):
+    return render(request, 'mypage.html')
+
+def recommended_papers(request):
+    # 여기에 추천 논문 데이터를 불러오는 로직을 추가합니다.
+    return render(request, 'recommended_papers.html')
+
+def recent_papers(request):
+    # 여기에 추천 논문 데이터를 불러오는 로직을 추가합니다.
+    return render(request, 'recent_papers.html')
+
+def saved_papers(request):
+    # 필터링 및 검색어 관련 코드를 생략
+    query = request.GET.get('query', '')
+    search_query = query
+    order = request.GET.get('order', 'desc')
+    sort_by = request.GET.get('sort_by', 'title')
+    items_per_page = int(request.GET.get('items_per_page', 10)) # 기본값 10
+
+    # 전체 논문을 가져오는 쿼리셋 생성 (논문 전체를 조회)
+    papers = Paper.objects.all()
+
+    # 정렬 처리 (검색어 무시하고 기본 정렬 적용)
+    if sort_by == 'title':
+        papers = papers.order_by('title' if order == 'asc' else '-title')
+    elif sort_by == 'latest':
+        papers = papers.order_by('date' if order == 'asc' else '-date')
+
+    # 페이징 처리
+    paginator = Paginator(papers, items_per_page)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    # 페이지 그룹 계산 (10개 단위)
+    current_page = page_obj.number
+    current_group_start = (current_page - 1) // 10 * 10 + 1
+    current_group_end = min(current_group_start + 9, paginator.num_pages)
+
+    # 페이지 그룹 리스트 생성
+    current_group_pages = list(range(current_group_start, current_group_end + 1))
+
+    # 저자 및 키워드 추가
+    papers_with_authors_and_keywords = []
+    for paper in page_obj:
+        authors = Author.objects.filter(paperauthor__paper_id=paper.id)
+        keywords = Keyword.objects.filter(paperkeyword__paper_id=paper.id)
+        affiliations = Affiliation.objects.filter(paperaffiliation__paper_id=paper.id)
+
+        # 논문 내 국가 정보 수집 및 중복 제거
+        countries = PaperCountry.objects.filter(paper_id=paper.id).select_related('country')
+        unique_countries = list(set([country.country.name for country in countries]))
+
+        papers_with_authors_and_keywords.append({
+            'paper': paper,
+            'authors': authors,
+            'keywords': keywords,
+            'affiliations': affiliations,
+            'countries': unique_countries,  # 중복 제거된 국가 목록 추가
+        })
+
+    # 관련 정보는 기본값으로 빈 값을 사용 (로그인/검색 관련 정보 없음)
+    context = {
+        'query': query,
+        'papers_with_authors_and_keywords': papers_with_authors_and_keywords,
+        'page_obj': page_obj,
+        'order': order,
+        'sort_by': sort_by,
+        'items_per_page': items_per_page,
+        'current_group_pages': current_group_pages,
+    }
+
+    return render(request, 'saved_papers.html', context)
+
+def analysis_file(request):
+    # 여기에 추천 논문 데이터를 불러오는 로직을 추가합니다.
+    return render(request, 'analysis_file.html')
+

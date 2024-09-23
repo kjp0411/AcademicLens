@@ -45,5 +45,11 @@ urlpatterns = [
 
     path('login/', views.login_html, name='login'),
     path('signup/', views.signup_html, name='signup'),
+    
+    path('mypage/', views.mypage_html, name='mypage'),
+    path('mypage/recommended-papers/', views.recommended_papers, name='recommended_papers'),
+    path('mypage/recent-papers/', views.recent_papers, name='recent_papers'),
+    path('mypage/saved-papers/', views.saved_papers, name='saved_papers'),
+    path('mypage/analysis-file/', views.analysis_file, name='analysis_file'),
 ]
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
