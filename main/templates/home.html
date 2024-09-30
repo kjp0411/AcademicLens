@@ -154,6 +154,7 @@
         .auth-buttons {
             display: flex;
             gap: 10px; /* 버튼 사이의 간격 설정 */
+            align-items: center; /* 세로 중앙 정렬 */
         }
 
         .btn-login, .btn-signup {
@@ -170,6 +171,27 @@
         .btn-login:hover, .btn-signup:hover {
             background-color: #4682B4; /* 호버 시 배경색 변경 */
         }
+
+        .btn-logout {
+            padding: 8px 15px;
+            color: #ffffff;
+            background-color: #1E90FF;
+            text-decoration: none;
+            border-radius: 5px;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            margin-left: 10px; /* 로그아웃 버튼과 환영 메시지 사이의 간격 추가 */
+        }
+
+        .btn-logout:hover {
+            background-color: #4682B4;
+        }
+
+        .welcome-message {
+            margin-right: 2px; /* 환영 메시지와 로그아웃 버튼 사이 간격 */
+            font-size: 16px;
+        }
     </style>
 </head>
 <body>
@@ -178,8 +200,13 @@
             <a href="{% url 'home' %}"><img src="{% static 'image/cap_logo.png' %}" alt="Logo" class="logo"></a>
         </div>
         <div class="auth-buttons">
-            <a href="{% url 'accounts:login' %}" class="btn-login">로그인</a>
-            <a href="{% url 'accounts:signup' %}" class="btn-signup">회원가입</a>
+            {% if user.is_authenticated %}
+                <span class="welcome-message">{{ user.profile.nickname }}님, 환영합니다.</span>
+                <a href="{% url 'accounts:logout' %}" class="btn-logout">로그아웃</a>
+            {% else %}
+                <a href="{% url 'accounts:login' %}" class="btn-login">로그인</a>
+                <a href="{% url 'accounts:signup' %}" class="btn-signup">회원가입</a>
+            {% endif %}
         </div>
     </header>
     <main>
