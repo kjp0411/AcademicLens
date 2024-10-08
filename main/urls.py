@@ -51,5 +51,7 @@ urlpatterns = [
     path('mypage/recent-papers/', views.recent_papers, name='recent_papers'),
     path('mypage/saved-papers/', views.saved_papers, name='saved_papers'),
     path('mypage/analysis-file/', views.analysis_file, name='analysis_file'),
+    path('save-paper/', views.save_paper, name='save_paper'),
+    path('remove-paper/', views.remove_paper, name='remove_paper'),
 ]
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

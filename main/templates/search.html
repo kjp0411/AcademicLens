@@ -212,8 +212,8 @@
                                         {{ item.paper.title|highlight:query }}
                                     </a></strong>                                                                
                                 </p>
-                                <button class="save-btn">
-                                    <img src="{% static 'image/heart-empty.png' %}" alt="save" class="save-icon">
+                                <button class="save-btn" data-paper-id="{{ item.paper.id }}">
+                                    <img src="{% if item.is_saved %}{% static 'image/heart-filled.png' %}{% else %}{% static 'image/heart-empty.png' %}{% endif %}" alt="save" class="save-icon">
                                 </button>
                             </div>
                             <div class="preAbstract-container">
@@ -329,24 +329,69 @@
 </div>
 
 <script>
+    const csrftoken = "{{ csrf_token }}";
+
     // 하트 저장 버튼 전환
     document.addEventListener('DOMContentLoaded', function() {
         const saveButtons = document.querySelectorAll('.save-btn');
+        const isAuthenticated = "{{ request.user.is_authenticated|yesno:'true,false' }}" === "true"; // 로그인 여부 확인
+
+        
         saveButtons.forEach(button => {
             button.addEventListener('click', function() {
+                if (!isAuthenticated) {
+                    // 로그인되지 않은 경우, 로그인 페이지로 리다이렉트
+                    const loginUrl = "{% url 'accounts:login' %}";  // 로그인 페이지 URL
+                    alert("로그인 후 저장할 수 있습니다.");
+                    window.location.href = loginUrl;
+                    return;  // 로그인 페이지로 이동 후 함수 종료
+                }
+                
                 const saveIcon = this.querySelector('.save-icon');
                 const heartEmpty = "{% static 'image/heart-empty.png' %}";
                 const heartFilled = "{% static 'image/heart-filled.png' %}";
-
-                if (saveIcon.src.includes('heart-empty.png')) {
-                    saveIcon.src = heartFilled;
-                } else {
-                    saveIcon.src = heartEmpty;
+                
+                // 논문 ID 가져오기
+                const paperId = this.getAttribute('data-paper-id');
+                
+                // 논문 ID가 있는지 확인
+                if (!paperId) {
+                    console.error("논문 ID를 찾을 수 없습니다.");
+                    return;
                 }
+
+                // FormData 객체 생성
+                const formData = new FormData();
+                formData.append('paper_id', paperId);
+                formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');  // CSRF 토큰 추가
+                
+                // 저장 상태에 따라 URL 변경
+                const isSaved = saveIcon.src.includes('heart-filled.png');
+                const url = isSaved ? "{% url 'remove_paper' %}" : "{% url 'save_paper' %}";
+                
+                // 서버로 POST 요청 보내기
+                fetch(url, {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        if (isSaved) {
+                            saveIcon.src = heartEmpty;  // 삭제된 경우 빈 하트로 변경
+                        } else {
+                            saveIcon.src = heartFilled;  // 저장된 경우 채워진 하트로 변경
+                        }
+                    } else {
+                        alert(data.message);
+                    }
+                })
+                .catch(error => console.error('Error:', error));
             });
         });
     });
 
+    
     // 필터 초기화 버튼
     document.getElementById('reset-filters').addEventListener('click', function() {
         // 모든 체크박스를 해제

@@ -5,6 +5,41 @@
 {% block title %}AcademicLens{% endblock %}
 
 {% block content %}
+<style>
+    .folder {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        width: 100%;
+    }
+    
+    .folder-name {
+        flex: 1;
+        text-align: left;
+    }
+    
+    .folder-actions {
+        display: flex;
+        gap: 10px; /* 아이콘 간격 */
+    }
+    
+    .folder-actions button {
+        background: none;
+        border: none;
+        cursor: pointer;
+        font-size: 18px;
+    }
+
+    .delete-btn {
+        border: none;
+        background: none;
+        padding: 0;
+        cursor: pointer;
+        font-size: 16px; /* 아이콘 크기 조절 */
+        color: red;
+    }
+</style>
+
 <div class="container">
     <!-- 사이드 메뉴 -->
     <div class="sidebar">
@@ -39,14 +74,16 @@
 </div>
 
 <script>
-    function showContent(contentType) {
+    function showContent(contentType, page = 1) {
         let url = "";
-    
+        const query = "";  // 필요한 쿼리 추가
+        const order = "";  // 정렬 방식 추가
+        
         if (contentType === "recommended") {
             url = "/mypage/recommended-papers/";  // 추천 논문 URL
         }
         if (contentType === "recent") {
-            url = "/mypage/recent-papers/";  // 최근 본 논문 URL
+            url = `/mypage/recent-papers/?page=${page}&query=${query}&order=${order}`;  // 최근 본 논문 URL에 page와 query 추가
         }
         if (contentType === "saved") {
             url = "/mypage/saved-papers/";  // 저장 논문 URL
@@ -54,16 +91,29 @@
         if (contentType === "analysis") {
             url = "/mypage/analysis-file/";  // 분석 저장소 URL
         }
-    
+
         fetch(url)
             .then(response => response.text())
             .then(html => {
                 document.getElementById('content-area').innerHTML = html;
                 setupSaveButtons(); // 저장 버튼 클릭 이벤트 재설정
+                setupPagination(contentType); // 페이징 클릭 처리 재설정
             })
             .catch(error => console.error('Error loading the content:', error));
     }
+
+    // 페이징 클릭 처리
+    function setupPagination(contentType) {
+        document.querySelectorAll('.pagination a').forEach(link => {
+            link.addEventListener('click', function (event) {
+                event.preventDefault();
+                const page = new URL(link.href).searchParams.get('page');  // 페이지 번호 추출
+                showContent(contentType, page);  // 해당 페이지로 콘텐츠 로드
+            });
+        });
+    }
     
+    // 분석저장소 토글
     function toggleAnalysis() {
         const folderContainer = document.getElementById('analysis-folder');
         const icon = document.querySelector('.dropdown-btn .icon'); // 아이콘 요소만 선택
@@ -77,6 +127,7 @@
         }
     }
     
+    // 폴더 생성
     function createNewFolder() {
         const folderContainer = document.getElementById('analysis-folder');
         const newFolder = document.createElement('li');
@@ -85,10 +136,16 @@
         if (folderName && folderName.trim() !== "") {
             // 새 폴더의 HTML 구조
             newFolder.innerHTML = `
-                <div class="folder">
-                    <span class="folder-name">${folderName}</span>
-                    <button class="edit-btn" onclick="editFolderName(this)">&#9998;</button>
-                </div><hr>
+                <li>
+                    <div class="folder">
+                        <span class="folder-name">${folderName}</span>
+                        <div class="folder-actions">
+                            <button class="edit-btn" onclick="editFolderName(this)">&#9998;</button>
+                            <button class="delete-btn" onclick="deleteFolder(this)">&#10006;</button>
+                        </div>
+                    </div>
+                    <hr>
+                </li>
             `;
     
             // 새 폴더를 추가 버튼 바로 위에 추가
@@ -98,6 +155,7 @@
         }
     }
     
+    // 폴더명 수정
     function editFolderName(button) {
         const folderNameElement = button.previousElementSibling;
         const newFolderName = prompt("새 폴더 이름을 입력하세요:", folderNameElement.textContent);
@@ -108,22 +166,61 @@
             alert("폴더 이름이 유효하지 않습니다.");
         }
     }
-    
-    // 하트 저장 버튼
+
+    // 폴더 삭제
+    function deleteFolder(button) {
+        if (confirm("이 폴더를 정말 삭제하시겠습니까?")) {
+            const folderElement = button.parentElement.parentElement;
+            const folderItem = folderElement.parentElement; // 폴더와 hr을 감싸는 부모 요소(li)
+
+            folderItem.remove();  // 폴더와 hr 요소 삭제
+        }
+    }
+
+
+    // 하트 버튼
     function setupSaveButtons() {
+        const csrftoken = "{{ csrf_token }}"; // CSRF Token setup
         const saveButtons = document.querySelectorAll('.save-btn');
-        
+
+        console.log("Initializing save buttons. Number of buttons found:", saveButtons.length);
+
         saveButtons.forEach(button => {
             button.addEventListener('click', function() {
                 const saveIcon = this.querySelector('.save-icon');
+                const paperId = this.getAttribute('data-paper-id');
                 const heartEmpty = "{% static 'image/heart-empty.png' %}";
                 const heartFilled = "{% static 'image/heart-filled.png' %}";
-    
-                if (saveIcon.src.includes('heart-empty.png')) {
-                    saveIcon.src = heartFilled;
-                } else {
-                    saveIcon.src = heartEmpty;
+
+                if (!paperId) {
+                    console.error("논문 ID를 찾을 수 없습니다.");
+                    return;
                 }
+
+                const formData = new FormData();
+                formData.append('paper_id', paperId);
+                formData.append('csrfmiddlewaretoken', csrftoken);
+
+                const isSaved = saveIcon.src.includes('heart-filled.png');
+                const url = isSaved ? "{% url 'remove_paper' %}" : "{% url 'save_paper' %}";
+
+                fetch(url, {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        if (isSaved) {
+                            saveIcon.src = heartEmpty;
+                        } else {
+                            saveIcon.src = heartFilled;
+                        }
+                    } else {
+                        alert(data.message);
+                    }
+                })
+                .catch(error => console.error("Fetch error:", error));
             });
         });
     }
@@ -131,6 +228,7 @@
     // 페이지 로드 시 필요한 이벤트 리스너 설정
     document.addEventListener('DOMContentLoaded', function() {
         setupSaveButtons();
+        setupPagination();
     });
 </script>
 {% endblock %}

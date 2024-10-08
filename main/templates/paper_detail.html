@@ -8,8 +8,8 @@
 <div class="paper-container">
     <div class="title-container">
         <h1 class="paper-title">{{ paper.title }}</h1>
-        <button id="save-btn" class="save-btn">
-            <img id="save-icon" src="{% static 'image/heart-empty.png' %}" alt="save">
+        <button class="save-btn" data-paper-id="{{ paper.id }}">
+            <img src="{% if is_saved %}{% static 'image/heart-filled.png' %}{% else %}{% static 'image/heart-empty.png' %}{% endif %}" alt="save" class="save-icon">
         </button>
     </div>
     <hr>
@@ -64,19 +64,59 @@
 </div>
 
 <script>
+    const csrftoken = "{{ csrf_token }}";
+
     document.addEventListener('DOMContentLoaded', function() {
-        const saveBtn = document.getElementById('save-btn');
-        const saveIcon = document.getElementById('save-icon');
+        const saveBtn = document.querySelector('.save-btn');  // ID 대신 클래스 선택자 사용
+        const saveIcon = document.querySelector('.save-icon');  // 동일하게 클래스 사용
         const heartEmpty = "{% static 'image/heart-empty.png' %}";
         const heartFilled = "{% static 'image/heart-filled.png' %}";
+        const isAuthenticated = "{{ request.user.is_authenticated|yesno:'true,false' }}" === "true"; // 로그인 여부 확인
 
-        saveBtn.addEventListener('click', function() {
-            if (saveIcon.src.includes('heart-empty.png')) {
-                saveIcon.src = heartFilled;
-            } else {
-                saveIcon.src = heartEmpty;
-            }
-        });
+        if (saveBtn && saveIcon) {  // 요소가 존재하는지 확인
+            saveBtn.addEventListener('click', function() {
+                if (!isAuthenticated) {
+                    // 로그인되지 않은 경우, 로그인 페이지로 리다이렉트
+                    const loginUrl = "{% url 'accounts:login' %}";
+                    alert("로그인 후 저장할 수 있습니다.");
+                    window.location.href = loginUrl;
+                    return;
+                }
+                    
+                // 논문 ID 가져오기
+                const paperId = this.getAttribute('data-paper-id');
+                    
+                // 논문 ID가 있는지 확인
+                if (!paperId) {
+                    console.error("논문 ID를 찾을 수 없습니다.");
+                    return;
+                }
+
+                // FormData 객체 생성
+                const formData = new FormData();
+                formData.append('paper_id', paperId);
+                formData.append('csrfmiddlewaretoken', csrftoken);  // CSRF 토큰 추가
+                    
+                // 저장 상태에 따라 URL 변경
+                const isSaved = saveIcon.src.includes('heart-filled.png');
+                const url = isSaved ? "{% url 'remove_paper' %}" : "{% url 'save_paper' %}";
+                
+                // 서버로 POST 요청 보내기
+                fetch(url, {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        saveIcon.src = isSaved ? heartEmpty : heartFilled;
+                    } else {
+                        alert(data.message);
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+            });
+        }
 
         document.querySelectorAll('.author-link').forEach(link => {
             link.addEventListener('click', function(event) {

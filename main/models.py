@@ -1,4 +1,6 @@
 from django.db import models
+from django.conf import settings
+from django.utils import timezone
 
 class Affiliation(models.Model):
     name = models.TextField()
@@ -197,3 +199,18 @@ class PaperKeyword(models.Model):
     class Meta:
         managed = False
         db_table = 'paper_keyword'
+        
+        
+class SavedPaper(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    paper = models.ForeignKey(Paper, on_delete=models.CASCADE)
+    saved_at = models.DateTimeField(auto_now_add=True)
+    
+
+class RecentPaper(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    paper = models.ForeignKey(Paper, on_delete=models.CASCADE)
+    viewed_at = models.DateTimeField(default=timezone.now)  # 논문 조회 시간
+
+    class Meta:
+        ordering = ['-viewed_at']  # 최신 순으로 정렬
