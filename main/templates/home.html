@@ -88,7 +88,6 @@
             margin-left: 0; /* 가운데 정렬을 위한 여백 제거 */
         }
 
-
         .search-icon-wrapper {
             margin-right: 535px;
         }
@@ -221,17 +220,18 @@
             <div class="search-icon-wrapper">
                 <img src="{% static 'image/search_icon2.png' %}" alt="Search" class="search-icon">
             </div>
-            <form action="{% url 'search' %}" method="get" class="search-form" id="search-form">
-                <select name="filter" id="filter">
-                    <option value="paper">논문</option>
-                    <option value="author">저자</option>
-                    <option value="country">나라</option>
-                </select>
-                <input type="text" name="query" id="search-box" placeholder="검색어를 입력하세요" value="{{ query }}">
-                <button type="submit">
-                    <img src="{% static 'image/search_icon.png' %}" alt="Search">
-                </button>
-            </form>
+            <div class="search-container">
+                <form action="{% url 'search' %}" method="get" class="search-form" id="search-form">
+                    <select name="filter" id="filter">
+                        <option value="paper">논문</option>
+                        <option value="author">저자</option>
+                        <option value="country">나라</option>
+                    </select>
+                    <input type="text" name="query" id="search-box" placeholder="Enter search query" value="{{ query }}">
+                    <button type="submit">Search</button>
+                </form>
+            </div>
+            
         </div>
         <!-- 콘텐츠 시작 -->
         <div class="container">

@@ -14,6 +14,11 @@
                 <a href="{% url 'home' %}"><img src="{% static 'image/cap_logo.png' %}" alt="Logo" class="logo"></a>
             </div>
             <form action="{% url 'search' %}" method="get" class="search-form" id="search-form">
+                <select name="filter" id="filter">
+                    <option value="paper">논문</option>
+                    <option value="author">저자</option>
+                    <option value="country">나라</option>
+                </select>
                 <input type="text" name="query" id="search-box" placeholder="Enter search query" value="{{ query }}">
                 <button type="submit">Search</button>
             </form>
