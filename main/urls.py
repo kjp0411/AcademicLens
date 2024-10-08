@@ -35,7 +35,8 @@ urlpatterns = [
     path('api/author_total_papers/', views.author_get_total_papers, name='author_total_papers'),
 
     path('api/analyze_network_data/', views.AnalyzeNetworkData.as_view(), name='analyze_network_data'),
-    
+    path('api/analyze_keyword_data/', views.AnalyzeKeywordData.as_view(), name='analyze_keyword_data'),
+
     path('admin/', admin.site.urls),
     path('accounts/', include('accounts.urls')),
     path('accounts/', include('allauth.urls')),

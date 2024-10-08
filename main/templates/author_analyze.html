@@ -19,9 +19,11 @@
         body {
             font-family: Arial, sans-serif;
         }
+
         .container {
             display: flex;
         }
+
         .sidebar {
             width: 15%;
             border-right: 1px solid #ccc;
@@ -35,44 +37,61 @@
             margin-left: 18%;
             border-left: 1px solid #ccc;
         }
+
         .author-info {
             border-bottom: 1px solid #ccc;
             padding-bottom: 10px;
             margin-bottom: 10px;
         }
-        .chart, .graph, .paper-list, .keywords {
+
+        .chart,
+        .graph,
+        .paper-list,
+        .keywords {
             margin-bottom: 20px;
         }
+
         .header {
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
+
         .header .search {
             margin-right: 20px;
         }
+
         .header .login {
             margin-left: auto;
         }
+
         .link {
             stroke: #aeaeae;
             stroke-opacity: 0.8;
         }
+
         .node text {
             pointer-events: none;
             font-size: 10px;
             text-anchor: middle;
             fill: #000;
         }
+
         #wordcloud {
+            width: 100%;
+            max-width: 400px;
+            height: 400px;
+            margin: 0 auto;
             border: 1px solid #ddd;
             box-shadow: 2px 2px 12px rgba(0, 0, 0, 0.1);
             position: relative;
         }
+
         #network-container {
             display: flex;
             gap: 20px;
         }
+
         #network {
             flex: 1;
             border: 1px solid #ddd;
@@ -81,6 +100,7 @@
             background-color: #fff;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
         }
+
         #analysisBox {
             flex: 1;
             border: 1px solid #ddd;
@@ -89,17 +109,20 @@
             background-color: #f9f9f9;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
         }
+
         .chart-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin-bottom: 15px;
         }
+
         .chart-title {
             font-size: 1.5em;
             font-weight: bold;
             color: #333;
         }
+
         .analyze-btn {
             background-color: #007bff;
             color: white;
@@ -109,50 +132,49 @@
             cursor: pointer;
             transition: background-color 0.3s ease;
         }
+
         .analyze-btn:hover {
             background-color: #0056b3;
         }
+
         .analyze-btn i {
             margin-right: 5px;
         }
+
         .analysis-title {
             font-size: 1.25em;
             font-weight: bold;
             color: #333;
             margin-bottom: 10px;
         }
+
         .analysis-result {
             font-size: 1em;
             color: #666;
         }
+
         .analysis-result p {
             margin: 0;
         }
 
-        /* 워드클라우드와 네트워크 분석 결과를 나란히 배치하기 위한 flexbox 설정 */
         .keyword-container {
             display: flex;
             justify-content: space-between;
-            gap: 20px; /* 워드클라우드와 분석 결과 사이의 간격 */
+            gap: 20px;
             margin-top: 20px;
         }
 
         #wordcloud {
             width: 100%;
-            /* 부모 요소의 100% 너비를 사용 */
             max-width: 400px;
-            /* 최대 너비를 400px로 제한 */
             height: 400px;
-            /* 높이는 400px로 고정 */
-            margin: 0 auto;
-            /* 자동으로 좌우 가운데 정렬 */
             border: 1px solid #ddd;
             box-shadow: 2px 2px 12px rgba(0, 0, 0, 0.1);
             position: relative;
         }
 
         #analysisBoxKeywords {
-            width: 50%; /* 네트워크 분석 결과가 차지할 비율 */
+            width: 50%;
             padding: 20px;
             border: 1px solid #ddd;
             border-radius: 8px;
@@ -162,11 +184,12 @@
 
         @media screen and (max-width: 768px) {
             .keyword-container {
-                flex-direction: column; /* 작은 화면에서는 세로로 배치 */
+                flex-direction: column;
             }
 
-            #wordcloud, #analysisBoxKeywords {
-                width: 100%; /* 작은 화면에서 두 요소가 100% 차지 */
+            #wordcloud,
+            #analysisBoxKeywords {
+                width: 100%;
                 margin-bottom: 20px;
             }
         }
@@ -211,13 +234,13 @@
                 <div class="chart-header">
                     <h3 class="chart-title">TOP 키워드</h3>
                     <button id="analyzeButtonKeywords" class="analyze-btn">
-                        <i class="fas fa-chart-network"></i> 네트워크 데이터 분석
+                        <i class="fas fa-chart-network"></i> TOP 키워드 데이터 분석
                     </button>
                 </div>
                 <div class="keyword-container">
                     <div id="wordcloud"></div>
                     <div id="analysisBoxKeywords">
-                        <h4 class="analysis-title">네트워크 데이터 분석 결과</h4>
+                        <h4 class="analysis-title">TOP 키워드 데이터 분석 결과</h4>
                         <div id="analysisResultKeywords" class="analysis-result">
                             <p>분석 결과가 여기에 표시됩니다.</p>
                         </div>
@@ -263,7 +286,7 @@
         async function fetchPaperCountsByYear() {
             const response = await fetch(`/api/author_paper_counts_by_year/?name=${encodeURIComponent(authorName)}`);
             if (!response.ok) {
-                console.error('네트워크 응답이 올바르지 않습니다', response.statusText);
+                console.error('Network response was not ok', response.statusText);
                 return;
             }
             const data = await response.json();
@@ -305,13 +328,13 @@
                 renderPaperChart(data);
             }
         }).catch(error => {
-            console.error('연도별 논문 수 데이터를 가져오는 중 오류 발생:', error);
+            console.error('Error fetching paper counts by year:', error);
         });
 
         async function fetchRecentPapers() {
             const response = await fetch(`/api/author_recent_papers/?name=${encodeURIComponent(authorName)}`);
             if (!response.ok) {
-                console.error('네트워크 응답이 올바르지 않습니다', response.statusText);
+                console.error('Network response was not ok', response.statusText);
                 return;
             }
             const data = await response.json();
@@ -354,13 +377,13 @@
                 renderRecentPapers(data);
             }
         }).catch(error => {
-            console.error('최근 논문 데이터를 가져오는 중 오류 발생:', error);
+            console.error('Error fetching recent papers:', error);
         });
 
         async function fetchTotalPapers() {
             const response = await fetch(`/api/author_total_papers/?name=${encodeURIComponent(authorName)}`);
             if (!response.ok) {
-                console.error('네트워크 응답이 올바르지 않습니다', response.statusText);
+                console.error('Network response was not ok', response.statusText);
                 return;
             }
             const data = await response.json();
@@ -377,13 +400,13 @@
                 renderTotalPapers(totalPapers);
             }
         }).catch(error => {
-            console.error('총 논문 수 데이터를 가져오는 중 오류 발생:', error);
+            console.error('Error fetching total papers:', error);
         });
 
         async function fetchNetworkData() {
             const response = await fetch(`/author_network/?name=${encodeURIComponent(authorName)}`);
             if (!response.ok) {
-                console.error('네트워크 응답이 올바르지 않습니다', response.statusText);
+                console.error('Network response was not ok', response.statusText);
                 return;
             }
             const data = await response.json();
@@ -427,10 +450,9 @@
                 .attr("r", d => Math.sqrt(d.total_papers))
                 .attr("fill", d => d.id === centerNode ? '#8aaac6' : '#cde2f4');
 
-            // 저자의 텍스트마다 하이퍼링크 적용했으나 배포 시 링크 확인 필요함(로컬에서만 돌아갈 가능성 있음)
             node.append("a")
                 .attr("xlink:href", d => `/author-analyze/?name=${d.id}`)
-                .attr("class", "country-link")
+                .attr("class", "author-link")
                 .append("text")
                 .attr("dy", ".35em")
                 .text(d => d.id)
@@ -443,22 +465,22 @@
                 .on("drag", dragged)
                 .on("end", dragended);
 
-            let isDragging = false; // 드래그 상태를 추적
+            let isDragging = false;
 
             node.call(drag)
                 .on("click", function (d) {
-                    if (!isDragging) { // 드래그가 발생하지 않은 경우에만 클릭 처리
+                    if (!isDragging) {
                         window.location.href = `/author-analyze/?name=${d.id}`;
                     }
                 });
 
             function dragstarted(event, d) {
-                isDragging = false; // 드래그 시작 시 드래그 상태 초기화
+                isDragging = false;
                 d3.select(this).raise().attr("stroke", "black");
             }
 
             function dragged(event, d) {
-                isDragging = true; // 드래그가 발생할 경우 드래그 상태로 설정
+                isDragging = true;
                 d3.select(this)
                     .attr("x", d.x = event.x)
                     .attr("y", d.y = event.y);
@@ -466,9 +488,8 @@
 
             function dragended(event, d) {
                 d3.select(this).attr("stroke", null);
-                setTimeout(() => { isDragging = false; }, 100); // 클릭과 드래그의 충돌 방지를 위해 딜레이 설정
+                setTimeout(() => { isDragging = false; }, 100);
             }
-            // 저자의 텍스트마다 하이퍼링크 적용 코드
 
             simulation.on("tick", () => {
                 link
@@ -497,7 +518,7 @@
                     d.fy = null;
                 }));
 
-            document.getElementById('analyzeButton').addEventListener('click', function() {
+            document.getElementById('analyzeButton').addEventListener('click', function () {
                 const networkText = JSON.stringify(data);
                 analyzeNetworkData(networkText);
             });
@@ -508,7 +529,7 @@
                 visualizeNetwork(data);
             }
         }).catch(error => {
-            console.error('네트워크 데이터를 가져오는 중 오류 발생:', error);
+            console.error('Error fetching network data:', error);
         });
 
         async function analyzeNetworkData(networkData) {
@@ -525,7 +546,7 @@
                 const data = await response.json();
                 document.getElementById('analysisResult').textContent = data.analysis_result;
             } else {
-                console.error('네트워크 데이터 분석 중 오류 발생:', response.statusText);
+                console.error('Error analyzing network data', response.statusText);
             }
         }
 
@@ -545,17 +566,17 @@
                 list: words,
                 gridSize: 5,
                 weightFactor: function (size) {
-                    return Math.max(12, size * (wordCount > 50 ? 1 : 10 / wordCount) * 10); // 데이터가 적을수록 글씨가 커짐
+                    return Math.max(12, size * (wordCount > 50 ? 1 : 10 / wordCount));
                 },
                 fontFamily: 'Arial, sans-serif',
-                color: function() {
+                color: function () {
                     return getRandomColor();
                 },
                 rotateRatio: 0.5,
                 rotationSteps: 2,
                 backgroundColor: '#fff',
                 drawOutOfBound: false,
-                click: function(item) {
+                click: function (item) {
                     alert(item[0] + ': ' + item[1]);
                 }
             });
@@ -564,12 +585,41 @@
         fetch(`/author_wordcloud/?name=${encodeURIComponent(authorName)}`)
             .then(response => response.json())
             .then(data => {
-                var words = data.map(function(d) {
+                var words = data.map(function (d) {
                     return [d[0], d[1]];
                 });
                 generateWordCloud(words);
             })
-            .catch(error => console.error('키워드 데이터를 가져오는 중 오류 발생:', error));
+            .catch(error => console.error('Error fetching data:', error));
+
+        document.getElementById('analyzeButtonKeywords').addEventListener('click', function () {
+            fetch(`/author_wordcloud/?name=${encodeURIComponent(authorName)}`)
+                .then(response => response.json())
+                .then(data => {
+                    const keywordsText = JSON.stringify(data);
+
+                    analyzeKeywordData(keywordsText);
+                })
+                .catch(error => console.error('Error fetching keyword data:', error));
+        });
+
+        async function analyzeKeywordData(keywordData) {
+            const response = await fetch('/api/analyze_keyword_data/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrftoken
+                },
+                body: JSON.stringify({ keyword_data: keywordData })
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                document.getElementById('analysisResultKeywords').textContent = data.analysis_result;
+            } else {
+                console.error('Error analyzing keyword data', response.statusText);
+            }
+        }
     </script>
 </body>
 </html>
