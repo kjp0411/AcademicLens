@@ -899,6 +899,29 @@ class AnalyzeNetworkData(CsrfExemptMixin, APIView):
             return Response({'analysis_result': analysis_result})
         return Response({'error': 'Invalid request'}, status=400)
 
+#GPT API 사용 함수
+class AnalyzeKeywordData(CsrfExemptMixin, APIView):
+    authentication_classes = []
+
+    def post(self, request, format=None):
+        keyword_data = request.data.get('keyword_data', '')
+
+        if keyword_data:
+            prompt = f"Analyze the following keyword data in Korean: {keyword_data}"
+
+            response = openai.ChatCompletion.create(
+                model="gpt-3.5-turbo",  # 또는 gpt-4
+                messages=[
+                    {"role": "system", "content": "You are a helpful assistant."},
+                    {"role": "user", "content": prompt}
+                ]
+            )
+
+            analysis_result = response.choices[0].message['content'].strip()
+
+            return Response({'analysis_result': analysis_result})
+        
+        return Response({'error': 'Invalid request'}, status=400)
 
 # 소속 분석 페이지 html 출력 함수
 def affiliation_analyze_html(request):
