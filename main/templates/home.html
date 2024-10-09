@@ -10,12 +10,19 @@
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
     <link rel="stylesheet" href="{% static 'css/paperDetail.css' %}">
     <style>
+        main {
+            width: 100%;
+        }
+
         .container {
+            margin-left: 300px;
             display: flex; /* 자식 요소들을 가로로 배치 */
+            width : 70%;
         }
         .table-container {
             margin: 0 20px; /* 테이블 간의 간격 조정 */
             text-align: center;
+            width : 70%;
         }
         table {
             border-collapse: collapse;
@@ -34,6 +41,8 @@
             flex-direction: column; /* 수직 정렬 */
             justify-content: center; /* 수평 중앙 정렬 */
             text-align: center; /* 텍스트 중앙 정렬 */
+            width : 70%;
+            margin-left: 300px;
         }
         .info-container {
             text-align: center; /* 텍스트 중앙 정렬 */
@@ -213,7 +222,7 @@
         <nav class="navbar">
             <ul>
                 <li><a href="#">소개</a></li>
-                <li><a href="#">버튼 1</a></li>
+                <li><a href="{% url 'post:post_list' %}">IT스타그램</a></li>
                 <li><a href="{% url 'mypage' %}">마이페이지</a></li>
             </ul>
         </nav>
