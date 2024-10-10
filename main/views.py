@@ -884,7 +884,7 @@ class AnalyzeNetworkData(CsrfExemptMixin, APIView):
         network_data = request.data.get('network_data', '')
 
         if network_data:
-            prompt = f"Analyze the following network data in Korean: {network_data}"
+            prompt = f"다음 네트워크 데이터가 다른 노드와 어떤 관계가 있는지 분석합니다: {network_data}"
 
             response = openai.ChatCompletion.create(
                 model="gpt-3.5-turbo",  # 또는 gpt-4
@@ -907,7 +907,7 @@ class AnalyzeKeywordData(CsrfExemptMixin, APIView):
         keyword_data = request.data.get('keyword_data', '')
 
         if keyword_data:
-            prompt = f"Analyze the following keyword data in Korean: {keyword_data}"
+            prompt = f"다음 키워드 데이터를 설명하고 어떤 주제를 담고있는지 분석합니다: {keyword_data}"
 
             response = openai.ChatCompletion.create(
                 model="gpt-3.5-turbo",  # 또는 gpt-4
@@ -982,9 +982,9 @@ def affiliation_network(request):
         for row in rows:
             original_affiliation = row[0]
             co_affiliation = row[1]
-            num_papers = row[2]
-            original_affiliation_total_papers = row[3]
-            co_affiliation_total_papers = row[4]
+            num_papers = row[2] * 10
+            original_affiliation_total_papers = row[3] * 100
+            co_affiliation_total_papers = row[4] * 50
 
             if original_affiliation not in node_set:
                 nodes.append({"id": original_affiliation, "total_papers": original_affiliation_total_papers})
@@ -1153,9 +1153,9 @@ def author_network(request):
         for row in rows:
             original_author = row[0]
             co_author = row[1]
-            num_papers = row[2]
-            original_author_total_papers = row[3]
-            co_author_total_papers = row[4]
+            num_papers = row[2] * 10
+            original_author_total_papers = row[3] * 100
+            co_author_total_papers = row[4] * 50
 
             if original_author not in node_set:
                 nodes.append({"id": original_author, "total_papers": original_author_total_papers})
