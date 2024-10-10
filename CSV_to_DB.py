@@ -15,7 +15,8 @@ cursor = conn.cursor()
 # CSV 파일 읽기
 csv_file = r"total_result.csv"
 selected_columns = ["search", "title", "url", "author", "date", "citations", "publisher", "abstract", "affiliation", "keywords"]
-data = pd.read_csv(csv_file, usecols=selected_columns, encoding='utf-8')
+# data = pd.read_csv(csv_file, usecols=selected_columns, encoding='utf-8') 데이터 추가시 오류나서 아래 코드로 변경함
+data = pd.read_csv(csv_file, usecols=selected_columns, encoding='latin1')
 
 # "none" 값을 None으로 변경
 data.loc[data['date'] == "none", 'date'] = None
