@@ -86,10 +86,10 @@
             url = `/mypage/recent-papers/?page=${page}&query=${query}&order=${order}`;  // 최근 본 논문 URL에 page와 query 추가
         }
         if (contentType === "saved") {
-            url = "/mypage/saved-papers/";  // 저장 논문 URL
+            url = `/mypage/saved-papers/?page=${page}&query=${query}&order=${order}`;  // 저장 논문 URL
         }
         if (contentType === "analysis") {
-            url = "/mypage/analysis-file/";  // 분석 저장소 URL
+            url = `/mypage/analysis-file/?page=${page}&query=${query}&order=${order}`;  // 분석 저장소 URL
         }
 
         fetch(url)
@@ -176,7 +176,6 @@
             folderItem.remove();  // 폴더와 hr 요소 삭제
         }
     }
-
 
     // 하트 버튼
     function setupSaveButtons() {

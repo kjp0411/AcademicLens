@@ -1,3 +1,4 @@
+<!-- ITstagram 헤더 -->
 {% load static %}
 <!DOCTYPE html>
 <html lang="en">
@@ -24,14 +25,18 @@
     <header id="header">
         <section class="h_inner">
             <h1 class="logo">
-                <a href="{% url 'post:post_list' %}">
-                    <div>
-                        <img src="{% static '/imgs/Lens.png' %}" alt="Lens Logo" width="103px" height="29px">
-                    </div>
-                    <div>
-                        <img src="{% static '/imgs/ITsta_logo.png' %}" alt="ITsta Logo" width="103px" height="29px">
-                    </div>
-                </a>
+                <div class="logo-container">
+                    <a href="{% url 'home' %}">
+                        <div>
+                            <img src="{% static '/imgs/Lens.png' %}" alt="Lens Logo" width="103px" height="29px">
+                        </div>
+                    </a>
+                    <a href="{% url 'post:post_list' %}">
+                        <div>
+                            <img src="{% static '/imgs/ITsta_logo.png' %}" alt="ITsta Logo" width="103px" height="29px">
+                        </div>
+                    </a>
+                </div>
             </h1>
             <div class="search_field">
                 <form class="search-form" action="{% url "post:post_list" %}" method="post">

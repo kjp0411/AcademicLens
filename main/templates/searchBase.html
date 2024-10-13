@@ -15,23 +15,24 @@
             </div>
             <form action="{% url 'search' %}" method="get" class="search-form" id="search-form">
                 <select name="filter" id="filter">
-                    <option value="paper">논문</option>
-                    <option value="author">저자</option>
-                    <option value="country">나라</option>
+                    <option value="paper" {% if filter == 'paper' %}selected{% endif %}>논문</option>
+                    <option value="author" {% if filter == 'author' %}selected{% endif %}>저자</option>
+                    <option value="country" {% if filter == 'country' %}selected{% endif %}>나라</option>
                 </select>
                 <input type="text" name="query" id="search-box" placeholder="Enter search query" value="{{ query }}">
                 <button type="submit">Search</button>
             </form>
-            {% if related_terms %}
+        </div>
+        <br>
+        {% if related_terms %}
             <div class="related-terms-container">
                 <ul class="related-terms-list">
                     {% for term in related_terms %}
-                    <li class="related-term">{{ term }}</li>
+                    <li class="related-term" style="cursor: pointer;" onclick="searchWithTerm('{{ term }}')">{{ term }}</li>
                     {% endfor %}
                 </ul>
             </div>
-            {% endif %}
-        </div>
+        {% endif %}
     </header>
 
     <main>
@@ -50,6 +51,12 @@
             var searchQuery = document.getElementById('search-box').value;
             document.getElementById('analysis-query').value = searchQuery;
         });
+
+        // 추천 검색어를 클릭하면 검색 폼에 입력한 후 제출하는 함수
+        function searchWithTerm(term) {
+            document.getElementById('search-box').value = term;  // 검색어 입력 필드에 선택된 추천 검색어 삽입
+            document.getElementById('search-form').submit();  // 검색 폼 제출
+        }
     </script>
 </body>
 </html>

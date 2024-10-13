@@ -391,6 +391,61 @@
         });
     });
 
+    // 체크박스로 저장
+    document.addEventListener('DOMContentLoaded', function() {
+        const saveButton = document.getElementById('check-save-btn');
+        const checkboxes = document.querySelectorAll('.paper-checkbox');
+        const isAuthenticated = "{{ request.user.is_authenticated|yesno:'true,false' }}" === "true"; // 로그인 여부 확인
+
+        // 저장하기 버튼 클릭 이벤트 처리
+        saveButton.addEventListener('click', function() {
+            if (!isAuthenticated) {
+                // 로그인되지 않은 경우, 로그인 페이지로 리다이렉트
+                const loginUrl = "{% url 'accounts:login' %}";
+                alert("로그인 후 저장할 수 있습니다.");
+                window.location.href = loginUrl;
+                return; // 로그인 페이지로 이동 후 함수 종료
+            }
+
+            // 선택된 논문 ID 배열 생성
+            const selectedPapers = [];
+            checkboxes.forEach(checkbox => {
+                if (checkbox.checked) {
+                    selectedPapers.push(checkbox.value);
+                }
+            });
+
+            // 선택된 논문이 없는 경우 알림
+            if (selectedPapers.length === 0) {
+                alert("저장할 논문을 선택하세요.");
+                return;
+            }
+
+            // FormData 객체 생성
+            const formData = new FormData();
+            formData.append('csrfmiddlewaretoken', '{{ csrf_token }}'); // CSRF 토큰 추가
+
+            // 선택된 논문 ID 배열을 서버에 전송하기 위해 추가
+            selectedPapers.forEach(paperId => {
+                formData.append('selected_papers[]', paperId);  // 배열 형식으로 전송
+            });
+
+            // 서버로 POST 요청 보내기
+            fetch("{% url 'save_selected_papers' %}", {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert(data.message);
+                } else {
+                    alert(data.message);
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        });
+    });
     
     // 필터 초기화 버튼
     document.getElementById('reset-filters').addEventListener('click', function() {

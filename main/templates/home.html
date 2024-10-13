@@ -232,9 +232,9 @@
             <div class="search-container">
                 <form action="{% url 'search' %}" method="get" class="search-form" id="search-form">
                     <select name="filter" id="filter">
-                        <option value="paper">논문</option>
-                        <option value="author">저자</option>
-                        <option value="country">나라</option>
+                        <option value="paper" {% if filter == 'paper' %}selected{% endif %}>논문</option>
+                        <option value="author" {% if filter == 'author' %}selected{% endif %}>저자</option>
+                        <option value="country" {% if filter == 'country' %}selected{% endif %}>나라</option>
                     </select>
                     <input type="text" name="query" id="search-box" placeholder="Enter search query" value="{{ query }}">
                     <button type="submit">Search</button>
