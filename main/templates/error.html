@@ -1,0 +1,27 @@
+{% extends 'searchBase.html' %}
+{% load static %}
+
+{% block title %}AcademicLens - 검색 결과 없음{% endblock %}
+
+{% block content %}
+<div class="main-container">
+    <div class="content-container">
+        <div class="error-container">
+            <h2 style="text-align: center; padding: 20px; color: red;">검색 결과가 없습니다</h2>
+            <div style="text-align: center; padding: 20px; font-size: 18px;">
+                <p>죄송합니다, 입력하신 검색어에 해당하는 결과를 찾을 수 없습니다.</p>
+                <br>
+                <button onclick="history.back()" style="display: inline-block; padding: 10px 20px; background-color: #007BFF; color: white; text-decoration: none; border-radius: 5px; cursor: pointer;">
+                    뒤로 가기
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const csrftoken = "{{ csrf_token }}";
+    });
+</script>
+{% endblock %}

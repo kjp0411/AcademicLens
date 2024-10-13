@@ -54,175 +54,178 @@ def home(request):
 
 # 검색 시 논문 출력 및 필터링
 def search(request):
-    query = request.GET.get('query', '')
-    years = request.GET.getlist('year')
-    publishers = request.GET.getlist('publisher')
-    author = request.GET.get('author-search')
-    countries = request.GET.getlist('country')
-    search_query = query
-    news_type = request.GET.get('news_type', 'international')  # 기본값을 'international'로 설정
-    order = request.GET.get('order', 'desc')
-    sort_by = request.GET.get('sort_by', 'title')
-    items_per_page = int(request.GET.get('items_per_page', 10)) # 기본값 10
-    
-    # 로그인된 사용자의 저장된 논문 ID 확인
-    saved_paper_ids = []
-    if request.user.is_authenticated:
-        saved_paper_ids = SavedPaper.objects.filter(user=request.user).values_list('paper_id', flat=True)
-    
-    filter_type = request.GET.get('filter', 'paper')
+    try:
+        query = request.GET.get('query', '')
+        years = request.GET.getlist('year')
+        publishers = request.GET.getlist('publisher')
+        author = request.GET.get('author-search')
+        countries = request.GET.getlist('country')
+        search_query = query
+        news_type = request.GET.get('news_type', 'international')  # 기본값을 'international'로 설정
+        order = request.GET.get('order', 'desc')
+        sort_by = request.GET.get('sort_by', 'title')
+        items_per_page = int(request.GET.get('items_per_page', 10)) # 기본값 10
 
-    # 뉴스 검색 부분
-    api_key = '2f963493ee124210ac91a3b54ebb3c5c'
+        # 로그인된 사용자의 저장된 논문 ID 확인
+        saved_paper_ids = []
+        if request.user.is_authenticated:
+            saved_paper_ids = SavedPaper.objects.filter(user=request.user).values_list('paper_id', flat=True)
 
-    if filter_type == 'author':
-        paper_ids = get_author_paper_ids(query)
-    else:
-        paper_ids = get_paper_ids(query)
+        filter_type = request.GET.get('filter', 'paper')
 
-    related_terms = []
-    if query:
-        related_terms, most_related_word = top_5_related_words(query, paper_ids)
-    
-    # 기본 쿼리셋 생성
-    papers = Paper.objects.filter(id__in=paper_ids)
-    
-    # 정렬 처리
-    if sort_by == 'title':
-        # 정확도순: 제목에 검색어가 포함된 횟수로 정렬
-        papers = papers.annotate(search_rank=Count('title', filter=Q(title__icontains=query)))
-        papers = papers.order_by('-search_rank' if order == 'desc' else 'search_rank')
-    elif sort_by == 'latest':
-        # 최신순
-        papers = papers.order_by('date' if order == 'asc' else '-date')
-        
-    # 연도 필터링
-    if years:
-        papers = papers.filter(date__year__in=years)
-    
-    # 발행처 필터링
-    if publishers:
-        papers = papers.filter(publisher__in=publishers)
-    
-    # 저자 필터링
-    if author:
-        paper_ids_by_authors = Author.objects.filter(name__icontains=author).values_list('paperauthor__paper_id', flat=True)
-        papers = papers.filter(id__in=paper_ids_by_authors)
-        
-    # 국가 필터링
-    if countries:
-        paper_ids_by_countries = PaperCountry.objects.filter(country__name__in=countries).values_list('paper_id', flat=True)
-        papers = papers.filter(id__in=paper_ids_by_countries)
+        # 뉴스 검색 부분
+        api_key = '2f963493ee124210ac91a3b54ebb3c5c'
 
-    # 필터링된 논문 개수
-    total_results = papers.count()
-    
-    # 페이징 처리
-    paginator = Paginator(papers, items_per_page)
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
-    
-    # 현재 페이지 그룹 계산 (10개 단위)
-    current_page = page_obj.number
-    current_group_start = (current_page - 1) // 10 * 10 + 1
-    current_group_end = min(current_group_start + 9, paginator.num_pages)
-    
-    # 페이지 그룹 리스트 생성
-    current_group_pages = list(range(current_group_start, current_group_end + 1))
-    
-    # 저자 및 키워드 추가
-    papers_with_authors_and_keywords = []
-    for paper in page_obj:
-        authors = Author.objects.filter(paperauthor__paper_id=paper.id)
-        keywords = Keyword.objects.filter(paperkeyword__paper_id=paper.id)
-        affiliations = Affiliation.objects.filter(paperaffiliation__paper_id=paper.id)
-        
-        # 논문 내 국가 정보 수집 및 중복 제거
-        countries = PaperCountry.objects.filter(paper_id=paper.id).select_related('country')
-        unique_countries = list(set([country.country.name for country in countries]))
-        
-        # 논문이 저장된 상태인지 확인 (로그인한 경우에만 확인)
-        is_saved = paper.id in saved_paper_ids if request.user.is_authenticated else False
-        
-        papers_with_authors_and_keywords.append({
-            'paper': paper,
-            'authors': authors,
-            'keywords': keywords,
-            'affiliations': affiliations,
-            'countries': unique_countries,  # 나라 중복 제거
-            'is_saved': is_saved,  # 저장 여부 추가
-        })
+        if filter_type == 'author':
+            paper_ids = get_author_paper_ids(query)
+        else:
+            paper_ids = get_paper_ids(query)
 
-    # 연도 및 발행처별 논문 수 계산
-    year = range(2019, datetime.now().year + 1)
-    paper_counts_by_year = {str(y): Paper.objects.filter(id__in=paper_ids, date__year=y).count() for y in year}
-    
-    publisher = ['ACM', 'IEEE', 'Springer']
-    paper_counts_by_publisher = {p: Paper.objects.filter(id__in=paper_ids, publisher=p).count() for p in publisher}
+        related_terms = []
+        if query:
+            related_terms, most_related_word = top_5_related_words(query, paper_ids)
 
-    paper_countries = PaperCountry.objects.filter(paper_id__in=paper_ids).values_list('country__name', 'paper_id')
-    country_paper_map = {}
-    for country, paper in paper_countries:
-        if country not in country_paper_map:
-            country_paper_map[country] = set()
-        country_paper_map[country].add(paper)
+        # 기본 쿼리셋 생성
+        papers = Paper.objects.filter(id__in=paper_ids)
 
-    paper_counts_by_country = {country: len(papers) for country, papers in country_paper_map.items()}
+        # 정렬 처리
+        if sort_by == 'title':
+            papers = papers.annotate(search_rank=Count('title', filter=Q(title__icontains=query)))
+            papers = papers.order_by('-search_rank' if order == 'desc' else 'search_rank')
+        elif sort_by == 'latest':
+            papers = papers.order_by('date' if order == 'asc' else '-date')
+
+        # 연도 필터링
+        if years:
+            papers = papers.filter(date__year__in=years)
+
+        # 발행처 필터링
+        if publishers:
+            papers = papers.filter(publisher__in=publishers)
+
+        # 저자 필터링
+        if author:
+            paper_ids_by_authors = Author.objects.filter(name__icontains=author).values_list('paperauthor__paper_id', flat=True)
+            papers = papers.filter(id__in=paper_ids_by_authors)
+
+        # 국가 필터링
+        if countries:
+            paper_ids_by_countries = PaperCountry.objects.filter(country__name__in=countries).values_list('paper_id', flat=True)
+            papers = papers.filter(id__in=paper_ids_by_countries)
+
+        # 필터링된 논문 개수
+        total_results = papers.count()
+
+        # 페이징 처리
+        paginator = Paginator(papers, items_per_page)
+        page_number = request.GET.get('page')
+        page_obj = paginator.get_page(page_number)
+
+        # 현재 페이지 그룹 계산 (10개 단위)
+        current_page = page_obj.number
+        current_group_start = (current_page - 1) // 10 * 10 + 1
+        current_group_end = min(current_group_start + 9, paginator.num_pages)
+
+        # 페이지 그룹 리스트 생성
+        current_group_pages = list(range(current_group_start, current_group_end + 1))
+
+        # 저자 및 키워드 추가
+        papers_with_authors_and_keywords = []
+        for paper in page_obj:
+            authors = Author.objects.filter(paperauthor__paper_id=paper.id)
+            keywords = Keyword.objects.filter(paperkeyword__paper_id=paper.id)
+            affiliations = Affiliation.objects.filter(paperaffiliation__paper_id=paper.id)
+
+            # 논문 내 국가 정보 수집 및 중복 제거
+            countries = PaperCountry.objects.filter(paper_id=paper.id).select_related('country')
+            unique_countries = list(set([country.country.name for country in countries]))
+
+            # 논문이 저장된 상태인지 확인 (로그인한 경우에만 확인)
+            is_saved = paper.id in saved_paper_ids if request.user.is_authenticated else False
+
+            papers_with_authors_and_keywords.append({
+                'paper': paper,
+                'authors': authors,
+                'keywords': keywords,
+                'affiliations': affiliations,
+                'countries': unique_countries,  # 나라 중복 제거
+                'is_saved': is_saved,  # 저장 여부 추가
+            })
+
+        # 연도 및 발행처별 논문 수 계산
+        year = range(2019, datetime.now().year + 1)
+        paper_counts_by_year = {str(y): Paper.objects.filter(id__in=paper_ids, date__year=y).count() for y in year}
+
+        publisher = ['ACM', 'IEEE', 'Springer']
+        paper_counts_by_publisher = {p: Paper.objects.filter(id__in=paper_ids, publisher=p).count() for p in publisher}
+
+        paper_countries = PaperCountry.objects.filter(paper_id__in=paper_ids).values_list('country__name', 'paper_id')
+        country_paper_map = {}
+        for country, paper in paper_countries:
+            if country not in country_paper_map:
+                country_paper_map[country] = set()
+            country_paper_map[country].add(paper)
+
+        paper_counts_by_country = {country: len(papers) for country, papers in country_paper_map.items()}
 
 
-    # 뉴스 검색 부분
-    api_key = '2f963493ee124210ac91a3b54ebb3c5c'
-    articles = []
+        # 뉴스 검색 부분
+        api_key = '2f963493ee124210ac91a3b54ebb3c5c'
+        articles = []
 
-    if filter_type == 'author':
-        if search_query:
-            if news_type == 'domestic':
-                url = f'https://newsapi.org/v2/everything?q={most_related_word}&language=ko&apiKey={api_key}'
-            else:
-                url = f'https://newsapi.org/v2/everything?q={most_related_word}&language=en&apiKey={api_key}'
+        if filter_type == 'author':
+            if search_query:
+                if news_type == 'domestic':
+                    url = f'https://newsapi.org/v2/everything?q={most_related_word}&language=ko&apiKey={api_key}'
+                else:
+                    url = f'https://newsapi.org/v2/everything?q={most_related_word}&language=en&apiKey={api_key}'
 
-            response = requests.get(url)
-            news_data = response.json()
-            articles = news_data.get('articles', [])
-        
-        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-            return JsonResponse({'articles': articles})
-    else:
-        if search_query:
-            if news_type == 'domestic':
-                url = f'https://newsapi.org/v2/everything?q={search_query}&language=ko&apiKey={api_key}'
-            else:
-                url = f'https://newsapi.org/v2/everything?q={search_query}&language=en&apiKey={api_key}'
+                response = requests.get(url)
+                news_data = response.json()
+                articles = news_data.get('articles', [])
 
-            response = requests.get(url)
-            news_data = response.json()
-            articles = news_data.get('articles', [])
-        
-        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-            return JsonResponse({'articles': articles})
-    
-    context = {
-        'query': query,
-        'papers_with_authors_and_keywords': papers_with_authors_and_keywords,
-        'paper_counts_by_year': paper_counts_by_year,
-        'paper_counts_by_publisher': paper_counts_by_publisher,
-        'paper_counts_by_country': paper_counts_by_country,
-        'related_terms': related_terms,
-        'articles': articles,
-        'news_type': news_type,
-        'search_query': search_query,
-        'page_obj': page_obj,
-        'selected_years': years,
-        'selected_publishers': publishers,
-        'selected_countries': countries,
-        'total_results': total_results,
-        'author': author,
-        'order': order,
-        'sort_by': sort_by,
-        'items_per_page': items_per_page,
-        'current_group_pages': current_group_pages,
-    }
-    return render(request, 'search.html', context)
+            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                return JsonResponse({'articles': articles})
+        else:
+            if search_query:
+                if news_type == 'domestic':
+                    url = f'https://newsapi.org/v2/everything?q={search_query}&language=ko&apiKey={api_key}'
+                else:
+                    url = f'https://newsapi.org/v2/everything?q={search_query}&language=en&apiKey={api_key}'
+
+                response = requests.get(url)
+                news_data = response.json()
+                articles = news_data.get('articles', [])
+
+            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                return JsonResponse({'articles': articles})
+
+        context = {
+            'query': query,
+            'papers_with_authors_and_keywords': papers_with_authors_and_keywords,
+            'paper_counts_by_year': paper_counts_by_year,
+            'paper_counts_by_publisher': paper_counts_by_publisher,
+            'paper_counts_by_country': paper_counts_by_country,
+            'related_terms': related_terms,
+            'articles': articles,
+            'news_type': news_type,
+            'search_query': search_query,
+            'page_obj': page_obj,
+            'selected_years': years,
+            'selected_publishers': publishers,
+            'selected_countries': countries,
+            'total_results': total_results,
+            'author': author,
+            'order': order,
+            'sort_by': sort_by,
+            'items_per_page': items_per_page,
+            'current_group_pages': current_group_pages,
+        }
+        return render(request, 'search.html', context)
+
+    except Exception as e:
+        # 오류 발생 시 error.html로 리디렉션
+        return render(request, 'error.html', {'error_message': str(e)})
 
 # 저자 이름으로 검색하는 엔진
 def get_author_paper_ids(user_keyword):
@@ -246,39 +249,45 @@ def get_author_paper_ids(user_keyword):
 
 
 # 논문 제목으로 검색하는 엔진
-def get_paper_ids(user_keyword):
+def get_paper_ids(user_keyword, start_year=2019, end_year=2024):
     # MariaDB 데이터베이스 연결
     db = mariadb.connect(**db_config)
     # 커서 생성
     cursor = db.cursor(dictionary=True)
 
-    # 쿼리 실행 / 검색 방식
-    if len(user_keyword) <= 2:      # 검색 키워드 길이가 2 이하일 때
-        cursor.execute("""
-        SELECT id
-        FROM paper
-        WHERE search LIKE %s
-           OR title LIKE %s
-           OR abstract LIKE %s
-        UNION
+    # 기본 쿼리
+    query_conditions = []
+    query_params = []
+
+    # 검색 키워드 조건 추가
+    if len(user_keyword) <= 2:  # 검색 키워드 길이가 2 이하일 때
+        query_conditions.append("""
+            (search LIKE %s OR title LIKE %s OR abstract LIKE %s
+             OR EXISTS (SELECT 1 FROM paper_keyword pk
+                        JOIN keyword k ON pk.keyword_id = k.id
+                        WHERE pk.paper_id = p.id AND k.keyword_name LIKE %s))
+        """)
+        query_params.extend([f'% {user_keyword} %', f'% {user_keyword} %', f'% {user_keyword} %', f'% {user_keyword} %'])
+    else:  # 검색 키워드 길이가 3 이상일 때
+        query_conditions.append("""
+            (MATCH(search, title, abstract) AGAINST(%s)
+             OR EXISTS (SELECT 1 FROM paper_keyword pk
+                        JOIN keyword k ON pk.keyword_id = k.id
+                        WHERE pk.paper_id = p.id AND MATCH(k.keyword_name) AGAINST(%s)))
+        """)
+        query_params.extend([user_keyword, user_keyword])
+
+    # 연도 필터링 조건 추가 (기본값: 2019 ~ 2024)
+    query_conditions.append("YEAR(p.date) BETWEEN %s AND %s")
+    query_params.extend([start_year, end_year])
+
+    # 쿼리 실행
+    query = f"""
         SELECT p.id
         FROM paper p
-        JOIN paper_keyword pk ON p.id = pk.paper_id
-        JOIN keyword k ON pk.keyword_id = k.id
-        WHERE k.keyword_name LIKE %s;
-        """, (f'% {user_keyword} %', f'% {user_keyword} %', f'% {user_keyword} %', f' %{user_keyword} %'))
-    else:       # 검색 키워드 길이가 3 이상일 때
-        cursor.execute("""
-        SELECT id
-        FROM paper
-        WHERE MATCH(search, title, abstract) AGAINST(%s)
-        UNION
-        SELECT p.id
-        FROM paper p
-        JOIN paper_keyword pk ON p.id = pk.paper_id
-        JOIN keyword k ON pk.keyword_id = k.id
-        WHERE MATCH(k.keyword_name) AGAINST(%s);
-        """, (user_keyword, user_keyword))
+        WHERE {' AND '.join(query_conditions)};
+    """
+    cursor.execute(query, query_params)
 
     # 쿼리 결과 가져오기
     paper_ids = [row['id'] for row in cursor.fetchall()]
@@ -288,6 +297,7 @@ def get_paper_ids(user_keyword):
     db.close()
 
     return paper_ids
+
 
 # 주어진 논문 ID 목록에 대한 abstract를 가져오는 함수
 def get_abstracts(paper_ids):
@@ -363,9 +373,11 @@ def top_5_related_words(query, paper_ids):
 
 # 분석 페이지 그래프
 def analyze(request):
+    start_year = int(request.GET.get('start_year', 2019))  # 기본값은 2019
+    end_year = int(request.GET.get('end_year', 2024))  # 기본값은 2024
     if 'query' in request.GET:
         user_keyword = request.GET['query']
-        paper_ids = get_paper_ids(user_keyword)
+        paper_ids = get_paper_ids(user_keyword, start_year=start_year, end_year=end_year)
         papers = Paper.objects.filter(id__in=paper_ids)
         total_results = papers.count()
 
@@ -489,6 +501,8 @@ def analyze(request):
             'top_keywords': top_keywords,
             'keyword': user_keyword,
             'total_results': total_results,
+            'start_year': start_year,
+            'end_year': end_year,
         }
 
         return render(request, 'total_graph.html', context)
