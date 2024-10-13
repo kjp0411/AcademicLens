@@ -12,7 +12,6 @@ body {
 /* 헤더 검색창 및 추천검색어 */
 .header {
     display: flex;
-    justify-content: space-between;
     align-items: center;
     background-color: #ffffff;
     border-bottom: 1px solid #e7e7e7;
@@ -21,7 +20,7 @@ body {
 }
 
 .logo-container {
-    margin-top: 20px;
+    margin-top: 10px;
     margin-left: 30%;
 }
 
@@ -35,7 +34,8 @@ body {
     display: flex;
     align-items: center;
     position: relative;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
+    margin-left: 1%;
 }
 
 .search-form {
@@ -69,10 +69,10 @@ body {
 }
 
 .related-terms-container {
-    display: flex;
+    display: block;
     justify-content: center;
-    margin-top: 10px;
-    margin-left: 45%;
+    margin-top: 7%;
+    margin-left: -24%;
     text-align: center;
 }
 

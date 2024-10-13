@@ -16,6 +16,7 @@ import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
 import requests
 from django.db.models import Count, Q
+import json
 
 from django.shortcuts import redirect
 from django.contrib import messages
@@ -54,6 +55,7 @@ def home(request):
 
 # 검색 시 논문 출력 및 필터링
 def search(request):
+<<<<<<< HEAD
     try:
         query = request.GET.get('query', '')
         years = request.GET.getlist('year')
@@ -72,6 +74,30 @@ def search(request):
             saved_paper_ids = SavedPaper.objects.filter(user=request.user).values_list('paper_id', flat=True)
 
         filter_type = request.GET.get('filter', 'paper')
+=======
+    query = request.GET.get('query', '')
+    years = request.GET.getlist('year')
+    publishers = request.GET.getlist('publisher')
+    author = request.GET.get('author-search')
+    countries = request.GET.getlist('country')
+    search_query = query
+    news_type = request.GET.get('news_type', 'international')  # 기본값을 'international'로 설정
+    order = request.GET.get('order', 'desc')
+    sort_by = request.GET.get('sort_by', 'title')
+    items_per_page = int(request.GET.get('items_per_page', 10)) # 기본값 10
+    filter_type = request.GET.get('filter', 'paper')
+    
+    # 로그인된 사용자의 저장된 논문 ID 확인
+    saved_paper_ids = []
+    if request.user.is_authenticated:
+        saved_paper_ids = SavedPaper.objects.filter(user=request.user).values_list('paper_id', flat=True)
+
+    # 필터(검색창-콤보박스)에 따라 논문 검색
+    if filter_type == 'author':
+        paper_ids = get_author_paper_ids(query)
+    else:
+        paper_ids = get_paper_ids(query)
+>>>>>>> develop_jh
 
         # 뉴스 검색 부분
         api_key = '2f963493ee124210ac91a3b54ebb3c5c'
@@ -184,6 +210,7 @@ def search(request):
                 news_data = response.json()
                 articles = news_data.get('articles', [])
 
+<<<<<<< HEAD
             if request.headers.get('x-requested-with') == 'XMLHttpRequest':
                 return JsonResponse({'articles': articles})
         else:
@@ -226,6 +253,38 @@ def search(request):
     except Exception as e:
         # 오류 발생 시 error.html로 리디렉션
         return render(request, 'error.html', {'error_message': str(e)})
+=======
+            response = requests.get(url)
+            news_data = response.json()
+            articles = news_data.get('articles', [])
+        
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            return JsonResponse({'articles': articles})
+    
+    context = {
+        'query': query,
+        'papers_with_authors_and_keywords': papers_with_authors_and_keywords,
+        'paper_counts_by_year': paper_counts_by_year,
+        'paper_counts_by_publisher': paper_counts_by_publisher,
+        'paper_counts_by_country': paper_counts_by_country,
+        'related_terms': related_terms,
+        'articles': articles,
+        'news_type': news_type,
+        'search_query': search_query,
+        'page_obj': page_obj,
+        'selected_years': years,
+        'selected_publishers': publishers,
+        'selected_countries': countries,
+        'total_results': total_results,
+        'author': author,
+        'order': order,
+        'sort_by': sort_by,
+        'items_per_page': items_per_page,
+        'current_group_pages': current_group_pages,
+        'filter': filter_type,
+    }
+    return render(request, 'search.html', context)
+>>>>>>> develop_jh
 
 # 저자 이름으로 검색하는 엔진
 def get_author_paper_ids(user_keyword):
@@ -1330,6 +1389,44 @@ def save_paper(request):
             return JsonResponse({'success': False, 'message': '이미 저장된 논문입니다.'})
     except Paper.DoesNotExist:
         return JsonResponse({'success': False, 'message': '논문을 찾을 수 없습니다.'})
+    
+# 논문 저장하기 - 체크박스 (여러개)
+@login_required
+@require_POST
+def save_selected_papers(request):
+    try:
+        # POST 요청에서 선택된 논문들의 ID 리스트를 받음
+        selected_papers = request.POST.getlist('selected_papers[]')  # name이 selected_papers[]인 데이터를 가져옴
+        
+        # 선택된 논문들이 있는지 확인
+        if not selected_papers:
+            return JsonResponse({'success': False, 'message': '저장할 논문이 선택되지 않았습니다.'})
+
+        # 각 논문을 저장
+        saved_count = 0
+        already_saved_count = 0
+        for paper_id in selected_papers:
+            try:
+                paper = Paper.objects.get(id=paper_id)
+                # 이미 저장된 논문이 있는지 확인 후 없으면 저장
+                saved_paper, created = SavedPaper.objects.get_or_create(user=request.user, paper=paper)
+                if created:
+                    saved_count += 1
+                else:
+                    already_saved_count += 1
+            except Paper.DoesNotExist:
+                # 논문이 존재하지 않는 경우 건너뜀
+                continue
+
+        # 결과 반환
+        message = f'{saved_count}개의 논문이 저장되었습니다.'
+        if already_saved_count > 0:
+            message += f' {already_saved_count}개의 논문은 이미 저장되었습니다.'
+
+        return JsonResponse({'success': True, 'message': message})
+
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': f'오류가 발생했습니다: {str(e)}'})
     
 # 논문 저장 삭제하기
 @login_required

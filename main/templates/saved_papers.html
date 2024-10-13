@@ -70,21 +70,21 @@
     <div class="pagination">
         <span class="step-links">
             {% if page_obj.has_previous %}
-                <a href="?query={{ query }}&page=1">&laquo;</a>
-                <a href="?query={{ query }}&page={{ page_obj.previous_page_number }}">&lsaquo;</a>
+                <a href="?query={{ query }}&order={{ order }}&sort_by={{ sort_by }}&page=1">&laquo;</a>
+                <a href="?query={{ query }}&order={{ order }}&sort_by={{ sort_by }}&page={{ page_obj.previous_page_number }}">&lsaquo;</a>
             {% endif %}
             
             {% for num in current_group_pages %}
                 {% if page_obj.number == num %}
                     <a href="#" class="current">{{ num }}</a>
                 {% else %}
-                    <a href="?query={{ query }}&page={{ num }}">{{ num }}</a>
+                    <a href="?query={{ query }}&order={{ order }}&sort_by={{ sort_by }}&page={{ num }}">{{ num }}</a>
                 {% endif %}
             {% endfor %}
             
             {% if page_obj.has_next %}
-                <a href="?query={{ query }}&page={{ page_obj.next_page_number }}">&rsaquo;</a>
-                <a href="?query={{ query }}&page={{ page_obj.paginator.num_pages }}">&raquo;</a>
+                <a href="?query={{ query }}&order={{ order }}&sort_by={{ sort_by }}&page={{ page_obj.next_page_number }}">&rsaquo;</a>
+                <a href="?query={{ query }}&order={{ order }}&sort_by={{ sort_by }}&page={{ page_obj.paginator.num_pages }}">&raquo;</a>
             {% endif %}
         </span>
     </div>
