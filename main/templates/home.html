@@ -247,7 +247,7 @@
             <div class="table-container">
                 <h2>실시간 인기 키워드</h2>
                 <div style="display: flex;">
-                    <!-- 첫 번째 테이블 -->
+                    <!-- 첫 번째 테이블 (1-5위) -->
                     <table style="margin-right: 20px;">
                         <thead>
                             <tr>
@@ -256,30 +256,20 @@
                             </tr>
                         </thead>
                         <tbody>
+                            {% for keyword in popular_keywords_1_5 %}
                             <tr>
-                                <td>1</td>
-                                <td>Python</td>
+                                <td>{{ forloop.counter }}</td>
+                                <td>{{ keyword.keyword }}</td>
                             </tr>
+                            {% empty %}
                             <tr>
-                                <td>2</td>
-                                <td>Machine Learning</td>
+                                <td colspan="2">No popular keywords found.</td>
                             </tr>
-                            <tr>
-                                <td>3</td>
-                                <td>Data Science</td>
-                            </tr>
-                            <tr>
-                                <td>4</td>
-                                <td>Artificial Intelligence</td>
-                            </tr>
-                            <tr>
-                                <td>5</td>
-                                <td>Deep Learning</td>
-                            </tr>
+                            {% endfor %}
                         </tbody>
                     </table>
-                
-                    <!-- 두 번째 테이블 -->
+            
+                    <!-- 두 번째 테이블 (6-10위) -->
                     <table>
                         <thead>
                             <tr>
@@ -288,30 +278,19 @@
                             </tr>
                         </thead>
                         <tbody>
+                            {% for keyword in popular_keywords_6_10 %}
                             <tr>
-                                <td>6</td>
-                                <td>Natural Language Processing</td>
+                                <td>{{ forloop.counter|add:5 }}</td>
+                                <td>{{ keyword.keyword }}</td>
                             </tr>
+                            {% empty %}
                             <tr>
-                                <td>7</td>
-                                <td>Computer Vision</td>
+                                <td colspan="2">No popular keywords found.</td>
                             </tr>
-                            <tr>
-                                <td>8</td>
-                                <td>Reinforcement Learning</td>
-                            </tr>
-                            <tr>
-                                <td>9</td>
-                                <td>Robotics</td>
-                            </tr>
-                            <tr>
-                                <td>10</td>
-                                <td>Big Data</td>
-                            </tr>
+                            {% endfor %}
                         </tbody>
                     </table>
                 </div>
-                
             </div>
             <!-- 총 논문 수와 학회 수 -->
         <div class="table-container">
