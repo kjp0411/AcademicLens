@@ -159,6 +159,7 @@ class Paper(models.Model):
     citations = models.IntegerField()
     publisher = models.CharField(max_length=20)
     abstract = models.TextField()
+    saved_count = models.IntegerField(default=0)  # 기본값을 0으로 설정
 
     class Meta:
         managed = False
