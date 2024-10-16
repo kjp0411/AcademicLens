@@ -110,6 +110,17 @@
             document.getElementById('search-box').value = term;  // 검색어 입력 필드에 선택된 추천 검색어 삽입
             document.getElementById('search-form').submit();  // 검색 폼 제출
         }
+
+        // 사용자가 한 글자만 검색했을 때 경고문 띄우기
+        document.getElementById('search-form').addEventListener('submit', function(event) {
+            var query = document.getElementById('search-box').value;
+
+            // 입력된 검색어가 2글자 이상인지 확인
+            if (query.length < 2) {
+                alert('2글자 이상 입력해주세요.');
+                event.preventDefault(); // 폼 제출 막기
+            }
+        });
     </script>
 </body>
 </html>
