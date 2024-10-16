@@ -32,7 +32,14 @@ from rest_framework.response import Response
 from braces.views import CsrfExemptMixin
 
 
-openai.api_key = ''
+import os
+from dotenv import load_dotenv
+
+# .env 파일 로드
+load_dotenv()
+
+# 환경 변수에서 OpenAI API 키 불러오기
+openai.api_key = os.getenv('OPENAI_API_KEY')
 
 db_config = {
     'host': '127.0.0.1',
@@ -42,14 +49,19 @@ db_config = {
     'port':3307
 }
 
-# 메인 화면 논문 수, 소속 수
+# 메인 화면 논문 수, 소속 수, 인기 논문 5개 가져오기
 def home(request):
     papers = Paper.objects.all()
     paper_count = len(papers)
     affiliation_count = Affiliation.objects.values('name').distinct().count()
+    
+    # saved_count 기준으로 인기 논문 5개 가져오기
+    popular_papers = Paper.objects.order_by('-saved_count')[:5]
+
     return render(request, 'home.html', {
         'paper_count': paper_count,
-        'affiliation_count': affiliation_count
+        'affiliation_count': affiliation_count,
+        'popular_papers': popular_papers  # 인기 논문 데이터를 템플릿에 전달
     })
 
 # 검색 시 논문 출력 및 필터링
@@ -1311,6 +1323,9 @@ def save_paper(request):
         paper = Paper.objects.get(id=paper_id)
         saved_paper, created = SavedPaper.objects.get_or_create(user=request.user, paper=paper)
         if created:
+            # 논문 저장 시 saved_count 증가
+            paper.saved_count += 1
+            paper.save()
             return JsonResponse({'success': True, 'message': '논문이 저장되었습니다.'})
         else:
             return JsonResponse({'success': False, 'message': '이미 저장된 논문입니다.'})
@@ -1330,7 +1345,10 @@ def remove_paper(request):
         paper = Paper.objects.get(id=paper_id)
         saved_paper = SavedPaper.objects.filter(user=request.user, paper=paper)
         if saved_paper.exists():
+            # 논문 삭제 시 saved_count 감소
             saved_paper.delete()
+            paper.saved_count = max(0, paper.saved_count - 1)  # saved_count가 음수가 되지 않도록
+            paper.save()
             return JsonResponse({'success': True, 'message': '논문이 삭제되었습니다.'})
         else:
             return JsonResponse({'success': False, 'message': '저장되지 않은 논문입니다.'})
