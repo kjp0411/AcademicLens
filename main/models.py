@@ -215,3 +215,11 @@ class RecentPaper(models.Model):
 
     class Meta:
         ordering = ['-viewed_at']  # 최신 순으로 정렬
+
+
+class SearchKeyword(models.Model):
+    keyword = models.CharField(max_length=255, unique=True)
+    count = models.IntegerField(default=0)
+    
+    def __str__(self):
+        return self.keyword

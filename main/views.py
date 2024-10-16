@@ -1,6 +1,6 @@
 import mariadb
 from django.shortcuts import render, get_object_or_404
-from .models import Paper, Author, Keyword, Affiliation, Country, PaperAuthor, PaperAffiliation, PaperKeyword, PaperCountry, SavedPaper, RecentPaper
+from .models import Paper, Author, Keyword, Affiliation, Country, PaperAuthor, PaperAffiliation, PaperKeyword, PaperCountry, SavedPaper, RecentPaper, SearchKeyword
 from django.db import connection
 from collections import Counter
 from datetime import datetime
@@ -52,17 +52,24 @@ db_config = {
 
 # 메인 화면 논문 수, 소속 수, 인기 논문 5개 가져오기
 def home(request):
+    # 전체 논문 수 및 학회 수 계산
     papers = Paper.objects.all()
     paper_count = len(papers)
     affiliation_count = Affiliation.objects.values('name').distinct().count()
-    
-    # saved_count 기준으로 인기 논문 5개 가져오기
+
+    # 인기 논문 5개 가져오기 (saved_count 기준)
     popular_papers = Paper.objects.order_by('-saved_count')[:5]
+
+    # 실시간 인기 키워드 상위 10개 가져오기
+    popular_keywords_1_5 = SearchKeyword.objects.all().order_by('-count')[:5]
+    popular_keywords_6_10 = SearchKeyword.objects.all().order_by('-count')[5:10]
 
     return render(request, 'home.html', {
         'paper_count': paper_count,
         'affiliation_count': affiliation_count,
-        'popular_papers': popular_papers  # 인기 논문 데이터를 템플릿에 전달
+        'popular_papers': popular_papers,  # 인기 논문 데이터
+        'popular_keywords_1_5': popular_keywords_1_5,  # 상위 1-5위 인기 키워드
+        'popular_keywords_6_10': popular_keywords_6_10,  # 상위 6-10위 인기 키워드
     })
 
 # 검색 시 논문 출력 및 필터링
@@ -77,9 +84,9 @@ def search(request):
         news_type = request.GET.get('news_type', 'international')  # 기본값을 'international'로 설정
         order = request.GET.get('order', 'desc')
         sort_by = request.GET.get('sort_by', 'title')
-        items_per_page = int(request.GET.get('items_per_page', 10)) # 기본값 10
+        items_per_page = int(request.GET.get('items_per_page', 10))  # 기본값 10
         filter_type = request.GET.get('filter', 'paper')
-        
+
         # 로그인된 사용자의 저장된 논문 ID 확인
         saved_paper_ids = []
         if request.user.is_authenticated:
@@ -93,11 +100,6 @@ def search(request):
 
         # 뉴스 검색 부분
         api_key = '2f963493ee124210ac91a3b54ebb3c5c'
-
-        if filter_type == 'author':
-            paper_ids = get_author_paper_ids(query)
-        else:
-            paper_ids = get_paper_ids(query)
 
         related_terms = []
         if query:
@@ -133,6 +135,10 @@ def search(request):
 
         # 필터링된 논문 개수
         total_results = papers.count()
+
+        if total_results == 0:
+            # 검색 결과가 없을 경우 error.html로 이동
+            return render(request, 'error.html', {'error_message': '검색 결과가 없습니다.'})
 
         # 페이징 처리
         paginator = Paginator(papers, items_per_page)
@@ -186,9 +192,7 @@ def search(request):
 
         paper_counts_by_country = {country: len(papers) for country, papers in country_paper_map.items()}
 
-
         # 뉴스 검색 부분
-        api_key = '2f963493ee124210ac91a3b54ebb3c5c'
         articles = []
 
         if filter_type == 'author':
@@ -239,11 +243,22 @@ def search(request):
             'current_group_pages': current_group_pages,
             'filter': filter_type,
         }
-        return render(request, 'search.html', context)
 
+        # 검색 결과가 있는 경우에만 렌더 후에 키워드 저장
+        response = render(request, 'search.html', context)
+
+        # 검색 결과가 성공적으로 렌더링된 후에 키워드 카운트 업데이트
+        if total_results > 0 and query:
+            keyword, created = SearchKeyword.objects.get_or_create(keyword=query)
+            if not created:
+                keyword.count += 1
+            keyword.save()
+
+        return response
     except Exception as e:
         # 오류 발생 시 error.html로 리디렉션
         return render(request, 'error.html', {'error_message': str(e)})
+
 
 # 저자 이름으로 검색하는 엔진
 def get_author_paper_ids(user_keyword):
