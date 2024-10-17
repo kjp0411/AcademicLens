@@ -93,10 +93,12 @@ def search(request):
             saved_paper_ids = SavedPaper.objects.filter(user=request.user).values_list('paper_id', flat=True)
 
         # 필터(검색창-콤보박스)에 따라 논문 검색
-        if filter_type == 'author':
-            paper_ids = get_author_paper_ids(query)
-        else:
+        if filter_type == 'paper':
             paper_ids = get_paper_ids(query)
+        elif filter_type == 'author':
+            paper_ids = get_author_paper_ids(query)
+        elif filter_type == 'country':
+            paper_ids = get_country_paper_ids(query)
 
         # 뉴스 검색 부분
         api_key = '2f963493ee124210ac91a3b54ebb3c5c'
@@ -281,6 +283,54 @@ def get_author_paper_ids(user_keyword):
     return paper_ids
 
 
+def get_country_paper_ids(user_keyword):
+    db = mariadb.connect(**db_config)
+    cursor = db.cursor(dictionary=True)
+
+    # 조건문을 통해 입력된 키워드 길이에 따라 검색 필드를 결정
+    if len(user_keyword) == 2:
+        # alpha_2로 검색
+        query = """
+        SELECT p.id
+        FROM paper p
+        JOIN paper_country pc ON p.id = pc.paper_id
+        JOIN country c ON pc.country_id = c.id
+        WHERE c.alpha_2 = %s;
+        """
+        params = (user_keyword,)
+    elif len(user_keyword) == 3:
+        # alpha_3로 검색
+        query = """
+        SELECT p.id
+        FROM paper p
+        JOIN paper_country pc ON p.id = pc.paper_id
+        JOIN country c ON pc.country_id = c.id
+        WHERE c.alpha_3 = %s;
+        """
+        params = (user_keyword,)
+    else:
+        # name으로 검색 (공백을 무시하고 검색)
+        query = """
+        SELECT p.id
+        FROM paper p
+        JOIN paper_country pc ON p.id = pc.paper_id
+        JOIN country c ON pc.country_id = c.id
+        WHERE REPLACE(c.name, ' ', '') LIKE REPLACE(%s, ' ', '');
+        """
+        params = (f'%{user_keyword}%',)
+
+    # 쿼리 실행
+    cursor.execute(query, params)
+
+    # 결과 가져오기
+    paper_ids = [row['id'] for row in cursor.fetchall()]
+
+    cursor.close()
+    db.close()
+    
+    return paper_ids
+
+    
 # 논문 제목으로 검색하는 엔진
 def get_paper_ids(user_keyword, start_year=2019, end_year=2024):
     # MariaDB 데이터베이스 연결

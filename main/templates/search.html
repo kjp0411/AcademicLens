@@ -274,21 +274,21 @@
                 <div class="pagination">
                     <span class="step-links">
                         {% if page_obj.has_previous %}
-                            <a href="?query={{ query }}{% for year in selected_years %}&year={{ year }}{% endfor %}{% for publisher in selected_publishers %}&publisher={{ publisher }}{% endfor %}&page=1">&laquo;</a>
-                            <a href="?query={{ query }}{% for year in selected_years %}&year={{ year }}{% endfor %}{% for publisher in selected_publishers %}&publisher={{ publisher }}{% endfor %}&page={{ page_obj.previous_page_number }}">&lsaquo;</a>
+                            <a href="?filter={{ filter }}&query={{ query }}{% for year in selected_years %}&year={{ year }}{% endfor %}{% for publisher in selected_publishers %}&publisher={{ publisher }}{% endfor %}&page=1">&laquo;</a>
+                            <a href="?filter={{ filter }}&query={{ query }}{% for year in selected_years %}&year={{ year }}{% endfor %}{% for publisher in selected_publishers %}&publisher={{ publisher }}{% endfor %}&page={{ page_obj.previous_page_number }}">&lsaquo;</a>
                         {% endif %}
                         
                         {% for num in current_group_pages %}
                             {% if page_obj.number == num %}
                                 <a href="#" class="current">{{ num }}</a>
                             {% else %}
-                                <a href="?query={{ query }}{% for year in selected_years %}&year={{ year }}{% endfor %}{% for publisher in selected_publishers %}&publisher={{ publisher }}{% endfor %}&page={{ num }}">{{ num }}</a>
+                                <a href="?filter={{ filter }}&query={{ query }}{% for year in selected_years %}&year={{ year }}{% endfor %}{% for publisher in selected_publishers %}&publisher={{ publisher }}{% endfor %}&page={{ num }}">{{ num }}</a>
                             {% endif %}
                         {% endfor %}
                         
                         {% if page_obj.has_next %}
-                            <a href="?query={{ query }}{% for year in selected_years %}&year={{ year }}{% endfor %}{% for publisher in selected_publishers %}&publisher={{ publisher }}{% endfor %}&page={{ page_obj.next_page_number }}">&rsaquo;</a>
-                            <a href="?query={{ query }}{% for year in selected_years %}&year={{ year }}{% endfor %}{% for publisher in selected_publishers %}&publisher={{ publisher }}{% endfor %}&page={{ page_obj.paginator.num_pages }}">&raquo;</a>
+                            <a href="?filter={{ filter }}&query={{ query }}{% for year in selected_years %}&year={{ year }}{% endfor %}{% for publisher in selected_publishers %}&publisher={{ publisher }}{% endfor %}&page={{ page_obj.next_page_number }}">&rsaquo;</a>
+                            <a href="?filter={{ filter }}&query={{ query }}{% for year in selected_years %}&year={{ year }}{% endfor %}{% for publisher in selected_publishers %}&publisher={{ publisher }}{% endfor %}&page={{ page_obj.paginator.num_pages }}">&raquo;</a>
                         {% endif %}
                     </span>
                 </div>
