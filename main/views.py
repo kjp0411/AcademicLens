@@ -918,7 +918,7 @@ def country_get_paper_counts_by_year(request):
     country_name = request.GET.get('name')
     with connection.cursor() as cursor:
         cursor.execute("""
-            SELECT YEAR(p.date) AS year, COUNT(*) AS paper_count
+            SELECT YEAR(p.date) AS year, COUNT(DISTINCT p.id) AS paper_count
             FROM paper p
             JOIN paper_country pc ON p.id = pc.paper_id
             JOIN country c ON pc.country_id = c.id
@@ -1138,7 +1138,7 @@ def affiliation_get_paper_counts_by_year(request):
     affiliation_name = request.GET.get('name')
     with connection.cursor() as cursor:
         cursor.execute("""
-            SELECT YEAR(p.date) AS year, COUNT(*) AS paper_count
+            SELECT YEAR(p.date) AS year, COUNT(DISTINCT p.id) AS paper_count
             FROM paper p
             JOIN paper_affiliation pa ON p.id = pa.paper_id
             JOIN affiliation a ON pa.affiliation_id = a.id
@@ -1361,6 +1361,24 @@ def author_get_total_papers(request):
     
     return JsonResponse(data)
 
+def author_get_affiliation(request):
+    author_name = request.GET.get('name')  # 저자의 이름을 요청 파라미터로 받음
+    with connection.cursor() as cursor:
+        cursor.execute("""
+            SELECT a.affiliation
+            FROM author a
+            WHERE a.name = %s;
+        """, [author_name])
+        
+        row = cursor.fetchone()
+    
+    # 저자가 존재할 경우, 소속 정보 반환
+    if row:
+        affiliation = row[0]
+        return JsonResponse({'affiliation': affiliation})
+    else:
+        return JsonResponse({'error': '저자를 찾을 수 없습니다.'}, status=404)
+    
 # 로그인 html 출력 함수
 def login_html(request):
     return render(request, 'login.html')

@@ -18,10 +18,12 @@
         <strong>저자</strong><br> 
         <p>
             {% for author in authors %}
-                <a href="#" class="author-link">{{ author.name }}</a>{% if not forloop.last %}, {% endif %}
+            <span>{{ forloop.counter }}) </span>
+                <a href="#" class="author-link">{{ author.name }}</a> 
+                {% if not forloop.last %}, {% endif %}
             {% endfor %}
         </p><br>
-        
+
         <strong>국가</strong><br>
         <p>
             {% for country in countries %}
@@ -32,9 +34,11 @@
         <strong>소속기관</strong><br> 
         <p>
             {% for affiliation in affiliations %}
+            <span>{{ forloop.counter }}) </span>
                 <a href="#" class="affiliation-link">{{ affiliation.name }}</a>{% if not forloop.last %}<br> {% endif %}
             {% endfor %}
         </p><br>
+
 
         <strong>발행연도</strong><br>
         <p>{{ paper.date|date:"Y-m-d" }}</p><br>

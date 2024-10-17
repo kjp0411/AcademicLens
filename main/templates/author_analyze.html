@@ -202,6 +202,7 @@
                 <h2 id="authorName" style="color: black;"></h2>
                 <p>발표 논문 수</p>
                 <p>논문 수 (개): <span id="totalPapers">로딩 중...</span></p>
+                <p>소속: <span id="affiliation">로딩 중...</span></p>
             </div>
         </div>
         <div class="main">
@@ -620,6 +621,29 @@
                 console.error('Error analyzing keyword data', response.statusText);
             }
         }
+
+        async function fetchAffiliation() {
+            const response = await fetch(`/author/affiliation/?name=${encodeURIComponent(authorName)}`);
+            if (!response.ok) {
+                console.error('Network response was not ok', response.statusText);
+                return;
+            }
+            const data = await response.json();
+            return data.affiliation;
+        }
+
+        function renderAffiliation(affiliation) {
+            const affiliationElement = document.getElementById('affiliation');
+            affiliationElement.textContent = affiliation;
+        }
+
+        fetchAffiliation().then(affiliation => {
+            if (affiliation) {
+                renderAffiliation(affiliation);
+            }
+        }).catch(error => {
+            console.error('Error fetching affiliation:', error);
+        });
     </script>
 </body>
 </html>

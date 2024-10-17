@@ -33,6 +33,7 @@ urlpatterns = [
     path('api/author_paper_counts_by_year/', views.author_get_paper_counts_by_year, name='author_paper_counts_by_year'),
     path('api/author_recent_papers/', views.author_get_recent_papers, name='author_recent_papers'),
     path('api/author_total_papers/', views.author_get_total_papers, name='author_total_papers'),
+    path('author/affiliation/', views.author_get_affiliation, name='author_get_affiliation'),
 
     path('api/analyze_network_data/', views.AnalyzeNetworkData.as_view(), name='analyze_network_data'),
     path('api/analyze_keyword_data/', views.AnalyzeKeywordData.as_view(), name='analyze_keyword_data'),
