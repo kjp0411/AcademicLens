@@ -248,7 +248,7 @@ def search(request):
         response = render(request, 'search.html', context)
 
         # 검색 결과가 성공적으로 렌더링된 후에 키워드 카운트 업데이트
-        if total_results > 0 and query:
+        if total_results > 0 and query and filter_type == 'paper':
             keyword, created = SearchKeyword.objects.get_or_create(keyword=query)
             if not created:
                 keyword.count += 1
