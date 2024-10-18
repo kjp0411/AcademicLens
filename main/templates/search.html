@@ -167,7 +167,8 @@
                     </span>
                     <div class="analysis-button-container">
                         <form action="{% url 'total_graph' %}" method="get" id="analysis-form">
-                            <input type="hidden" name="query" id="analysis-query">
+                            <input type="hidden" name="query" value="{{ query }}">
+                            <input type="hidden" name="filter" value="{{ request.GET.filter }}"> <!-- filter 값을 유지하여 전달 -->
                             <button type="submit"> 분석결과보기 </button>
                         </form>
                     </div>

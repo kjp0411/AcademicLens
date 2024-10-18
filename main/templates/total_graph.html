@@ -56,8 +56,9 @@
     <br>
     <div style="text-align: center; padding: 20px;">
         <form method="GET" action="{% url 'total_graph' %}" style="display: inline-flex; align-items: center; gap: 10px; background-color: #f0f0f0; padding: 10px; border-radius: 8px;">
-            <!-- query를 hidden 필드로 추가하여 유지 -->
+            <!-- query와 filter를 hidden 필드로 추가하여 유지 -->
             <input type="hidden" name="query" value="{{ keyword }}">
+            <input type="hidden" name="filter" value="{{ filter }}">  <!-- filter 파라미터 유지 -->
         
             <label for="start_year" style="margin-right: 10px; white-space: nowrap;">기간 설정:</label>
             
