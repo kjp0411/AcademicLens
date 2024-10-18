@@ -32,7 +32,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from braces.views import CsrfExemptMixin
 
-
+import logging # 문제 발생 시 로그 띄우기
 import os
 from dotenv import load_dotenv
 
@@ -263,64 +263,77 @@ def search(request):
 
 
 # 저자 이름으로 검색하는 엔진
-def get_author_paper_ids(user_keyword):
+def get_author_paper_ids(user_keyword, start_year=2019, end_year=2024):
     db = mariadb.connect(**db_config)
     cursor = db.cursor(dictionary=True)
 
     # 공백을 제거하고 비교하는 SQL 쿼리
-    cursor.execute("""
-    SELECT p.id
-    FROM paper p
-    JOIN paper_author pa ON p.id = pa.paper_id
-    JOIN author a ON pa.author_id = a.id
-    WHERE REPLACE(a.name, ' ', '') LIKE REPLACE(%s, ' ', '');
-    """, (f'%{user_keyword}%',))
+    query_conditions = []
+    query_params = []
 
+    # 저자 이름 검색 조건 추가
+    query_conditions.append("""
+        REPLACE(a.name, ' ', '') LIKE REPLACE(%s, ' ', '')
+    """)
+    query_params.append(f'%{user_keyword}%')
+
+    # 연도 필터링 조건 추가 (기본값: 2019 ~ 2024)
+    query_conditions.append("YEAR(p.date) BETWEEN %s AND %s")
+    query_params.extend([start_year, end_year])
+
+    # 쿼리 실행
+    query = f"""
+        SELECT p.id
+        FROM paper p
+        JOIN paper_author pa ON p.id = pa.paper_id
+        JOIN author a ON pa.author_id = a.id
+        WHERE {' AND '.join(query_conditions)};
+    """
+    cursor.execute(query, query_params)
+
+    # 쿼리 결과 가져오기
     paper_ids = [row['id'] for row in cursor.fetchall()]
 
     cursor.close()
     db.close()
+    
     return paper_ids
 
 
-def get_country_paper_ids(user_keyword):
+def get_country_paper_ids(user_keyword, start_year=2019, end_year=2024):
     db = mariadb.connect(**db_config)
     cursor = db.cursor(dictionary=True)
 
     # 조건문을 통해 입력된 키워드 길이에 따라 검색 필드를 결정
+    query_conditions = []
+    query_params = []
+
     if len(user_keyword) == 2:
         # alpha_2로 검색
-        query = """
-        SELECT p.id
-        FROM paper p
-        JOIN paper_country pc ON p.id = pc.paper_id
-        JOIN country c ON pc.country_id = c.id
-        WHERE c.alpha_2 = %s;
-        """
-        params = (user_keyword,)
+        query_conditions.append("c.alpha_2 = %s")
+        query_params.append(user_keyword)
     elif len(user_keyword) == 3:
         # alpha_3로 검색
-        query = """
-        SELECT p.id
-        FROM paper p
-        JOIN paper_country pc ON p.id = pc.paper_id
-        JOIN country c ON pc.country_id = c.id
-        WHERE c.alpha_3 = %s;
-        """
-        params = (user_keyword,)
+        query_conditions.append("c.alpha_3 = %s")
+        query_params.append(user_keyword)
     else:
         # name으로 검색 (공백을 무시하고 검색)
-        query = """
+        query_conditions.append("REPLACE(c.name, ' ', '') LIKE REPLACE(%s, ' ', '')")
+        query_params.append(f'%{user_keyword}%')
+
+    # 연도 필터링 조건 추가 (기본값: 2019 ~ 2024)
+    query_conditions.append("YEAR(p.date) BETWEEN %s AND %s")
+    query_params.extend([start_year, end_year])
+
+    # 쿼리 실행
+    query = f"""
         SELECT p.id
         FROM paper p
         JOIN paper_country pc ON p.id = pc.paper_id
         JOIN country c ON pc.country_id = c.id
-        WHERE REPLACE(c.name, ' ', '') LIKE REPLACE(%s, ' ', '');
-        """
-        params = (f'%{user_keyword}%',)
-
-    # 쿼리 실행
-    cursor.execute(query, params)
+        WHERE {' AND '.join(query_conditions)};
+    """
+    cursor.execute(query, query_params)
 
     # 결과 가져오기
     paper_ids = [row['id'] for row in cursor.fetchall()]
@@ -460,14 +473,22 @@ def analyze(request):
     end_year = int(request.GET.get('end_year', 2024))  # 기본값은 2024
     if 'query' in request.GET:
         user_keyword = request.GET['query']
-        paper_ids = get_paper_ids(user_keyword, start_year=start_year, end_year=end_year)
-        papers = Paper.objects.filter(id__in=paper_ids)
-        total_results = papers.count()
+        filter_type = request.GET.get('filter', 'paper')
 
         # MariaDB 데이터베이스 연결
         db = mariadb.connect(**db_config)
         # 커서 생성
         cursor = db.cursor(dictionary=True)
+
+        if filter_type == 'paper':
+            paper_ids = get_paper_ids(user_keyword, start_year=start_year, end_year=end_year)
+        elif filter_type == 'author':
+            paper_ids = get_author_paper_ids(user_keyword, start_year=start_year, end_year=end_year)
+        elif filter_type == 'country':
+            paper_ids = get_country_paper_ids(user_keyword, start_year=start_year, end_year=end_year)
+
+        papers = Paper.objects.filter(id__in=paper_ids)
+        total_results = papers.count()
 
         # 연도별로 그룹화하고 각 연도의 논문 수 구하기
         if paper_ids:
@@ -526,9 +547,16 @@ def analyze(request):
                 LIMIT 10;
                 """, paper_ids)
 
-                # 데이터를 UTF-8로 인코딩하여 가져오기
+                # 데이터를 가져오기
                 rows = cursor.fetchall()
-                affiliation_counts = [(row[0].encode('latin1').decode('utf8'), row[1]) for row in rows]
+                for row in rows:
+                    try:
+                        # 인코딩 및 디코딩을 생략하고 데이터를 바로 사용
+                        affiliation_name = row[0]
+                        affiliation_counts.append((affiliation_name, row[1]))
+                    except Exception as e:
+                        # 문제가 발생한 경우 해당 데이터를 로그로 남김
+                        logging.error(f"Error processing affiliation name: {row[0]} - {str(e)}")
 
         # 소속 이름과 논문 수를 결합한 리스트 생성
         affiliation_data = list(zip([item[0] for item in affiliation_counts], [item[1] for item in affiliation_counts]))
@@ -586,6 +614,7 @@ def analyze(request):
             'total_results': total_results,
             'start_year': start_year,
             'end_year': end_year,
+            'filter': filter_type,
         }
 
         return render(request, 'total_graph.html', context)
