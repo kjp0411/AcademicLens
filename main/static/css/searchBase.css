@@ -21,7 +21,7 @@ body {
 
 .logo-container {
     margin-top: 10px;
-    margin-left: 50%;
+    margin-left: 30%;
 }
 
 .logo {
@@ -36,7 +36,7 @@ body {
     position: relative;
     flex-wrap: nowrap;
     margin-left: 1%;
-    margin-right: 30%;
+    margin-right: 15%;
 }
 
 .search-form {
@@ -70,10 +70,10 @@ body {
 }
 
 .related-terms-container {
-    display: block;
+    display: flex;
     justify-content: center;
     margin-top: 7%;
-    margin-left: -62%;
+    margin-left: -65%;
     text-align: center;
 }
 

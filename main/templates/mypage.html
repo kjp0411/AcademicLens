@@ -157,9 +157,9 @@
     
     // 폴더명 수정
     function editFolderName(button) {
-        const folderNameElement = button.previousElementSibling;
+        const folderNameElement = button.closest('.folder').querySelector('.folder-name');  // 폴더 이름을 찾음
         const newFolderName = prompt("새 폴더 이름을 입력하세요:", folderNameElement.textContent);
-    
+
         if (newFolderName && newFolderName.trim() !== "") {
             folderNameElement.textContent = newFolderName;
         } else {

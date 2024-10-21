@@ -1389,6 +1389,8 @@ def save_selected_papers(request):
                 saved_paper, created = SavedPaper.objects.get_or_create(user=request.user, paper=paper)
                 if created:
                     saved_count += 1
+                    paper.saved_count += 1
+                    paper.save()
                 else:
                     already_saved_count += 1
             except Paper.DoesNotExist:
