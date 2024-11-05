@@ -56,5 +56,11 @@ urlpatterns = [
     path('save-paper/', views.save_paper, name='save_paper'),
     path('remove-paper/', views.remove_paper, name='remove_paper'),
     path('save-selected-papers/', views.save_selected_papers, name='save_selected_papers'),
+
+    # 이미지 저장
+    path('save-image/', views.save_image, name='save_image'),
+
+    # 폴더 생성
+    path('create-folder/', views.create_folder, name='create_folder'),
 ]
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

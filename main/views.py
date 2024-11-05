@@ -36,6 +36,16 @@ import logging # 문제 발생 시 로그 띄우기
 import os
 from dotenv import load_dotenv
 
+# 이미지 저장 라이브러리
+import base64
+from django.conf import settings
+from django.http import JsonResponse
+from django.contrib.auth.decorators import login_required
+from PIL import Image
+from io import BytesIO
+
+# 폴더 지정
+from django.core.files.base import ContentFile
 # .env 파일 로드
 load_dotenv()
 
@@ -1681,3 +1691,50 @@ def analysis_file(request):
     # 여기에 추천 논문 데이터를 불러오는 로직을 추가합니다.
     return render(request, 'analysis_file.html')
 
+# 이미지 저장
+@login_required
+def save_image(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        image_data = data['imageData']
+        folder_name = data['folderName']
+        image_name = data['imageName']
+        
+        user_folder = os.path.join(settings.MEDIA_ROOT, 'accounts', request.user.username, folder_name)
+
+        if not os.path.exists(user_folder):
+            os.makedirs(user_folder)
+
+        format, imgstr = image_data.split(';base64,') 
+        ext = format.split('/')[-1] 
+        image_data = ContentFile(base64.b64decode(imgstr), name=f'{image_name}.{ext}')
+
+        file_path = os.path.join(user_folder, image_data.name)
+        with open(file_path, 'wb') as f:
+            f.write(image_data.read())
+
+        return JsonResponse({'status': 'success', 'message': '이미지가 저장되었습니다.'})
+    
+    return JsonResponse({'status': 'error', 'message': '잘못된 요청입니다.'}, status=400)
+
+# 사용자 폴더 내 폴더 생성
+@login_required
+def create_folder(request):
+    if request.method == 'POST':
+        folder_name = request.POST.get('folder_name')
+        user_folder = os.path.join(settings.MEDIA_ROOT, 'accounts', request.user.username)
+
+        if not os.path.exists(user_folder):
+            os.makedirs(user_folder)
+
+        new_folder_path = os.path.join(user_folder, folder_name)
+
+        try:
+            if not os.path.exists(new_folder_path):
+                os.makedirs(new_folder_path)
+                return JsonResponse({'status': 'success', 'message': f'폴더 {folder_name} 생성 완료'})
+            else:
+                return JsonResponse({'status': 'error', 'message': '이미 폴더가 존재합니다.'})
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)})
+    return JsonResponse({'status': 'error', 'message': '잘못된 요청입니다.'})

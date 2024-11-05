@@ -5,33 +5,31 @@
 {% block content %}
     <style>
         #papersChart, #authorsChart, #affiliationChart, #countryChart, #keywordChart {
-            width: 100%; /* 차트가 페이지 전체 너비를 차지하도록 설정 */
-            max-width: 1200px; /* 원하는 최대 너비를 지정 */
-            height: 500px; /* 차트의 높이 조정 */
+            width: 100%;
+            max-width: 1200px;
+            height: 500px;
             display: block;
-            margin: auto; /* 중앙 정렬을 위해 추가 */
+            margin: auto;
         }
 
-        /* 페이지의 전체 폭을 넓히기 위한 컨테이너 설정 */
         main {
-            width: 100%; /* 페이지의 너비를 90%로 설정 */
-            max-width: 1900px; /* 최대 너비 설정 */
-            margin: 0 auto; /* 페이지 중앙 정렬 */
+            width: 100%;
+            max-width: 1900px;
+            margin: 0 auto;
         }
 
         .chart-container {
             position: relative;
             margin-bottom: 20px;
         }
-        
+
         .chart-buttons {
             position: absolute;
             right: 20px;
             top: 20px;
-            z-index: 10; /* 그래프 위에 버튼이 위치하도록 설정 */
-            margin-right:20%
+            z-index: 10;
         }
-        
+
         .chart-buttons button {
             padding: 5px 10px;
             margin: 0 5px;
@@ -41,9 +39,9 @@
             border-radius: 5px;
             cursor: pointer;
         }
-        
+
         .chart-buttons .like-btn {
-            background-color: #28a745; /* 초록색 버튼 */
+            background-color: #28a745;
         }
     </style>
     <br><br><br>
@@ -56,13 +54,11 @@
     <br>
     <div style="text-align: center; padding: 20px;">
         <form method="GET" action="{% url 'total_graph' %}" style="display: inline-flex; align-items: center; gap: 10px; background-color: #f0f0f0; padding: 10px; border-radius: 8px;">
-            <!-- query와 filter를 hidden 필드로 추가하여 유지 -->
             <input type="hidden" name="query" value="{{ keyword }}">
-            <input type="hidden" name="filter" value="{{ filter }}">  <!-- filter 파라미터 유지 -->
-        
-            <label for="start_year" style="margin-right: 10px; white-space: nowrap;">기간 설정:</label>
+            <input type="hidden" name="filter" value="{{ filter }}">
+
+            <label for="start_year" style="margin-right: 10px;">기간 설정:</label>
             
-            <!-- Start Year Dropdown -->
             <select name="start_year" id="start_year" style="padding: 5px; border-radius: 5px; border: 1px solid #ccc; width: 100px;">
                 <option value="2019" {% if start_year == 2019 %}selected{% endif %}>2019</option>
                 <option value="2020" {% if start_year == 2020 %}selected{% endif %}>2020</option>
@@ -72,10 +68,8 @@
                 <option value="2024" {% if start_year == 2024 %}selected{% endif %}>2024</option>
             </select>
             
-            <!-- Tilde separator for range -->
             <label for="end_year" style="margin: 0 10px;"> ~ </label>
         
-            <!-- End Year Dropdown -->
             <select name="end_year" id="end_year" style="padding: 5px; border-radius: 5px; border: 1px solid #ccc; width: 100px;">
                 <option value="2019" {% if end_year == 2019 %}selected{% endif %}>2019</option>
                 <option value="2020" {% if end_year == 2020 %}selected{% endif %}>2020</option>
@@ -85,74 +79,65 @@
                 <option value="2024" {% if end_year == 2024 %}selected{% endif %}>2024</option>
             </select>
         
-            <!-- Search Button -->
             <button type="submit" style="padding: 5px 10px; background-color: #007BFF; color: white; border: none; border-radius: 5px; cursor: pointer; width: 80px;">
                 검색
             </button>
         </form>
-        
     </div>
 
-    <!-- 현재 설정한 기간을 텍스트로 표시 -->
     <div style="text-align: center; margin-top: 10px;">
         <p>현재 선택한 기간: <strong>{{ start_year }} ~ {{ end_year }}</strong></p>
     </div>
     
     <br>
 
-    <!-- Papers Chart (연도별 논문 수) -->
     <div class="chart-container">
         <div id="papersChart"></div>
         <div class="chart-buttons">
             <button class="gpt-analysis-btn">GPT 분석</button>
             <button class="like-btn">좋아요</button>
-            <button class="pdf-btn" data-chart="papersChart">PDF로 저장</button> <!-- PDF 저장 버튼 추가 -->
+            <button class="pdf-btn" data-chart="papersChart">이미지로 저장</button>
         </div>
     </div>
 
-    <!-- Authors Chart (저자별 논문 수) -->
     <div class="chart-container">
         <div id="authorsChart"></div>
         <div class="chart-buttons">
             <button class="gpt-analysis-btn">GPT 분석</button>
             <button class="like-btn">좋아요</button>
-            <button class="pdf-btn" data-chart="authorsChart">PDF로 저장</button> <!-- PDF 저장 버튼 추가 -->
+            <button class="pdf-btn" data-chart="authorsChart">이미지로 저장</button>
         </div>
     </div>
 
-    <!-- Affiliation Chart (소속 기관별 논문 수) -->
     <div class="chart-container">
         <div id="affiliationChart"></div>
         <div class="chart-buttons">
             <button class="gpt-analysis-btn">GPT 분석</button>
             <button class="like-btn">좋아요</button>
-            <button class="pdf-btn" data-chart="affiliationChart">PDF로 저장</button> <!-- PDF 저장 버튼 추가 -->
+            <button class="pdf-btn" data-chart="affiliationChart">이미지로 저장</button>
         </div>
     </div>
 
-    <!-- Country Chart (국가별 논문 수) -->
     <div class="chart-container">
         <div id="countryChart"></div>
         <div class="chart-buttons">
             <button class="gpt-analysis-btn">GPT 분석</button>
             <button class="like-btn">좋아요</button>
-            <button class="pdf-btn" data-chart="countryChart">PDF로 저장</button> <!-- PDF 저장 버튼 추가 -->
+            <button class="pdf-btn" data-chart="countryChart">이미지로 저장</button>
         </div>
     </div>
 
-    <!-- Keyword Chart (많이 사용된 키워드) -->
     <div class="chart-container">
         <div id="keywordChart"></div>
         <div class="chart-buttons">
             <button class="gpt-analysis-btn">GPT 분석</button>
             <button class="like-btn">좋아요</button>
-            <button class="pdf-btn" data-chart="keywordChart">PDF로 저장</button> <!-- PDF 저장 버튼 추가 -->
+            <button class="pdf-btn" data-chart="keywordChart">이미지로 저장</button>
         </div>
     </div>
 
-    <!-- Google Charts 차트 그리기 스크립트 -->
     <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.2/html2pdf.bundle.min.js"></script>
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
     <script type="text/javascript">
         google.charts.load('current', {'packages':['corechart']});
         google.charts.setOnLoadCallback(drawPapersChart);
@@ -174,11 +159,9 @@
             var options = {
                 title: '연도별 논문 수',
                 legend: { position: 'bottom' },
-                chartArea: {width: '70%', height: '70%'},  // 차트 영역을 조정
-                pointSize: 5,  // 데이터 포인트에 동그라미 추가
-                series: {
-                    0: { lineWidth: 2 }  // 선의 두께 설정
-                }
+                chartArea: {width: '70%', height: '70%'},
+                pointSize: 5,
+                series: { 0: { lineWidth: 2 } }
             };
 
             var chart = new google.visualization.LineChart(document.getElementById('papersChart'));
@@ -214,23 +197,19 @@
                     ['{{ affiliation_name }}', {{ paper_count }}],
                 {% endfor %}
             ]);
-        
+
             var options = {
                 title: '소속 기관별 논문 수',
                 chartArea: {width: '50%'},
                 legend: 'none',
                 hAxis: {
-                    textStyle: {
-                        fontSize: 10  // 축 레이블의 글씨 크기를 축소
-                    },
+                    textStyle: { fontSize: 10 },
                 },
                 vAxis: {
-                    textStyle: {
-                        fontSize: 10  // 세로축 레이블 크기 설정
-                    }
+                    textStyle: { fontSize: 10 }
                 }
             };
-        
+
             var chart = new google.visualization.BarChart(document.getElementById('affiliationChart'));
             chart.draw(data, options);
         }
@@ -275,18 +254,67 @@
             chart.draw(data, options);
         }
 
-        // PDF 저장 버튼 클릭 이벤트 처리
+        // 이미지 저장 로직
         document.querySelectorAll('.pdf-btn').forEach(function(button) {
             button.addEventListener('click', function() {
                 var chartId = this.getAttribute('data-chart');
                 var element = document.getElementById(chartId);
-                html2pdf().from(element).set({
-                    margin: 1,
-                    filename: chartId + '.pdf',
-                    html2canvas: { scale: 2 },
-                    jsPDF: { orientation: 'landscape' }
-                }).save();
+
+                // 폴더 선택 및 이미지 이름 입력
+                var folderName = prompt("저장할 폴더 이름을 입력하세요:");
+                if (!folderName) {
+                    alert('폴더 이름을 입력해야 합니다.');
+                    return;
+                }
+
+                var imageName = prompt("저장할 이미지 이름을 입력하세요:", chartId);
+                if (!imageName) {
+                    alert('이미지 이름을 입력해야 합니다.');
+                    return;
+                }
+
+                html2canvas(element, { scale: 2 }).then(function(canvas) {
+                    var imageData = canvas.toDataURL('image/png');
+
+                    // 서버에 이미지 데이터와 폴더, 이름 전송
+                    fetch('/save-image/', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': getCookie('csrftoken')
+                        },
+                        body: JSON.stringify({ imageData: imageData, folderName: folderName, imageName: imageName })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.status === 'success') {
+                            alert('이미지가 성공적으로 저장되었습니다!');
+                        } else {
+                            alert('이미지 저장 실패: ' + data.message);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                    });
+                });
             });
         });
+
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+
     </script>
 {% endblock %}

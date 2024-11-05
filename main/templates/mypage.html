@@ -130,30 +130,61 @@
     // 폴더 생성
     function createNewFolder() {
         const folderContainer = document.getElementById('analysis-folder');
-        const newFolder = document.createElement('li');
         const folderName = prompt("새 폴더 이름을 입력하세요:");
-    
+
         if (folderName && folderName.trim() !== "") {
-            // 새 폴더의 HTML 구조
-            newFolder.innerHTML = `
-                <li>
-                    <div class="folder">
-                        <span class="folder-name">${folderName}</span>
-                        <div class="folder-actions">
-                            <button class="edit-btn" onclick="editFolderName(this)">&#9998;</button>
-                            <button class="delete-btn" onclick="deleteFolder(this)">&#10006;</button>
+            const csrftoken = getCookie('csrftoken');  // CSRF 토큰 가져오기
+
+            fetch('/create-folder/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-CSRFToken': csrftoken
+                },
+                body: `folder_name=${encodeURIComponent(folderName)}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    // 새 폴더를 UI에 추가
+                    const newFolder = document.createElement('li');
+                    newFolder.innerHTML = `
+                        <div class="folder">
+                            <span class="folder-name">${folderName}</span>
+                            <div class="folder-actions">
+                                <button class="edit-btn" onclick="editFolderName(this)">&#9998;</button>
+                                <button class="delete-btn" onclick="deleteFolder(this)">&#10006;</button>
+                            </div>
                         </div>
-                    </div>
-                    <hr>
-                </li>
-            `;
-    
-            // 새 폴더를 추가 버튼 바로 위에 추가
-            folderContainer.insertBefore(newFolder, document.getElementById('add-folder-btn'));
+                        <hr>
+                    `;
+                    folderContainer.insertBefore(newFolder, document.getElementById('add-folder-btn'));
+                    alert(data.message);
+                } else {
+                    alert(data.message);
+                }
+            })
+            .catch(error => console.error('Error:', error));
         } else {
             alert("폴더 이름을 입력해주세요.");
         }
     }
+
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
     
     // 폴더명 수정
     function editFolderName(button) {
