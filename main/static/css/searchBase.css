@@ -601,6 +601,15 @@ ul, ol {
     font-weight: bold;
 }
 
+.check-save-btn:hover {
+    background-color: transparent;
+    border: none;
+    cursor: pointer;
+    color: #007aab;
+    font-size: 14px;
+    font-weight: bold;
+}
+
 /* 분석결과보기 버튼 */
 .analysis-button-container {
     display: flex;

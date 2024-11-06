@@ -24,6 +24,8 @@ from django.urls import reverse
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_POST
 from django.utils import timezone
+from django.template.loader import render_to_string
+from django.http import HttpResponse
 
 # gpt api 라이브러리
 import openai
@@ -99,9 +101,6 @@ def search(request):
             paper_ids = get_author_paper_ids(query)
         elif filter_type == 'country':
             paper_ids = get_country_paper_ids(query)
-
-        # 뉴스 검색 부분
-        api_key = '2f963493ee124210ac91a3b54ebb3c5c'
 
         related_terms = []
         if query:
@@ -195,6 +194,7 @@ def search(request):
         paper_counts_by_country = {country: len(papers) for country, papers in country_paper_map.items()}
 
         # 뉴스 검색 부분
+        api_key = '2f963493ee124210ac91a3b54ebb3c5c'
         articles = []
 
         if filter_type == 'author':
@@ -1527,33 +1527,74 @@ def remove_paper(request):
     except Paper.DoesNotExist:
         return JsonResponse({'success': False, 'message': '논문을 찾을 수 없습니다.'})
     
+# 논문 삭제하기 - 체크박스 (여러개)
+@login_required
+@require_POST
+def remove_selected_papers(request):
+    try:
+        # POST 요청에서 선택된 논문들의 ID 리스트를 받음
+        selected_papers = request.POST.getlist('selected_papers[]')  # name이 selected_papers[]인 데이터를 가져옴
+
+        # 선택된 논문들이 있는지 확인
+        if not selected_papers:
+            return JsonResponse({'success': False, 'message': '삭제할 논문이 선택되지 않았습니다.'})
+
+        # 각 논문을 삭제
+        removed_count = 0
+        not_saved_count = 0
+        for paper_id in selected_papers:
+            try:
+                paper = Paper.objects.get(id=paper_id)
+                saved_paper = SavedPaper.objects.filter(user=request.user, paper=paper)
+                if saved_paper.exists():
+                    # 논문 삭제 시 saved_count 감소
+                    saved_paper.delete()
+                    paper.saved_count = max(0, paper.saved_count - 1)  # saved_count가 음수가 되지 않도록
+                    paper.save()
+                    removed_count += 1
+                else:
+                    not_saved_count += 1
+            except Paper.DoesNotExist:
+                # 논문이 존재하지 않는 경우 건너뜀
+                continue
+
+        # 결과 반환
+        message = f'{removed_count}개의 논문이 삭제되었습니다.'
+        if not_saved_count > 0:
+            message += f' {not_saved_count}개의 논문은 저장된 기록이 없습니다.'
+
+        return JsonResponse({'success': True, 'message': message})
+
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': f'오류가 발생했습니다: {str(e)}'})
+    
 # 마이페이지 - 저장된 논문
 @login_required
 def saved_papers(request):
     query = request.GET.get('query', '')
-    order = request.GET.get('order', 'desc')
-    sort_by = request.GET.get('sort_by', 'title')
+    order = request.GET.get('order', 'desc')  # 정렬 순서 ('desc' 또는 'asc')
     items_per_page = int(request.GET.get('items_per_page', 10))  # 기본값 10
+    filter_type = request.GET.get('filter', 'paper')
 
-    # 로그인된 사용자의 저장된 논문 ID 확인 
-    saved_paper_ids = []
-    if request.user.is_authenticated:
-        saved_paper_ids = SavedPaper.objects.filter(user=request.user).values_list('paper_id', flat=True)
+    # 로그인된 사용자의 저장된 논문을 저장된 시간 기준으로 가져오기
+    saved_papers = SavedPaper.objects.filter(user=request.user).select_related('paper').order_by(
+        '-saved_at' if order == 'desc' else 'saved_at'
+    )
+
+    paper_ids = []
+    
+    # 검색어가 있으면 필터(검색창-콤보박스)에 따라 논문 검색
+    if query:
+        if filter_type == 'paper':
+            paper_ids = get_paper_ids(query)
+        elif filter_type == 'author':
+            paper_ids = get_author_paper_ids(query)
+        elif filter_type == 'country':
+            paper_ids = get_country_paper_ids(query)
+        saved_papers = saved_papers.filter(paper_id__in=paper_ids)
         
-    # 로그인한 유저의 저장된 논문을 가져오기
-    saved_papers = SavedPaper.objects.filter(user=request.user).select_related('paper')
-
-    # Paper 객체만 추출
-    papers = [saved_paper.paper for saved_paper in saved_papers]
-
-    # 정렬 처리
-    if sort_by == 'title':
-        papers = sorted(papers, key=lambda paper: paper.title, reverse=(order == 'desc'))
-    elif sort_by == 'latest':
-        papers = sorted(papers, key=lambda paper: paper.date, reverse=(order == 'desc'))
-
     # 페이징 처리
-    paginator = Paginator(papers, items_per_page)
+    paginator = Paginator(saved_papers, items_per_page)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
@@ -1567,7 +1608,9 @@ def saved_papers(request):
 
     # 저자 및 키워드 추가
     papers_with_authors_and_keywords = []
-    for paper in page_obj:
+    for saved_paper in page_obj:
+        paper = saved_paper.paper
+        saved_at = saved_paper.saved_at
         authors = Author.objects.filter(paperauthor__paper_id=paper.id)
         keywords = Keyword.objects.filter(paperkeyword__paper_id=paper.id)
         affiliations = Affiliation.objects.filter(paperaffiliation__paper_id=paper.id)
@@ -1576,29 +1619,31 @@ def saved_papers(request):
         countries = PaperCountry.objects.filter(paper_id=paper.id).select_related('country')
         unique_countries = list(set([country.country.name for country in countries]))
 
-        # 각 논문이 저장된 상태인지 확인하여 is_saved 추가
-        is_saved = paper.id in saved_paper_ids
-
         papers_with_authors_and_keywords.append({
             'paper': paper,
+            'saved_at': saved_at,
             'authors': authors,
             'keywords': keywords,
             'affiliations': affiliations,
-            'countries': unique_countries,  # 중복 제거된 국가 목록 추가
-            'is_saved': is_saved,  # 저장 여부
+            'countries': unique_countries,
+            'is_saved': True,
         })
 
-    # 관련 정보는 기본값으로 빈 값을 사용 (로그인/검색 관련 정보 없음)
     context = {
         'query': query,
+        'filter': filter_type,
         'papers_with_authors_and_keywords': papers_with_authors_and_keywords,
         'page_obj': page_obj,
         'order': order,
-        'sort_by': sort_by,
         'items_per_page': items_per_page,
         'current_group_pages': current_group_pages,
     }
 
+    # AJAX 요청일 경우 검색된 논문 부분만 렌더링
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        html = render_to_string('saved_papers.html', context, request=request)
+        return HttpResponse(html)
+    
     return render(request, 'saved_papers.html', context)
 
 # 최근 본 논문
