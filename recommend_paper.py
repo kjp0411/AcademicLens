@@ -143,12 +143,32 @@ def get_paper_ids_with_weighted_score(user_keyword, start_year=2019, end_year=20
 
     return results
 
-top3_word = top3_word('kaihojun')
+def get_recommended_papers_for_user(username, start_year=2019, end_year=2024):
+    # 상위 3개의 키워드를 추출
+    top_keywords = top3_word(username)
+    
+    # 각 키워드에 대한 추천 논문 ID와 점수 저장
+    recommended_papers = []
+
+    for keyword in top_keywords:
+        # 각 키워드에 대해 논문 ID를 가져오고, 점수로 상위 5개 선택
+        paper_ids_with_scores = get_paper_ids_with_weighted_score(keyword, start_year, end_year)
+        top_5_papers = sorted(paper_ids_with_scores, key=lambda x: x['weighted_score'], reverse=True)[:5]
+        
+        # 키워드와 논문 ID 리스트 (상위 5개)를 함께 저장
+        recommended_papers.append({
+            'keyword': keyword,
+            'top_papers': [{'id': paper['id'], 'score': paper['weighted_score']} for paper in top_5_papers]
+        })
+
+    return recommended_papers
 
 # 예시 실행
-user_keyword = top3_word[0]
-results = get_paper_ids_with_weighted_score(user_keyword)
+username = 'kaihojun'
+recommended_papers = get_recommended_papers_for_user(username)
 
 # 결과 출력
-for result in results:
-    print(f"Paper ID: {result['id']}, Relevance: {result['relevance']}, Weighted Score: {result['weighted_score']}")
+for item in recommended_papers:
+    print(f"Keyword: {item['keyword']}")
+    for paper in item['top_papers']:
+        print(f"  - Paper ID: {paper['id']}, Score: {paper['score']}")

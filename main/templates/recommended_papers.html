@@ -1,89 +1,75 @@
-<!-- 추천 논문 -->
 {% load static %}
-추천 논문
+<h2>추천 논문</h2>
 
-{% comment %} {% if papers_with_authors_and_keywords %}
-{% for item in papers_with_authors_and_keywords %}
-    <div class="cont">
-        <div class="cont-container">
-            <div class="title-container">
-                <p class="title">
-                    <strong><a href="{% url 'paper_detail' item.paper.id %}">
-                        {{ item.paper.title }}
-                    </a></strong>                                                                
-                </p>
-                <button class="save-btn">
-                    <img src="{% static 'image/heart-empty.png' %}" alt="save" class="save-icon">
-                </button>
-            </div>
-            <div class="preAbstract-container">
-                <p class="preAbstract">
-                    <a href="{% url 'paper_detail' item.paper.id %}">{{ item.paper.abstract|truncatechars:250 }}</a>
-                </p>
-            </div>
-            {% if item.keywords %}
-            <div class="keywords-container">
-                <p class="keyword">
-                    {% for keyword in item.keywords %}
-                        # {{ keyword.keyword_name }}{% if not forloop.last %} {% endif %}
-                    {% endfor %}
-                </p>
-            </div>
-            {% endif%}
-            <div class="etc-container">
-                <!-- 저자 -->
-                {% if item.authors %}
-                    {% if item.authors|length > 1 %}
-                        {{ item.authors.0.name }} 외 {{ item.authors|length|add:"-1" }}인
-                    {% else %}
-                        {{ item.authors.0.name }}
+<p>사용자님의 상위 키워드는 
+    {% for item in recommended_papers %}
+        {{ item.keyword }}{% if not forloop.last %}, {% endif %}
+    {% endfor %}입니다.
+</p>
+
+{% for item in recommended_papers %}
+    <h3>추천 키워드: {{ item.keyword }}</h3>
+
+    {% for paper_item in item.papers %}
+        <div class="cont">
+            <div class="cont-container">
+                <div class="title-container">
+                    <p class="title">
+                        <strong><a href="{% url 'paper_detail' paper_item.paper.id %}">
+                            {{ paper_item.paper.title }}
+                        </a></strong>
+                    </p>
+                    <!-- 저장 버튼 추가 -->
+                    <button class="save-btn" data-paper-id="{{ paper_item.paper.id }}">
+                        <img src="{% if paper_item.is_saved %}{% static 'image/heart-filled.png' %}{% else %}{% static 'image/heart-empty.png' %}{% endif %}" alt="save" class="save-icon">
+                    </button>
+                </div>
+                <div class="preAbstract-container">
+                    <p class="preAbstract">
+                        <a href="{% url 'paper_detail' paper_item.paper.id %}">{{ paper_item.paper.abstract|truncatechars:250 }}</a>
+                    </p>
+                </div>
+
+                <!-- 키워드 -->
+                {% if paper_item.keywords %}
+                    <div class="keywords-container">
+                        <p class="keyword">
+                            {% for keyword in paper_item.keywords %}
+                                # {{ keyword.keyword_name }}{% if not forloop.last %} {% endif %}
+                            {% endfor %}
+                        </p>
+                    </div>
+                {% endif %}
+                
+                <div class="etc-container">
+                    <!-- 저자 -->
+                    {% if paper_item.authors %}
+                        {% if paper_item.authors|length > 1 %}
+                            {{ paper_item.authors.0.name }} 외 {{ paper_item.authors|length|add:"-1" }}인
+                        {% else %}
+                            {{ paper_item.authors.0.name }}
+                        {% endif %}
+                        &nbsp;&nbsp;|&nbsp;&nbsp;
                     {% endif %}
-                    &nbsp;&nbsp;|&nbsp;&nbsp;
-                {% endif %}
-                
-                <!-- 연도 -->
-                {{ item.paper.date|date:"Y" }}
-                
-                <!-- 국가 -->
-                {% if item.countries %}
-                    &nbsp;&nbsp;|&nbsp;&nbsp;
-                    {% for country in item.countries %}
-                        {{ country }}{% if not forloop.last %} , {% endif %}
-                    {% endfor %}
-                {% endif %}
-                
-                <!-- 발행처 -->
-                {% if item.paper.publisher %}
-                    &nbsp;&nbsp;|&nbsp;&nbsp;{{ item.paper.publisher }}
-                {% endif %}
+                    
+                    <!-- 연도 -->
+                    {{ paper_item.paper.date|date:"Y" }}
+                    
+                    <!-- 국가 -->
+                    {% if paper_item.countries %}
+                        &nbsp;&nbsp;|&nbsp;&nbsp;
+                        {% for country in paper_item.countries %}
+                            {{ country }}{% if not forloop.last %} , {% endif %}
+                        {% endfor %}
+                    {% endif %}
+                    
+                    <!-- 발행처 -->
+                    {% if paper_item.paper.publisher %}
+                        &nbsp;&nbsp;|&nbsp;&nbsp;{{ paper_item.paper.publisher }}
+                    {% endif %}
+                </div>
             </div>
         </div>
-    </div>
-    <hr>
+        <hr>
+    {% endfor %}
 {% endfor %}
-
-<!-- 페이징 -->
-<div class="pagination">
-    <span class="step-links">
-        {% if page_obj.has_previous %}
-            <a href="?query={{ query }}{% for year in selected_years %}&year={{ year }}{% endfor %}{% for publisher in selected_publishers %}&publisher={{ publisher }}{% endfor %}&page=1">&laquo;</a>
-            <a href="?query={{ query }}{% for year in selected_years %}&year={{ year }}{% endfor %}{% for publisher in selected_publishers %}&publisher={{ publisher }}{% endfor %}&page={{ page_obj.previous_page_number }}">&lsaquo;</a>
-        {% endif %}
-        
-        {% for num in current_group_pages %}
-            {% if page_obj.number == num %}
-                <a href="#" class="current">{{ num }}</a>
-            {% else %}
-                <a href="?query={{ query }}{% for year in selected_years %}&year={{ year }}{% endfor %}{% for publisher in selected_publishers %}&publisher={{ publisher }}{% endfor %}&page={{ num }}">{{ num }}</a>
-            {% endif %}
-        {% endfor %}
-        
-        {% if page_obj.has_next %}
-            <a href="?query={{ query }}{% for year in selected_years %}&year={{ year }}{% endfor %}{% for publisher in selected_publishers %}&publisher={{ publisher }}{% endfor %}&page={{ page_obj.next_page_number }}">&rsaquo;</a>
-            <a href="?query={{ query }}{% for year in selected_years %}&year={{ year }}{% endfor %}{% for publisher in selected_publishers %}&publisher={{ publisher }}{% endfor %}&page={{ page_obj.paginator.num_pages }}">&raquo;</a>
-        {% endif %}
-    </span>
-</div>
-{% else %}
-    <p>검색 결과가 없습니다.</p>
-{% endif %} {% endcomment %}
