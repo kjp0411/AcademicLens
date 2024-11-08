@@ -75,5 +75,8 @@ urlpatterns = [
 
     path('mypage/reports/', views.report_list, name='report_list'),
     path('mypage/reports/<str:folder_name>/', views.report_detail, name='report_detail'),
+
+    path('remove-selected-papers/', views.remove_selected_papers, name='remove_selected_papers'),
+
 ]
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

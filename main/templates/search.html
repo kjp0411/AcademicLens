@@ -125,7 +125,7 @@
                                 <ul class="contList author" data-header="저자">
                                     <div id="mCSB_3" class="mCustomScrollBox" tabindex="2" style="max-height: 120px;">
                                         <div id="mCSB_3_container" class="mCSB_3_container" style="position:relative; top:0; left:0;" dir="ltr">
-                                            <input type="text" id="author-search" name="author-search" {% if author %} value="{{ author }}" {% endif %}>
+                                            <input type="text" id="author-search" name="author-search" placeholder="저자명을 입력해주세요." {% if author %} value="{{ author }}" {% endif %}>
                                         </div>
                                     </div>
                                 </ul>
@@ -139,14 +139,11 @@
                                     <div id="mCSB_4" class="mCustomScrollBox" tabindex="3">
                                         <div id="mCSB_4_container" class="mCSB_4_container" style="position:relative; top:0; left:0;" dir="ltr">
                                             {% for country, count in paper_counts_by_country.items %}
-                                            <li>
-                                                <input type="checkbox" id="country_{{ country }}" name="country" value="{{ country }}" {% if country in selected_countries %}checked{% endif %}>
-                                                <label for="country_{{ country }}" data-currname="{{ country }}" data-currvalue="{{ country }}">
-                                                    <span class="checkBox"></span>
-                                                    {{ country }}
-                                                    <span class="total"> ({{ count }}) </span>
-                                                </label>
-                                            </li>
+                                                <li>
+                                                    <input type="checkbox" id="country_{{ country }}" name="country" value="{{ country }}"
+                                                        {% if country in selected_countries %} checked {% endif %}>
+                                                    <label for="country_{{ country }}">{{ country }} ({{ count }})</label>
+                                                </li>
                                             {% endfor %}
                                         </div>
                                         <div id="mCSB_4_scrollbar_vertical" class="mCSB_scrollTools" style="display: block;"></div>
@@ -195,7 +192,6 @@
                             <option value="50" {% if items_per_page == 50 %}selected{% endif %}>50개씩</option>
                         </select>
                     </div>
-                    
                 </div>
             </div>
             <!-- 검색 결과 -->
@@ -273,7 +269,7 @@
                 
                 <!-- 페이징 -->
                 <div class="pagination">
-                    <span class="step-links">
+                    {% comment %} <span class="step-links">
                         {% if page_obj.has_previous %}
                             <a href="?filter={{ filter }}&query={{ query }}{% for year in selected_years %}&year={{ year }}{% endfor %}{% for publisher in selected_publishers %}&publisher={{ publisher }}{% endfor %}&page=1">&laquo;</a>
                             <a href="?filter={{ filter }}&query={{ query }}{% for year in selected_years %}&year={{ year }}{% endfor %}{% for publisher in selected_publishers %}&publisher={{ publisher }}{% endfor %}&page={{ page_obj.previous_page_number }}">&lsaquo;</a>
@@ -290,6 +286,25 @@
                         {% if page_obj.has_next %}
                             <a href="?filter={{ filter }}&query={{ query }}{% for year in selected_years %}&year={{ year }}{% endfor %}{% for publisher in selected_publishers %}&publisher={{ publisher }}{% endfor %}&page={{ page_obj.next_page_number }}">&rsaquo;</a>
                             <a href="?filter={{ filter }}&query={{ query }}{% for year in selected_years %}&year={{ year }}{% endfor %}{% for publisher in selected_publishers %}&publisher={{ publisher }}{% endfor %}&page={{ page_obj.paginator.num_pages }}">&raquo;</a>
+                        {% endif %}
+                    </span> {% endcomment %}
+                    <span class="step-links">
+                        {% if page_obj.has_previous %}
+                            <a href="?filter={{ filter }}&query={{ query }}&sort_by={{ sort_by }}&order={{ order }}&items_per_page={{ items_per_page }}&page=1&{% for year in selected_years %}year={{ year }}&{% endfor %}{% for publisher in selected_publishers %}publisher={{ publisher }}&{% endfor %}{% for country in selected_countries %}country={{ country }}&{% endfor %}">&laquo;</a>
+                            <a href="?filter={{ filter }}&query={{ query }}&sort_by={{ sort_by }}&order={{ order }}&items_per_page={{ items_per_page }}&page={{ page_obj.previous_page_number }}&{% for year in selected_years %}year={{ year }}&{% endfor %}{% for publisher in selected_publishers %}publisher={{ publisher }}&{% endfor %}{% for country in selected_countries %}country={{ country }}&{% endfor %}">&lsaquo;</a>
+                        {% endif %}
+                
+                        {% for num in current_group_pages %}
+                            {% if page_obj.number == num %}
+                                <a href="#" class="current">{{ num }}</a>
+                            {% else %}
+                                <a href="?filter={{ filter }}&query={{ query }}&sort_by={{ sort_by }}&order={{ order }}&items_per_page={{ items_per_page }}&page={{ num }}&{% for year in selected_years %}year={{ year }}&{% endfor %}{% for publisher in selected_publishers %}publisher={{ publisher }}&{% endfor %}{% for country in selected_countries %}country={{ country }}&{% endfor %}">{{ num }}</a>
+                            {% endif %}
+                        {% endfor %}
+                
+                        {% if page_obj.has_next %}
+                            <a href="?filter={{ filter }}&query={{ query }}&sort_by={{ sort_by }}&order={{ order }}&items_per_page={{ items_per_page }}&page={{ page_obj.next_page_number }}&{% for year in selected_years %}year={{ year }}&{% endfor %}{% for publisher in selected_publishers %}publisher={{ publisher }}&{% endfor %}{% for country in selected_countries %}country={{ country }}&{% endfor %}">&rsaquo;</a>
+                            <a href="?filter={{ filter }}&query={{ query }}&sort_by={{ sort_by }}&order={{ order }}&items_per_page={{ items_per_page }}&page={{ page_obj.paginator.num_pages }}&{% for year in selected_years %}year={{ year }}&{% endfor %}{% for publisher in selected_publishers %}publisher={{ publisher }}&{% endfor %}{% for country in selected_countries %}country={{ country }}&{% endfor %}">&raquo;</a>
                         {% endif %}
                     </span>
                 </div>
@@ -585,7 +600,6 @@
         });
     });
     
-
     // 뉴스 국내 국외 전환 함수
     document.addEventListener('DOMContentLoaded', function() {
         // 버튼 요소를 가져옴

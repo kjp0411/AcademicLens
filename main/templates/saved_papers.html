@@ -4,6 +4,36 @@
 {% block content %}
 <h2>저장 논문</h2> 
 {% if papers_with_authors_and_keywords %}
+    <div class="search">
+        <form action="{% url 'saved_papers' %}" method="get" class="saved-search-form" id="saved-search-form">
+            <select name="filter" id="filter">
+                <option value="paper" {% if filter == 'paper' %}selected{% endif %}>논문</option>
+                <option value="author" {% if filter == 'author' %}selected{% endif %}>저자</option>
+                <option value="country" {% if filter == 'country' %}selected{% endif %}>나라</option>
+            </select>
+            <input type="text" name="query" id="search-box" placeholder="Enter search query" value="{{ query }}">
+            <button type="submit">Search</button>
+        </form>
+    </div>
+    <div class="search-options">
+        <div class="left-options">
+            <input type="checkbox" name="select_all" id="select-all"> &nbsp;&nbsp;&nbsp;
+            <button type="button" class="check-remove-btn" id="check-remove-btn">삭제하기</button>
+        </div>
+        <div class="right-options">
+            <select id="sort-order" name="order">
+                <option value="desc" {% if order == 'desc' %}selected{% endif %}>내림차순</option>
+                <option value="asc" {% if order == 'asc' %}selected{% endif %}>오름차순</option>
+            </select>
+            <select id="items-per-page" name="items_per_page">
+                <option value="10" {% if items_per_page == 10 %}selected{% endif %}>10개씩</option>
+                <option value="20" {% if items_per_page == 20 %}selected{% endif %}>20개씩</option>
+                <option value="30" {% if items_per_page == 30 %}selected{% endif %}>30개씩</option>
+                <option value="40" {% if items_per_page == 40 %}selected{% endif %}>40개씩</option>
+                <option value="50" {% if items_per_page == 50 %}selected{% endif %}>50개씩</option>
+            </select>
+        </div>
+    </div>
     {% for item in papers_with_authors_and_keywords %}
         <div class="cont">
             <div class="checkbox-container">
@@ -61,6 +91,7 @@
                         &nbsp;&nbsp;|&nbsp;&nbsp;{{ item.paper.publisher }}
                     {% endif %}
                 </div>
+                <p><strong>저장된 시간:</strong> {{ item.saved_at|date:"Y-m-d H:i" }}</p>
             </div>
         </div>
         <hr>
@@ -70,21 +101,21 @@
     <div class="pagination">
         <span class="step-links">
             {% if page_obj.has_previous %}
-                <a href="?query={{ query }}&order={{ order }}&sort_by={{ sort_by }}&page=1">&laquo;</a>
-                <a href="?query={{ query }}&order={{ order }}&sort_by={{ sort_by }}&page={{ page_obj.previous_page_number }}">&lsaquo;</a>
+                <a href="?query={{ query }}&filter={{ filter }}&order={{ order }}&items_per_page={{ items_per_page }}&page=1">&laquo;</a>
+                <a href="?query={{ query }}&filter={{ filter }}&order={{ order }}&items_per_page={{ items_per_page }}&page={{ page_obj.previous_page_number }}">&lsaquo;</a>
             {% endif %}
-            
+    
             {% for num in current_group_pages %}
                 {% if page_obj.number == num %}
                     <a href="#" class="current">{{ num }}</a>
                 {% else %}
-                    <a href="?query={{ query }}&order={{ order }}&sort_by={{ sort_by }}&page={{ num }}">{{ num }}</a>
+                    <a href="?query={{ query }}&filter={{ filter }}&order={{ order }}&items_per_page={{ items_per_page }}&page={{ num }}">{{ num }}</a>
                 {% endif %}
             {% endfor %}
-            
+    
             {% if page_obj.has_next %}
-                <a href="?query={{ query }}&order={{ order }}&sort_by={{ sort_by }}&page={{ page_obj.next_page_number }}">&rsaquo;</a>
-                <a href="?query={{ query }}&order={{ order }}&sort_by={{ sort_by }}&page={{ page_obj.paginator.num_pages }}">&raquo;</a>
+                <a href="?query={{ query }}&filter={{ filter }}&order={{ order }}&items_per_page={{ items_per_page }}&page={{ page_obj.next_page_number }}">&rsaquo;</a>
+                <a href="?query={{ query }}&filter={{ filter }}&order={{ order }}&items_per_page={{ items_per_page }}&page={{ page_obj.paginator.num_pages }}">&raquo;</a>
             {% endif %}
         </span>
     </div>

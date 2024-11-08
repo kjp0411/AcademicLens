@@ -277,3 +277,56 @@ main {
     color: rgb(91, 91, 91);
     text-decoration: none;
 }
+
+.check-remove-btn {
+    background-color: transparent;
+    border: none;
+    cursor: pointer;
+    color: black;
+    font-size: 14px;
+    font-weight: bold;
+}
+
+.check-remove-btn:hover {
+    background-color: transparent;
+    border: none;
+    cursor: pointer;
+    color: #007aab;
+    font-size: 14px;
+    font-weight: bold;
+}
+
+.search {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.saved-search-form {
+    display: flex;
+}
+
+.saved-search-form input {
+    width: 500px;
+    height: 30px;
+    padding: 10px;
+    font-size: 20px;
+    border: 1px solid #ccc;
+    border-radius: 4px 0 0 4px;
+    outline: none;
+}
+
+.saved-search-form button {
+    padding: 10px 20px;
+    font-size: 16px;
+    color: white;
+    border: 1px solid #ccc;
+    border-left: none;
+    border-radius: 0 4px 4px 0;
+    cursor: pointer;
+    background-color: #0186ba;
+    outline: none;
+}
+
+.saved-search-form button:hover {
+    background-color: #007aab;
+}
