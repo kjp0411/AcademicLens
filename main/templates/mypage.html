@@ -38,6 +38,12 @@
         font-size: 16px; /* 아이콘 크기 조절 */
         color: red;
     }
+
+    .image-list { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; }
+    .image-item { width: 150px; text-align: center; }
+    .image-item img { width: 100%; cursor: pointer; border: 2px solid transparent; }
+    .image-item img.selected { border-color: #007bff; }
+    .report-section { margin-top: 20px; }
 </style>
 
 <div class="container">
@@ -50,18 +56,8 @@
             <li><a href="#" onclick="showContent('recommended')">추천논문</a></li><hr>
             <li><a href="#" onclick="showContent('recent')">최근 본 논문</a></li><hr>
             <li><a href="#" onclick="showContent('saved')">저장 논문</a></li><hr>
-            <li>
-                <button class="dropdown-btn" onclick="toggleAnalysis()">
-                    <span>분석저장소</span>
-                    <span class="icon">&#9660;</span> <!-- 아이콘을 오른쪽에 배치 -->
-                </button><hr>
-                <ul id="analysis-folder" class="dropdown-container" style="display: none;">
-                    <!-- 새 폴더 추가 버튼은 항상 마지막 -->
-                    <li id="add-folder-btn">
-                        <button class="new-folder" onclick="createNewFolder()">+ 새 폴더</button>
-                    </li>
-                </ul>
-            </li>
+            <li><a href="#" onclick="showContent('analysis')">분석저장소</a></li><hr>
+            <li><a href="#" onclick="showContent('report')">리포트 목록</a></li><hr>
         </ul>
     </div>
 
@@ -74,7 +70,7 @@
 </div>
 
 <script>
-    function showContent(contentType, page = 1) {
+    function showContent(contentType, page = 1, folderName = "") {
         let url = "";
         const query = "";  // 필요한 쿼리 추가
         const order = "";  // 정렬 방식 추가
@@ -89,7 +85,19 @@
             url = `/mypage/saved-papers/?page=${page}&query=${query}&order=${order}`;  // 저장 논문 URL
         }
         if (contentType === "analysis") {
-            url = `/mypage/analysis-file/?page=${page}&query=${query}&order=${order}`;  // 분석 저장소 URL
+            url = `/mypage/analysis-storage/`;  // 분석 저장소 URL
+        }
+
+        if (contentType === "report") {
+            url = `/mypage/reports/`;  // 분석 저장소 URL
+        }
+
+        if (contentType === "report_detail" && folderName) {
+            url = `/mypage/reports/${folderName}/`;  // 리포트 상세 보기
+        }
+
+        if (contentType === "reporting" && folderName) {
+            url = `/reporting/?folder=${encodeURIComponent(folderName)}`;  // 리포트 작성 URL
         }
 
         fetch(url)
@@ -112,63 +120,6 @@
             });
         });
     }
-    
-    // 분석저장소 토글
-    function toggleAnalysis() {
-        const folderContainer = document.getElementById('analysis-folder');
-        const icon = document.querySelector('.dropdown-btn .icon'); // 아이콘 요소만 선택
-    
-        if (folderContainer.style.display === 'none' || folderContainer.style.display === '') {
-            folderContainer.style.display = 'block';
-            icon.innerHTML = '&#9650;';  // ▲ 아이콘으로 변경
-        } else {
-            folderContainer.style.display = 'none';
-            icon.innerHTML = '&#9660;';  // ▼ 아이콘으로 변경
-        }
-    }
-    
-    // 폴더 생성
-    function createNewFolder() {
-        const folderContainer = document.getElementById('analysis-folder');
-        const folderName = prompt("새 폴더 이름을 입력하세요:");
-
-        if (folderName && folderName.trim() !== "") {
-            const csrftoken = getCookie('csrftoken');  // CSRF 토큰 가져오기
-
-            fetch('/create-folder/', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                    'X-CSRFToken': csrftoken
-                },
-                body: `folder_name=${encodeURIComponent(folderName)}`
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.status === 'success') {
-                    // 새 폴더를 UI에 추가
-                    const newFolder = document.createElement('li');
-                    newFolder.innerHTML = `
-                        <div class="folder">
-                            <span class="folder-name">${folderName}</span>
-                            <div class="folder-actions">
-                                <button class="edit-btn" onclick="editFolderName(this)">&#9998;</button>
-                                <button class="delete-btn" onclick="deleteFolder(this)">&#10006;</button>
-                            </div>
-                        </div>
-                        <hr>
-                    `;
-                    folderContainer.insertBefore(newFolder, document.getElementById('add-folder-btn'));
-                    alert(data.message);
-                } else {
-                    alert(data.message);
-                }
-            })
-            .catch(error => console.error('Error:', error));
-        } else {
-            alert("폴더 이름을 입력해주세요.");
-        }
-    }
 
     function getCookie(name) {
         let cookieValue = null;
@@ -183,29 +134,6 @@
             }
         }
         return cookieValue;
-    }
-
-    
-    // 폴더명 수정
-    function editFolderName(button) {
-        const folderNameElement = button.closest('.folder').querySelector('.folder-name');  // 폴더 이름을 찾음
-        const newFolderName = prompt("새 폴더 이름을 입력하세요:", folderNameElement.textContent);
-
-        if (newFolderName && newFolderName.trim() !== "") {
-            folderNameElement.textContent = newFolderName;
-        } else {
-            alert("폴더 이름이 유효하지 않습니다.");
-        }
-    }
-
-    // 폴더 삭제
-    function deleteFolder(button) {
-        if (confirm("이 폴더를 정말 삭제하시겠습니까?")) {
-            const folderElement = button.parentElement.parentElement;
-            const folderItem = folderElement.parentElement; // 폴더와 hr을 감싸는 부모 요소(li)
-
-            folderItem.remove();  // 폴더와 hr 요소 삭제
-        }
     }
 
     // 하트 버튼
@@ -260,5 +188,241 @@
         setupSaveButtons();
         setupPagination();
     });
+    
+    // 폴더 생성
+    function createNewFolder() {
+        const folderName = prompt("새 폴더 이름을 입력하세요:");
+        if (folderName) {
+            // 새 폴더 생성 요청을 서버에 보냄
+            fetch('/create-folder/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({ 'folder_name': folderName })
+            }).then(response => {
+                if (response.ok) {
+                    location.reload();
+                } else {
+                    alert("폴더 생성 실패!");
+                }
+            });
+        }
+    }
+
+    // 폴더명 수정
+    function editFolder(folderName) {
+        const newFolderName = prompt("새 폴더 이름을 입력하세요:", folderName);
+        if (newFolderName && newFolderName !== folderName) {
+            // 폴더 이름 수정 요청을 서버에 보냄
+            fetch(`/edit-folder/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({ 'old_name': folderName, 'new_name': newFolderName })
+            }).then(response => {
+                if (response.ok) {
+                    location.reload();
+                } else {
+                    alert("폴더 이름 수정 실패!");
+                }
+            });
+        }
+    }
+
+    // 폴더 삭제
+    function deleteFolder(folderName) {
+        if (confirm("정말 이 폴더를 삭제하시겠습니까?")) {
+            // 폴더 삭제 요청을 서버에 보냄
+            fetch(`/delete-folder/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({ 'folder_name': folderName })
+            }).then(response => {
+                if (response.ok) {
+                    location.reload();
+                } else {
+                    alert("폴더 삭제 실패!");
+                }
+            });
+        }
+    }
+
+    // 폴더 클릭 시 이미지 목록 가져오기
+    function showImagesInFolder(folderName) {
+        fetch(`/folder-images/?folder_name=${encodeURIComponent(folderName)}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    displayImages(data.images, folderName);
+                } else {
+                    alert('이미지를 불러오는데 실패했습니다.');
+                }
+            })
+            .catch(error => console.error('Error fetching images:', error));
+    }
+
+    // 이미지 목록을 표시하는 함수
+    function displayImages(images, folderName) {
+        const contentArea = document.getElementById('content-area');
+        let html = `
+            <h3>${folderName} 폴더의 저장소</h3>
+            <button onclick="showContent('analysis')">뒤로가기</button>
+            <table>
+                <tbody>
+        `;
+
+        if (images.length === 0) {
+            html += `<tr><td colspan="2">이미지가 없습니다.</td></tr>`;
+        } else {
+            for (let i = 0; i < images.length; i += 2) {
+                html += `<tr>`;
+                
+                // 첫 번째 이미지 셀
+                html += `
+                    <td>
+                        <div style="display: flex; flex-direction: column; align-items: center;">
+                            <img src="${images[i].url}" alt="${images[i].name}" width="600" height="400" style="margin-bottom: 5px;">
+                            <span>${images[i].name}</span>
+                        </div>
+                    </td>
+                `;
+
+                // 두 번째 이미지 셀 (있을 때만 추가)
+                if (i + 1 < images.length) {
+                    html += `
+                        <td>
+                            <div style="display: flex; flex-direction: column; align-items: center;">
+                                <img src="${images[i + 1].url}" alt="${images[i + 1].name}" width="600" height="400" style="margin-bottom: 5px;">
+                                <span>${images[i + 1].name}</span>
+                            </div>
+                        </td>
+                    `;
+                } else {
+                    html += `<td></td>`;  // 이미지가 홀수일 경우 빈 셀 추가
+                }
+
+                html += `</tr>`;
+            }
+        }
+
+        html += `</tbody></table>`;
+        contentArea.innerHTML = html;
+    }
+
+    // 리포팅 버튼 클릭 시 사이드 창에 reporting.html 로드
+    function openReporting() {
+        const folderName = prompt("리포팅에 사용할 폴더 이름을 입력하세요:");
+        if (folderName) {
+            const url = `/reporting/?folder=${encodeURIComponent(folderName)}`;
+
+            fetch(url)
+                .then(response => response.text())
+                .then(html => {
+                    document.getElementById('content-area').innerHTML = html;
+                    initializeReportingScripts(folderName); // 리포팅 페이지 기능 초기화
+                })
+                .catch(error => console.error('Error loading reporting page:', error));
+        }
+    }
+
+    function initializeReportingScripts(folderName) {
+        // 이미지 목록 로드
+        fetch(`/get-images/?folder=${encodeURIComponent(folderName)}`)
+            .then(response => response.json())
+            .then(images => {
+                const imageList = document.getElementById('imageList');
+                imageList.innerHTML = ""; // 기존 이미지 목록 초기화
+                images.forEach(image => {
+                    const imageItem = document.createElement('div');
+                    imageItem.classList.add('image-item');
+                    imageItem.innerHTML = `
+                        <img src="${image.url}" alt="${image.name}" onclick="toggleImageSelection(this)">
+                        <div>${image.name}</div>
+                    `;
+                    imageList.appendChild(imageItem);
+                });
+            });
+
+        // 리포트 저장 버튼 이벤트 리스너 연결
+        const saveButton = document.querySelector('button[onclick="submitReport()"]');
+        if (saveButton) {
+            saveButton.removeAttribute("onclick"); // 기존 onclick 제거
+            saveButton.addEventListener("click", () => submitReport(folderName)); // 이벤트 리스너로 연결
+        }
+    }
+
+
+    // 선택된 이미지를 토글하는 함수
+    function toggleImageSelection(imgElement) {
+        imgElement.classList.toggle('selected');
+    }
+
+    // 리포트 저장 함수
+    function submitReport(folderName) {
+        const reportTitle = document.getElementById('reportTitle').value;
+        const reportContent = document.getElementById('reportContent').value;
+        const selectedImages = Array.from(document.querySelectorAll('.image-item img.selected')).map(img => img.getAttribute('src'));
+
+        if (!reportTitle) {
+            alert("리포트 제목을 입력하세요.");
+            return;
+        }
+        if (selectedImages.length === 0) {
+            alert("최소 하나의 이미지를 선택해야 합니다.");
+            return;
+        }
+        if (!reportContent) {
+            alert("리포트 내용을 입력하세요.");
+            return;
+        }
+
+        fetch('/submit-report/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({
+                folder: folderName,
+                title: reportTitle,
+                images: selectedImages,
+                content: reportContent
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                alert('리포트가 성공적으로 저장되었습니다.');
+                showContent('report');  // 리포트 목록으로 이동
+            } else {
+                alert('리포트 저장에 실패했습니다.');
+            }
+        })
+        .catch(error => console.error('Error submitting report:', error));
+    }
+
+
+    // CSRF 토큰 가져오기
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
 </script>
 {% endblock %}

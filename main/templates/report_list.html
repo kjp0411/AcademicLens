@@ -1,0 +1,28 @@
+
+{% block content %}
+<h2>리포트 목록</h2>
+<table>
+    <thead>
+        <tr>
+            <th>번호</th>
+            <th>리포트 제목</th>
+            <th>생성 날짜</th>
+            <th>보기</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for report in reports %}
+        <tr>
+            <td>{{ forloop.counter }}</td>
+            <td>{{ report.folder_name }}</td>
+            <td>{{ report.creation_date }}</td>
+            <td><a href="javascript:void(0);" onclick="showContent('report_detail', 1, '{{ report.folder_name }}')">상세 보기</a></td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="4">리포트가 없습니다.</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}
