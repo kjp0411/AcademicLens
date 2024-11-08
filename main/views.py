@@ -134,6 +134,8 @@ def search(request):
             paper_ids_by_countries = PaperCountry.objects.filter(country__name__in=countries).values_list('paper_id', flat=True)
             papers = papers.filter(id__in=paper_ids_by_countries)
 
+        selected_countries = countries
+        
         # 필터링된 논문 개수
         total_results = papers.count()
 
@@ -236,7 +238,7 @@ def search(request):
             'page_obj': page_obj,
             'selected_years': years,
             'selected_publishers': publishers,
-            'selected_countries': countries,
+            'selected_countries': selected_countries,
             'total_results': total_results,
             'author': author,
             'order': order,

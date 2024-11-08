@@ -90,11 +90,12 @@
             }
         } else {
             // resetParams가 false일 때 기존 URL을 유지하고 파라미터 업데이트
-            url = new URL(window.location.href);
-            const query = url.searchParams.get('query') || "";
-            const filter = url.searchParams.get('filter') || "paper";
-            const order = url.searchParams.get('order') || "desc";
-            const itemsPerPage = url.searchParams.get('items_per_page') || 10;
+            //url = new URL(window.location.href);
+            const currentUrl = window.location.href ? new URL(window.location.href) : new URL(window.location.origin);
+            const query = currentUrl.searchParams.get('query') || "";
+            const filter = currentUrl.searchParams.get('filter') || "paper";
+            const order = document.getElementById('sort-order') ? document.getElementById('sort-order').value : currentUrl.searchParams.get('order') || "desc";
+            const itemsPerPage = document.getElementById('items-per-page') ? document.getElementById('items-per-page').value : currentUrl.searchParams.get('items_per_page') || 10;
     
             if (contentType === "recommended") {
                 url = new URL("/mypage/recommended-papers/", window.location.origin);
@@ -124,6 +125,7 @@
             setupCheckSaveButton();
             setupCheckRemoveButton();
             setupSearchForm();
+            setupSortListeners();
         })
         .catch(error => console.error('Error loading the content:', error));
     }
@@ -267,7 +269,7 @@
                 .then(data => {
                     alert(data.message); // 성공/실패 메시지 표시
                     if (data.success) {
-                        location.reload(); // 저장 성공 후 페이지 새로고침
+                        window.location.href = "{% url 'mypage' %}";
                     }
                 })
                 .catch(error => console.error('Error:', error));
@@ -426,18 +428,18 @@
     
         if (sortOrderSelect) {
             sortOrderSelect.addEventListener('change', function() {
-                updateSavedPapersContent('order', this.value);
+                showContent('saved', 1, false);
             });
         }
     
         if (itemsPerPageSelect) {
             itemsPerPageSelect.addEventListener('change', function() {
-                updateSavedPapersContent('items_per_page', this.value);
+                showContent('saved', 1, false);
             });
         }
     }
     
-    function updateSavedPapersContent(param, value) {
+    {% comment %} function updateSavedPapersContent(param, value) {
         // 현재 URL의 페이지, 쿼리, 필터 등 파라미터 유지
         const currentUrl = new URL(window.location.href);
         currentUrl.searchParams.set(param, value);
@@ -469,7 +471,7 @@
             setupPagination('saved');
         })
         .catch(error => console.error('Error updating saved papers content:', error));
-    }
+    } {% endcomment %}
 
     // 페이지 로드 시 필요한 이벤트 리스너 설정
     document.addEventListener('DOMContentLoaded', function() {
