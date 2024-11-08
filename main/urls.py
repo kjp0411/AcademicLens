@@ -52,7 +52,7 @@ urlpatterns = [
     path('mypage/recommended-papers/', views.recommended_papers, name='recommended_papers'),
     path('mypage/recent-papers/', views.recent_papers, name='recent_papers'),
     path('mypage/saved-papers/', views.saved_papers, name='saved_papers'),
-    path('mypage/analysis-file/', views.analysis_file, name='analysis_file'),
+    path('mypage/analysis-storage/', views.analysis_storage, name='analysis_storage'),
     path('save-paper/', views.save_paper, name='save_paper'),
     path('remove-paper/', views.remove_paper, name='remove_paper'),
     path('save-selected-papers/', views.save_selected_papers, name='save_selected_papers'),
@@ -60,7 +60,20 @@ urlpatterns = [
     # 이미지 저장
     path('save-image/', views.save_image, name='save_image'),
 
-    # 폴더 생성
+    # 폴더 생성/수정/삭제
     path('create-folder/', views.create_folder, name='create_folder'),
+    path('edit-folder/', views.edit_folder, name='edit_folder'),
+    path('delete-folder/', views.delete_folder, name='delete_folder'),
+
+    # 폴더 이미지 보여주기
+    path('folder-images/', views.get_folder_images, name='folder_images'),
+
+    # 리포팅
+    path('get-images/', views.get_images, name='get_images'),
+    path('submit-report/', views.submit_report, name='submit_report'),
+    path('reporting/', views.reporting, name='reporting'),
+
+    path('mypage/reports/', views.report_list, name='report_list'),
+    path('mypage/reports/<str:folder_name>/', views.report_detail, name='report_detail'),
 ]
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

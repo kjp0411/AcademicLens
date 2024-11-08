@@ -44,8 +44,12 @@ from django.contrib.auth.decorators import login_required
 from PIL import Image
 from io import BytesIO
 
-# 폴더 지정
+# 폴더 생성/수정/삭제 관리 라이브러리
 from django.core.files.base import ContentFile
+import shutil
+
+# 리포팅
+from django.views.decorators.csrf import csrf_exempt
 # .env 파일 로드
 load_dotenv()
 
@@ -1717,24 +1721,223 @@ def save_image(request):
     
     return JsonResponse({'status': 'error', 'message': '잘못된 요청입니다.'}, status=400)
 
-# 사용자 폴더 내 폴더 생성
+# 폴더 생성
 @login_required
 def create_folder(request):
     if request.method == 'POST':
-        folder_name = request.POST.get('folder_name')
-        user_folder = os.path.join(settings.MEDIA_ROOT, 'accounts', request.user.username)
-
-        if not os.path.exists(user_folder):
-            os.makedirs(user_folder)
-
-        new_folder_path = os.path.join(user_folder, folder_name)
-
         try:
-            if not os.path.exists(new_folder_path):
-                os.makedirs(new_folder_path)
-                return JsonResponse({'status': 'success', 'message': f'폴더 {folder_name} 생성 완료'})
-            else:
-                return JsonResponse({'status': 'error', 'message': '이미 폴더가 존재합니다.'})
+            data = json.loads(request.body.decode('utf-8'))
+            folder_name = data.get('folder_name')
+            if folder_name is None:
+                return JsonResponse({'status': 'error', 'message': '폴더 이름이 제공되지 않았습니다.'})
+
+            user_folder_path = os.path.join(settings.MEDIA_ROOT, 'accounts', request.user.username)
+            new_folder_path = os.path.join(user_folder_path, folder_name)
+
+            os.makedirs(new_folder_path, exist_ok=True)
+            return JsonResponse({'status': 'success', 'message': '폴더가 생성되었습니다.'})
         except Exception as e:
-            return JsonResponse({'status': 'error', 'message': str(e)})
-    return JsonResponse({'status': 'error', 'message': '잘못된 요청입니다.'})
+            return JsonResponse({'status': 'error', 'message': f'폴더 생성 중 오류 발생: {str(e)}'})
+
+# 폴더명 수정
+@login_required
+def edit_folder(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body.decode('utf-8'))
+            old_name = data.get('old_name')
+            new_name = data.get('new_name')
+
+            if old_name is None or new_name is None:
+                return JsonResponse({'status': 'error', 'message': '올바른 폴더 이름이 제공되지 않았습니다.'})
+
+            user_folder_path = os.path.join(settings.MEDIA_ROOT, 'accounts', request.user.username)
+            old_path = os.path.join(user_folder_path, old_name)
+            new_path = os.path.join(user_folder_path, new_name)
+
+            os.rename(old_path, new_path)
+            return JsonResponse({'status': 'success', 'message': '폴더 이름이 수정되었습니다.'})
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': f'폴더 이름 수정 중 오류 발생: {str(e)}'})
+
+# 폴더 삭제
+@login_required
+def delete_folder(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body.decode('utf-8'))
+            folder_name = data.get('folder_name')
+            if folder_name is None:
+                return JsonResponse({'status': 'error', 'message': '폴더 이름이 제공되지 않았습니다.'})
+
+            user_folder_path = os.path.join(settings.MEDIA_ROOT, 'accounts', request.user.username, folder_name)
+            if os.path.isdir(user_folder_path):
+                os.rmdir(user_folder_path)
+                return JsonResponse({'status': 'success', 'message': '폴더가 삭제되었습니다.'})
+            else:
+                return JsonResponse({'status': 'error', 'message': '폴더가 존재하지 않습니다.'})
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': f'폴더 삭제 중 오류 발생: {str(e)}'})
+        
+# 분석저장소 내 폴더 보여주기
+@login_required
+def analysis_storage(request):
+    # 사용자 폴더 경로 설정
+    user_folder_path = os.path.join(settings.MEDIA_ROOT, 'accounts', request.user.username)
+    folder_list = []
+
+    # 사용자 폴더 내의 폴더 목록과 생성 날짜 가져오기
+    if os.path.exists(user_folder_path):
+        for folder in os.scandir(user_folder_path):
+            if folder.is_dir():
+                folder_info = {
+                    'name': folder.name,
+                    'creation_date': timezone.datetime.fromtimestamp(folder.stat().st_ctime),  # 생성 날짜
+                    'count': len([f for f in os.scandir(folder.path) if f.is_file()])  # 폴더 내 파일 수
+                }
+                folder_list.append(folder_info)
+
+    # 폴더 목록을 생성 날짜 순으로 정렬
+    folder_list.sort(key=lambda x: x['creation_date'], reverse=True)
+
+    return render(request, 'analysis_storage.html', {'folders': folder_list})
+
+# 폴더 내 이미지 보여주기
+def get_folder_images(request):
+    folder_name = request.GET.get('folder_name')
+    if not folder_name:
+        return JsonResponse({'status': 'error', 'message': '폴더 이름이 제공되지 않았습니다.'})
+
+    folder_path = os.path.join(settings.MEDIA_ROOT, 'accounts', request.user.username, folder_name)
+    
+    if not os.path.isdir(folder_path):
+        return JsonResponse({'status': 'error', 'message': '폴더가 존재하지 않습니다.'})
+
+    images = []
+    for filename in os.listdir(folder_path):
+        if filename.lower().endswith(('.png', '.jpg', '.jpeg', '.gif')):
+            images.append({
+                'name': filename,
+                'url': os.path.join(settings.MEDIA_URL, 'accounts', request.user.username, folder_name, filename)
+            })
+
+    return JsonResponse({'status': 'success', 'images': images})
+
+# 폴더 내 이미지 목록 반환
+def get_images(request):
+    folder_name = request.GET.get('folder')
+    folder_path = os.path.join(settings.MEDIA_ROOT, 'accounts', request.user.username, folder_name)
+    
+    if not os.path.isdir(folder_path):
+        return JsonResponse([], safe=False)
+    
+    images = []
+    for filename in os.listdir(folder_path):
+        images.append({
+            'url': f'/media/accounts/{request.user.username}/{folder_name}/{filename}',
+            'name': filename
+        })
+    return JsonResponse(images, safe=False)
+
+# 리포트 제출 및 저장
+@csrf_exempt
+@login_required
+def submit_report(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        folder_name = data.get('folder')
+        title = data.get('title')  # 추가된 제목 필드
+        selected_images = data.get('images')
+        content = data.get('content')
+        
+        if not title:
+            return JsonResponse({'status': 'fail', 'message': '제목이 필요합니다.'}, status=400)
+        
+        # 저장 폴더 설정
+        reports_folder = os.path.join(settings.MEDIA_ROOT, 'reports', request.user.username)
+        os.makedirs(reports_folder, exist_ok=True)
+        
+        # 제목을 파일명으로 사용하여 저장
+        safe_title = title.replace(" ", "_")  # 공백을 _로 대체하여 안전하게 파일명에 사용
+        report_path = os.path.join(reports_folder, f"{safe_title}.txt")
+        
+        with open(report_path, 'w', encoding='utf-8') as report_file:
+            report_file.write(f"리포트 제목: {title}\n")
+            report_file.write(f"리포트 내용:\n{content}\n\n")
+            report_file.write("선택된 이미지 목록:\n")
+            for img_url in selected_images:
+                report_file.write(f"{img_url}\n")
+        
+        return JsonResponse({'status': 'success', 'message': '리포트 저장 완료'})
+    
+    return JsonResponse({'status': 'fail', 'message': '리포트 저장 실패'}, status=400)
+
+# 리포팅 html 매핑
+@login_required
+def reporting(request):
+    folder_name = request.GET.get('folder')
+    return render(request, 'reporting.html', {'folder_name': folder_name})
+
+
+from django.utils.dateformat import format
+
+@login_required
+def report_list(request):
+    user_folder = os.path.join(settings.MEDIA_ROOT, 'reports', request.user.username)
+    if not os.path.exists(user_folder):
+        os.makedirs(user_folder)
+
+    reports = []
+    for file in os.listdir(user_folder):
+        if file.endswith('.txt'):
+            file_path = os.path.join(user_folder, file)
+            folder_name = file.rsplit('.txt', 1)[0]
+
+            # 생성 날짜를 datetime 객체로 변환
+            creation_timestamp = os.path.getctime(file_path)
+            creation_date = datetime.fromtimestamp(creation_timestamp).strftime('%Y-%m-%d %H:%M:%S')
+
+            reports.append({
+                'folder_name': folder_name,
+                'file_path': file_path,
+                'creation_date': creation_date,
+            })
+
+    return render(request, 'report_list.html', {'reports': reports})
+
+
+@login_required
+def report_detail(request, folder_name):
+    user_folder = os.path.join(settings.MEDIA_ROOT, 'reports', request.user.username)
+    report_path = os.path.join(user_folder, f"{folder_name}.txt")
+
+    if not os.path.exists(report_path):
+        return render(request, 'report_detail.html', {'error': '리포트를 찾을 수 없습니다.'})
+
+    title = ""
+    content = ""
+    image_urls = []
+
+    # 파일을 읽어서 제목, 내용, 이미지 URL을 추출
+    with open(report_path, 'r', encoding='utf-8') as file:
+        lines = file.readlines()
+        is_content = False
+        for line in lines:
+            line = line.strip()
+            if line.startswith("리포트 제목:"):
+                title = line.replace("리포트 제목:", "").strip()
+            elif line.startswith("리포트 내용:"):
+                is_content = True
+            elif line.startswith("선택된 이미지 목록:"):
+                is_content = False
+            elif is_content:
+                content += line + "\n"
+            elif line.startswith("/media/"):
+                image_urls.append(line)
+
+    return render(request, 'report_detail.html', {
+        'folder_name': folder_name,
+        'title': title,
+        'content': content.strip(),
+        'images': image_urls,
+    })

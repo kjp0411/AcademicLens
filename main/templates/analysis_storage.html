@@ -1,0 +1,65 @@
+
+{% block content %}
+<style>
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    th, td {
+        border: 1px solid #ddd;
+        padding: 8px;
+        text-align: center;
+    }
+    th {
+        background-color: #f2f2f2;
+    }
+    .actions button {
+        padding: 5px 10px;
+        border: none;
+        background-color: #007bff;
+        color: white;
+        cursor: pointer;
+        border-radius: 5px;
+    }
+    .actions .delete {
+        background-color: #dc3545;
+    }
+</style>
+
+<h2>분석저장소</h2>
+<div>
+    <button onclick="createNewFolder()">새 폴더 추가</button>
+    <button onclick="openReporting('{{ folder.name }}')">리포팅</button>
+
+</div>
+
+<table>
+    <thead>
+        <tr>
+            <th>번호</th>
+            <th>목록 이름</th>
+            <th>건수</th>
+            <th>생성일</th>
+            <th>편집</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for folder in folders %}
+        <tr>
+            <td>{{ forloop.counter }}</td>
+            <td><a href="javascript:void(0);" onclick="showImagesInFolder('{{ folder.name }}')">{{ folder.name }}</a></td>
+            <td>{{ folder.count }}</td>
+            <td>{{ folder.creation_date|date:"Y-m-d" }}</td>
+            <td class="actions">
+                <button onclick="editFolder('{{ folder.name }}')">수정</button>
+                <button class="delete" onclick="deleteFolder('{{ folder.name }}')">삭제</button>
+            </td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="5">폴더가 없습니다.</td>
+        </tr>
+        {% endfor %}
+    </tbody>    
+</table>
+{% endblock %}
