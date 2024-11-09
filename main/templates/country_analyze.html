@@ -16,7 +16,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/wordcloud2.js/1.0.6/wordcloud2.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        body {
+        body {  
             font-family: Arial, sans-serif;
         }
 
@@ -230,6 +230,17 @@
             </div>
             <div class="paper-list">
                 <h3>논문 리스트</h3>
+                <div id="topKeywords">
+                    <h3>Top 5 키워드</h3>
+                    <div id="topKeywordButtons"></div>
+                </div>
+                <br>
+                <div>
+                    <input type="text" id="keywordInput" placeholder="키워드를 입력하세요">
+                    <button onclick="searchPapersByKeyword()">검색</button>
+                    <button onclick="refreshPaperList()">새로고침</button>
+                </div>
+                <button onclick="redirectToFilteredPage()">더보기</button>
                 <ul id="paperList"></ul>
             </div>
             <div class="keywords">
@@ -348,25 +359,115 @@
             return text;
         }
 
+        // 탑 키워드 5개 가져오기
+        async function fetchTopKeywords() {
+            // country 이름을 기반으로 20개의 키워드를 가져옴
+            const response = await fetch(`/country_wordcloud/?name=${encodeURIComponent(countryName)}`);
+            if (!response.ok) {
+                console.error('Error fetching top keywords:', response.statusText);
+                return;
+            }
+            const allKeywords = await response.json();
+            // 상위 5개 키워드만 선택
+            const topKeywords = allKeywords.slice(0, 5);
+            renderTopKeywordButtons(topKeywords);
+        }
+
+        // 페이지 로드 시 topKeywords를 가져옴
+        fetchTopKeywords();
+
+        // 워드클라우드 탑 5 키워드로 논문 리스트 검색
+        function renderTopKeywordButtons(keywords) {
+            const topKeywordButtons = document.getElementById('topKeywordButtons');
+            topKeywordButtons.innerHTML = ''; // 기존 버튼 제거
+
+            keywords.forEach(([keyword]) => {
+                const button = document.createElement('button');
+                button.textContent = keyword;
+                button.onclick = () => {
+                    document.getElementById('keywordInput').value = keyword;
+                    searchPapersByKeyword();
+                };
+                topKeywordButtons.appendChild(button);
+            });
+        }
+        
+        // 논문 리스트 새로고침
+        function refreshPaperList() {
+            fetchRecentPapers()
+                .then(data => {
+                    if (data) {
+                        renderRecentPapers(data);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error refreshing paper list:', error);
+                });
+        }
+
+        // 검색어로 논문 리스트 출력
+        function searchPapersByKeyword() {
+            const keyword = document.getElementById('keywordInput').value;
+            const country = document.getElementById('countryName').innerText;
+
+            if (!keyword) {
+                alert("키워드를 입력하세요.");
+                return;
+            }
+
+            console.log(`검색 요청 - Country: ${country}, Keyword: ${keyword}`);  // 확인용 로그
+
+            // API 호출 (수정된 경로)
+            fetch(`/api/country_recent_papers/?name=${encodeURIComponent(country)}&keyword=${encodeURIComponent(keyword)}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log("검색 결과 데이터:", data);  // 응답 데이터 확인
+                    renderRecentPapers(data);
+                })
+                .catch(error => {
+                    console.error('Error fetching filtered papers:', error);
+                });
+        }
+
+        // 논문 리스트 출력
         function renderRecentPapers(data) {
             const paperList = document.getElementById('paperList');
-            paperList.innerHTML = '';
+            paperList.innerHTML = '';  // 기존 목록 초기화
 
             data.forEach(paper => {
                 const li = document.createElement('li');
                 const title = document.createElement('strong');
                 const abstract = document.createElement('p');
                 const meta = document.createElement('small');
+                const savedCount = document.createElement('span');
 
-                title.textContent = paper.title;
+                // 내부 URL로 설정하여 /paper/{id}/로 이동하게 만듦
+                const titleLink = document.createElement('a');
+                titleLink.href = `/paper/${paper.id}/`;  // 내부 URL로 설정
+                titleLink.textContent = paper.title;
+                titleLink.target = '_blank';  // 새 탭에서 열리도록 설정
+                title.appendChild(titleLink);
+
+                // 초록과 메타데이터 추가
                 abstract.textContent = truncateText(paper.abstract, 100);
-                meta.textContent = `Published by ${paper.publisher} on ${new Date(paper.date).toLocaleDateString()} - Citations: ${paper.citations}`;
+                meta.textContent = `발행처: ${paper.publisher}, 날짜: ${new Date(paper.date).toLocaleDateString()} - 인용 수: ${paper.citations}`;
 
+                // 좋아요 수 표시
+                savedCount.textContent = `좋아요 수: ${paper.saved_count}`;
+
+                // 요소 추가
                 li.appendChild(title);
                 li.appendChild(document.createElement('br'));
                 li.appendChild(meta);
                 li.appendChild(document.createElement('br'));
                 li.appendChild(abstract);
+                li.appendChild(document.createElement('br'));
+                li.appendChild(savedCount);  // 좋아요 수 추가
 
                 paperList.appendChild(li);
             });
@@ -619,6 +720,29 @@
             } else {
                 console.error('Error analyzing keyword data', response.statusText);
             }
+        }
+
+        function redirectToFilteredPage() {
+            // `countryName` 요소의 텍스트를 가져와 국가 정보를 추출
+            const country = document.getElementById('countryName').innerText;
+            const keywordInput = document.getElementById('keywordInput').value.trim(); // 입력 필드에서 키워드 가져오기
+
+            if (!country) {
+                alert("국가 정보가 없습니다.");
+                return;
+            }
+
+            let newUrl;
+
+            if (keywordInput) {
+                // 키워드가 있을 경우 - query와 country를 모두 포함
+                newUrl = `/search/?filter=paper&query=${encodeURIComponent(keywordInput)}&country=${encodeURIComponent(country)}`;
+            } else {
+                // 키워드가 없을 경우 - country 필터만 사용
+                newUrl = `/search/?filter=country&query=${encodeURIComponent(country)}`;
+            }
+
+            window.location.href = newUrl;
         }
     </script>
 </body>
