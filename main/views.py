@@ -982,23 +982,48 @@ def country_get_paper_counts_by_year(request):
 # 국가 논문 리스트
 def country_get_recent_papers(request):
     country_name = request.GET.get('name')
+    keyword = request.GET.get('keyword', '')
+
+    # 논문 ID 필터링 (키워드에 따라 논문 ID 가져오기)
+    paper_ids_by_keyword = get_paper_ids(keyword) if keyword else None
+
+    # 데이터베이스 쿼리
     with connection.cursor() as cursor:
-        cursor.execute("""
-            SELECT DISTINCT p.title, p.url, p.date, p.citations, p.publisher, p.abstract
+        query = """
+            SELECT DISTINCT p.id, p.title, p.url, p.date, p.citations, p.publisher, p.abstract, p.saved_count
             FROM paper p
             JOIN paper_country pc ON p.id = pc.paper_id
             JOIN country c ON pc.country_id = c.id
             WHERE c.name = %s
-            ORDER BY p.date DESC
-            LIMIT 5;
-        """, [country_name])
+        """
+        params = [country_name]
+
+        # 키워드 필터가 있는 경우
+        if paper_ids_by_keyword:
+            query += " AND p.id IN %s"
+            params.append(tuple(paper_ids_by_keyword))
+
+        # 좋아요 수로 정렬
+        query += " ORDER BY p.saved_count DESC LIMIT 5"
         
+        cursor.execute(query, params)
         rows = cursor.fetchall()
-    
-    # 데이터를 JSON 형식으로 변환
-    data = [{'title': row[0], 'url': row[1], 'date': row[2], 'citations': row[3], 'publisher': row[4], 'abstract': row[5]} for row in rows]
-    
-    return JsonResponse(data, safe=False)
+
+    # JSON 변환
+    data = [
+        {
+            'id': row[0],
+            'title': row[1],
+            'url': row[2],
+            'date': row[3],
+            'citations': row[4],
+            'publisher': row[5],
+            'abstract': row[6],
+            'saved_count': row[7]
+        }
+        for row in rows
+    ]
+    return JsonResponse(data, safe=False)  
 
 # 국가 발표 논문 수
 def country_get_total_papers(request):
@@ -1201,21 +1226,47 @@ def affiliation_get_paper_counts_by_year(request):
 #소속 논문 리스트 함수
 def affiliation_get_recent_papers(request):
     affiliation_name = request.GET.get('name')
+    keyword = request.GET.get('keyword', '')
+
+    # 논문 ID 필터링 (키워드에 따라 논문 ID 가져오기)
+    paper_ids_by_keyword = get_paper_ids(keyword) if keyword else None
+
+    # 데이터베이스 쿼리
     with connection.cursor() as cursor:
-        cursor.execute("""
-            SELECT DISTINCT p.title, p.url, p.date, p.citations, p.publisher, p.abstract
+        query = """
+            SELECT DISTINCT p.id, p.title, p.url, p.date, p.citations, p.publisher, p.abstract, p.saved_count
             FROM paper p
             JOIN paper_affiliation pa ON p.id = pa.paper_id
             JOIN affiliation a ON pa.affiliation_id = a.id
             WHERE a.name = %s
-            ORDER BY p.date DESC
-            LIMIT 5;
-        """, [affiliation_name])
+        """
+        params = [affiliation_name]
+
+        # 키워드 필터가 있는 경우
+        if paper_ids_by_keyword:
+            query += " AND p.id IN %s"
+            params.append(tuple(paper_ids_by_keyword))
+
+        # 좋아요 수로 정렬
+        query += " ORDER BY p.saved_count DESC LIMIT 5"
         
+        cursor.execute(query, params)
         rows = cursor.fetchall()
-    
-    data = [{'title': row[0], 'url': row[1], 'date': row[2], 'citations': row[3], 'publisher': row[4], 'abstract': row[5]} for row in rows]
-    
+
+    # JSON 변환
+    data = [
+        {
+            'id': row[0],
+            'title': row[1],
+            'url': row[2],
+            'date': row[3],
+            'citations': row[4],
+            'publisher': row[5],
+            'abstract': row[6],
+            'saved_count': row[7]
+        }
+        for row in rows
+    ]
     return JsonResponse(data, safe=False)
 
 #소속 발표 논문 수
@@ -1369,24 +1420,50 @@ def author_get_paper_counts_by_year(request):
     
     return JsonResponse(data, safe=False)
 
-#저자 논문 리스트 함수
+# 저자 논문 리스트 함수
 def author_get_recent_papers(request):
     author_name = request.GET.get('name')
+    keyword = request.GET.get('keyword', '')
+
+    # 논문 ID 필터링 (키워드에 따라 논문 ID 가져오기)
+    paper_ids_by_keyword = get_paper_ids(keyword) if keyword else None
+
+    # 데이터베이스 쿼리
     with connection.cursor() as cursor:
-        cursor.execute("""
-            SELECT DISTINCT p.title, p.url, p.date, p.citations, p.publisher, p.abstract
+        query = """
+            SELECT DISTINCT p.id, p.title, p.url, p.date, p.citations, p.publisher, p.abstract, p.saved_count
             FROM paper p
             JOIN paper_author pa ON p.id = pa.paper_id
             JOIN author a ON pa.author_id = a.id
             WHERE a.name = %s
-            ORDER BY p.date DESC
-            LIMIT 5;
-        """, [author_name])
+        """
+        params = [author_name]
+
+        # 키워드 필터가 있는 경우
+        if paper_ids_by_keyword:
+            query += " AND p.id IN %s"
+            params.append(tuple(paper_ids_by_keyword))
+
+        # 좋아요 수로 정렬
+        query += " ORDER BY p.saved_count DESC LIMIT 5"
         
+        cursor.execute(query, params)
         rows = cursor.fetchall()
-    
-    data = [{'title': row[0], 'url': row[1], 'date': row[2], 'citations': row[3], 'publisher': row[4], 'abstract': row[5]} for row in rows]
-    
+
+    # JSON 변환
+    data = [
+        {
+            'id': row[0],
+            'title': row[1],
+            'url': row[2],
+            'date': row[3],
+            'citations': row[4],
+            'publisher': row[5],
+            'abstract': row[6],
+            'saved_count': row[7]
+        }
+        for row in rows
+    ]
     return JsonResponse(data, safe=False)
 
 #저자 발표 논문 수
