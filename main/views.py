@@ -2241,3 +2241,45 @@ def report_detail(request, folder_name):
         'content': content.strip(),
         'images': image_urls,
     })
+    #         return JsonResponse({'status': 'error', 'message': str(e)})
+    # return JsonResponse({'status': 'error', 'message': '잘못된 요청입니다.'})
+
+def analyze_chart(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            chart_id = data.get('chart_id', '')
+            chart_data = data.get('chart_data', [])
+
+            # 각 차트에 대한 GPT 프롬프트 생성
+            if chart_id == 'papersChart':
+                prompt = f"Analyze the following paper counts by year: {chart_data}"
+            elif chart_id == 'authorsChart':
+                prompt = f"Analyze the number of papers by authors: {chart_data}"
+            elif chart_id == 'affiliationChart':
+                prompt = f"Analyze the number of papers by affiliation: {chart_data}"
+            elif chart_id == 'countryChart':
+                prompt = f"Analyze the number of papers by country: {chart_data}"
+            elif chart_id == 'keywordChart':
+                prompt = f"Analyze the top keywords used in papers: {chart_data}"
+            else:
+                return JsonResponse({'error': 'Invalid chart ID'}, status=400)
+
+            # GPT API 호출
+            response = openai.ChatCompletion.create(
+                model="gpt-3.5-turbo",  # 또는 gpt-4
+                messages=[
+                    {"role": "system", "content": "You are a helpful assistant."},
+                    {"role": "user", "content": prompt}
+                ]
+            )
+
+            # GPT 분석 결과 추출
+            analysis_result = response.choices[0].message['content'].strip()
+
+            return JsonResponse({'analysis': analysis_result})
+
+        except Exception as e:
+            return JsonResponse({'error': f'Analysis failed: {str(e)}'}, status=500)
+
+    return JsonResponse({'error': 'Invalid request method'}, status=400)

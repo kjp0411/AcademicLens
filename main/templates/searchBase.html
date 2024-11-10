@@ -124,6 +124,17 @@
                 event.preventDefault(); // 폼 제출 막기
             }
         });
+        
+    window.addEventListener('pagehide', function (event) {
+        // only if the page is being unloaded, not navigated within the same tab
+        if (event.persisted === false) {
+            fetch("{% url 'accounts:logout' %}", {
+                method: 'GET',
+                credentials: 'include'
+            });
+        }
+    });
+
     </script>
 </body>
 </html>

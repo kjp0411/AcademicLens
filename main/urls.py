@@ -78,5 +78,8 @@ urlpatterns = [
 
     path('remove-selected-papers/', views.remove_selected_papers, name='remove_selected_papers'),
 
+    # 분석페이지 gpt 분석
+    path('analyze-chart/', views.analyze_chart, name='analyze_chart'),
+
 ]
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

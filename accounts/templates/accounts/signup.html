@@ -32,8 +32,7 @@
         }
 
         .signup-container img {
-            max-width: 100%; /* 이미지가 컨테이너의 너비에 맞춰 조정되도록 설정 */
-            height: auto; /* 높이를 자동으로 설정하여 이미지 비율을 유지 */
+            width: 150px;
             margin-bottom: 15px;
         }
 
@@ -100,13 +99,13 @@
             margin-top: 20px; /* 가입 폼과 로그인 링크 사이에 간격 추가 */
             text-align: center;
         }
-
+        
     </style>
 </head>
 <body>
     <div class="signup-container">
         <div class="form">
-        <img src="{% static 'image/cap_logo.png' %}" alt="Academic Lens Logo">
+        <a href="{% url 'home' %}"><img src="{% static 'image/cap_logo.png' %}" alt="Academic Lens Logo"></a>
         <form action="" method="post" enctype="multipart/form-data">
             {% csrf_token %}
                 {{ form.as_p }}

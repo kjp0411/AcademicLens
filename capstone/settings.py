@@ -91,6 +91,10 @@ DATABASES = {
     }
 }
 
+# Session settings
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True  # 브라우저 종료 시 세션 만료
+SESSION_COOKIE_AGE = 1800  # 30분 동안 세션 유지 (1800초)
+
 # Password validation
 # https://docs.djangoproject.com/en/3.2/ref/settings/#auth-password-validators
 
