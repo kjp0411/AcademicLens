@@ -86,5 +86,16 @@
         </nav>
         {% block content %}{% endblock %}
     </main>
+    <script>
+        window.addEventListener('pagehide', function (event) {
+            // only if the page is being unloaded, not navigated within the same tab
+            if (event.persisted === false) {
+                fetch("{% url 'accounts:logout' %}", {
+                    method: 'GET',
+                    credentials: 'include'
+                });
+            }
+        });
+    </script>
 </body>
 </html>

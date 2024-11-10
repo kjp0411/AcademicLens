@@ -28,7 +28,7 @@ def signup(request):
             status = 1
         else:
             profile.delete()
-            message = '회원가입 간입가능'
+            message = '회원가입 가입가능'
             status = 0
         context = {
             'message': message,

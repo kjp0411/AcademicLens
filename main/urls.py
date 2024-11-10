@@ -62,5 +62,10 @@ urlpatterns = [
 
     # 폴더 생성
     path('create-folder/', views.create_folder, name='create_folder'),
+
+    # 분석페이지 gpt 분석
+    path('analyze-chart/', views.analyze_chart, name='analyze_chart'),
+
+
 ]
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

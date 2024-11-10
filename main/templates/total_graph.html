@@ -3,288 +3,392 @@
 {% block title %}연도별 논문 수 및 저자별 논문 수{% endblock %}
 
 {% block content %}
-    <style>
-        #papersChart, #authorsChart, #affiliationChart, #countryChart, #keywordChart {
-            width: 100%;
-            max-width: 1200px;
-            height: 500px;
-            display: block;
-            margin: auto;
-        }
+<style>
+    #papersChart,
+    #authorsChart,
+    #affiliationChart,
+    #countryChart,
+    #keywordChart {
+        width: 50%;
+        max-width: 1200px;
+        height: 500px;
+        display: inline-block;
+        vertical-align: top;
+        margin: 0;
+        padding: 20px;
+    }
 
-        main {
-            width: 100%;
-            max-width: 1900px;
-            margin: 0 auto;
-        }
+    main {
+        width: 100%;
+        max-width: 1900px;
+        margin: 0 auto;
+    }
 
-        .chart-container {
-            position: relative;
-            margin-bottom: 20px;
-        }
+    .chart-container {
+        position: relative;
+        margin-bottom: 20px;
+        display: flex;
+        justify-content: space-between;
+    }
 
-        .chart-buttons {
-            position: absolute;
-            right: 20px;
-            top: 20px;
-            z-index: 10;
-        }
+    .chart-buttons {
+        position: absolute;
+        right: 20px;
+        top: 20px;
+        z-index: 10;
+    }
 
-        .chart-buttons button {
-            padding: 5px 10px;
-            margin: 0 5px;
-            background-color: #007BFF;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
+    .chart-buttons button {
+        padding: 5px 10px;
+        margin: 0 5px;
+        background-color: #007BFF;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+    }
 
-        .chart-buttons .like-btn {
-            background-color: #28a745;
-        }
-    </style>
-    <br><br><br>
-    <div style="text-align: center;">
-        <h2 style="display: inline;">
-            "<span style="color: blue;">{{ keyword }}</span>" 검색 결과 분석
-        </h2>
-        <h3 style="display: inline;"> ( 검색결과 {{ total_results }} 건 )</h3>
+    .chart-buttons .like-btn {
+        background-color: #28a745;
+    }
+
+    #analysisContainer {
+        width: 45%;
+        max-width: 1200px;
+        padding: 20px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        background-color: #f9f9f9;
+        display: inline-block;
+        vertical-align: top;
+        margin-left: 20px;
+    }
+
+    .analysis-title {
+        margin-bottom: 10px;
+    }
+
+    .analysis-result {
+        white-space: pre-wrap;
+        /* 줄 바꿈을 유지 */
+    }
+</style>
+<br><br><br>
+<div style="text-align: center;">
+    <h2 style="display: inline;">
+        "<span style="color: blue;">{{ keyword }}</span>" 검색 결과 분석
+    </h2>
+    <h3 style="display: inline;"> ( 검색결과 {{ total_results }} 건 )</h3>
+</div>
+<br>
+<div style="text-align: center; padding: 20px;">
+    <form method="GET" action="{% url 'total_graph' %}"
+        style="display: inline-flex; align-items: center; gap: 10px; background-color: #f0f0f0; padding: 10px; border-radius: 8px;">
+        <input type="hidden" name="query" value="{{ keyword }}">
+        <input type="hidden" name="filter" value="{{ filter }}">
+
+        <label for="start_year" style="margin-right: 10px;">기간 설정:</label>
+
+        <select name="start_year" id="start_year"
+            style="padding: 5px; border-radius: 5px; border: 1px solid #ccc; width: 100px;">
+            <option value="2019" {% if start_year == 2019 %}selected{% endif %}>2019</option>
+            <option value="2020" {% if start_year == 2020 %}selected{% endif %}>2020</option>
+            <option value="2021" {% if start_year == 2021 %}selected{% endif %}>2021</option>
+            <option value="2022" {% if start_year == 2022 %}selected{% endif %}>2022</option>
+            <option value="2023" {% if start_year == 2023 %}selected{% endif %}>2023</option>
+            <option value="2024" {% if start_year == 2024 %}selected{% endif %}>2024</option>
+        </select>
+
+        <label for="end_year" style="margin: 0 10px;"> ~ </label>
+
+        <select name="end_year" id="end_year"
+            style="padding: 5px; border-radius: 5px; border: 1px solid #ccc; width: 100px;">
+            <option value="2019" {% if end_year == 2019 %}selected{% endif %}>2019</option>
+            <option value="2020" {% if end_year == 2020 %}selected{% endif %}>2020</option>
+            <option value="2021" {% if end_year == 2021 %}selected{% endif %}>2021</option>
+            <option value="2022" {% if end_year == 2022 %}selected{% endif %}>2022</option>
+            <option value="2023" {% if end_year == 2023 %}selected{% endif %}>2023</option>
+            <option value="2024" {% if end_year == 2024 %}selected{% endif %}>2024</option>
+        </select>
+
+        <button type="submit"
+            style="padding: 5px 10px; background-color: #007BFF; color: white; border: none; border-radius: 5px; cursor: pointer; width: 80px;">
+            검색
+        </button>
+    </form>
+</div>
+
+<div style="text-align: center; margin-top: 10px;">
+    <p>현재 선택한 기간: <strong>{{ start_year }} ~ {{ end_year }}</strong></p>
+</div>
+
+<br>
+
+<div class="chart-container">
+    <div id="papersChart"></div>
+    <div class="chart-buttons">
+        <button class="gpt-analysis-btn">GPT 분석</button>
+        <button class="like-btn">좋아요</button>
+        <button class="pdf-btn" data-chart="papersChart">이미지로 저장</button>
     </div>
-    <br>
-    <div style="text-align: center; padding: 20px;">
-        <form method="GET" action="{% url 'total_graph' %}" style="display: inline-flex; align-items: center; gap: 10px; background-color: #f0f0f0; padding: 10px; border-radius: 8px;">
-            <input type="hidden" name="query" value="{{ keyword }}">
-            <input type="hidden" name="filter" value="{{ filter }}">
-
-            <label for="start_year" style="margin-right: 10px;">기간 설정:</label>
-            
-            <select name="start_year" id="start_year" style="padding: 5px; border-radius: 5px; border: 1px solid #ccc; width: 100px;">
-                <option value="2019" {% if start_year == 2019 %}selected{% endif %}>2019</option>
-                <option value="2020" {% if start_year == 2020 %}selected{% endif %}>2020</option>
-                <option value="2021" {% if start_year == 2021 %}selected{% endif %}>2021</option>
-                <option value="2022" {% if start_year == 2022 %}selected{% endif %}>2022</option>
-                <option value="2023" {% if start_year == 2023 %}selected{% endif %}>2023</option>
-                <option value="2024" {% if start_year == 2024 %}selected{% endif %}>2024</option>
-            </select>
-            
-            <label for="end_year" style="margin: 0 10px;"> ~ </label>
-        
-            <select name="end_year" id="end_year" style="padding: 5px; border-radius: 5px; border: 1px solid #ccc; width: 100px;">
-                <option value="2019" {% if end_year == 2019 %}selected{% endif %}>2019</option>
-                <option value="2020" {% if end_year == 2020 %}selected{% endif %}>2020</option>
-                <option value="2021" {% if end_year == 2021 %}selected{% endif %}>2021</option>
-                <option value="2022" {% if end_year == 2022 %}selected{% endif %}>2022</option>
-                <option value="2023" {% if end_year == 2023 %}selected{% endif %}>2023</option>
-                <option value="2024" {% if end_year == 2024 %}selected{% endif %}>2024</option>
-            </select>
-        
-            <button type="submit" style="padding: 5px 10px; background-color: #007BFF; color: white; border: none; border-radius: 5px; cursor: pointer; width: 80px;">
-                검색
-            </button>
-        </form>
+    <!-- 분석 결과가 표시될 영역 -->
+<div id="analysisContainer">
+    <h4 class="analysis-title">GPT 분석 결과</h4>
+    <div id="analysisResult" class="analysis-result">
+        <p>분석 결과가 여기에 표시됩니다.</p>
     </div>
+</div>
+</div>
 
-    <div style="text-align: center; margin-top: 10px;">
-        <p>현재 선택한 기간: <strong>{{ start_year }} ~ {{ end_year }}</strong></p>
+<div class="chart-container">
+    <div id="authorsChart"></div>
+    <div class="chart-buttons">
+        <button class="gpt-analysis-btn">GPT 분석</button>
+        <button class="like-btn">좋아요</button>
+        <button class="pdf-btn" data-chart="authorsChart">이미지로 저장</button>
     </div>
-    
-    <br>
-
-    <div class="chart-container">
-        <div id="papersChart"></div>
-        <div class="chart-buttons">
-            <button class="gpt-analysis-btn">GPT 분석</button>
-            <button class="like-btn">좋아요</button>
-            <button class="pdf-btn" data-chart="papersChart">이미지로 저장</button>
-        </div>
+    <!-- 분석 결과가 표시될 영역 -->
+<div id="analysisContainer">
+    <h4 class="analysis-title">GPT 분석 결과</h4>
+    <div id="analysisResult" class="analysis-result">
+        <p>분석 결과가 여기에 표시됩니다.</p>
     </div>
+</div>
+</div>
 
-    <div class="chart-container">
-        <div id="authorsChart"></div>
-        <div class="chart-buttons">
-            <button class="gpt-analysis-btn">GPT 분석</button>
-            <button class="like-btn">좋아요</button>
-            <button class="pdf-btn" data-chart="authorsChart">이미지로 저장</button>
-        </div>
+<div class="chart-container">
+    <div id="affiliationChart"></div>
+    <div class="chart-buttons">
+        <button class="gpt-analysis-btn">GPT 분석</button>
+        <button class="like-btn">좋아요</button>
+        <button class="pdf-btn" data-chart="affiliationChart">이미지로 저장</button>
     </div>
-
-    <div class="chart-container">
-        <div id="affiliationChart"></div>
-        <div class="chart-buttons">
-            <button class="gpt-analysis-btn">GPT 분석</button>
-            <button class="like-btn">좋아요</button>
-            <button class="pdf-btn" data-chart="affiliationChart">이미지로 저장</button>
-        </div>
+    <!-- 분석 결과가 표시될 영역 -->
+<div id="analysisContainer">
+    <h4 class="analysis-title">GPT 분석 결과</h4>
+    <div id="analysisResult" class="analysis-result">
+        <p>분석 결과가 여기에 표시됩니다.</p>
     </div>
+</div>
+</div>
 
-    <div class="chart-container">
-        <div id="countryChart"></div>
-        <div class="chart-buttons">
-            <button class="gpt-analysis-btn">GPT 분석</button>
-            <button class="like-btn">좋아요</button>
-            <button class="pdf-btn" data-chart="countryChart">이미지로 저장</button>
-        </div>
+<div class="chart-container">
+    <div id="countryChart"></div>
+    <div class="chart-buttons">
+        <button class="gpt-analysis-btn">GPT 분석</button>
+        <button class="like-btn">좋아요</button>
+        <button class="pdf-btn" data-chart="countryChart">이미지로 저장</button>
     </div>
-
-    <div class="chart-container">
-        <div id="keywordChart"></div>
-        <div class="chart-buttons">
-            <button class="gpt-analysis-btn">GPT 분석</button>
-            <button class="like-btn">좋아요</button>
-            <button class="pdf-btn" data-chart="keywordChart">이미지로 저장</button>
-        </div>
+    <!-- 분석 결과가 표시될 영역 -->
+<div id="analysisContainer">
+    <h4 class="analysis-title">GPT 분석 결과</h4>
+    <div id="analysisResult" class="analysis-result">
+        <p>분석 결과가 여기에 표시됩니다.</p>
     </div>
+</div>
+</div>
 
-    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
-    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
-    <script type="text/javascript">
-        google.charts.load('current', {'packages':['corechart']});
-        google.charts.setOnLoadCallback(drawPapersChart);
-        google.charts.setOnLoadCallback(drawAuthorChart);
-        google.charts.setOnLoadCallback(drawAffiliationChart);
-        google.charts.setOnLoadCallback(drawCountryChart);
-        google.charts.setOnLoadCallback(drawKeywordChart);
+<div class="chart-container">
+    <div id="keywordChart"></div>
+    <div class="chart-buttons">
+        <button class="gpt-analysis-btn">GPT 분석</button>
+        <button class="like-btn">좋아요</button>
+        <button class="pdf-btn" data-chart="keywordChart">이미지로 저장</button>
+    </div>
+    <!-- 분석 결과가 표시될 영역 -->
+<div id="analysisContainer">
+    <h4 class="analysis-title">GPT 분석 결과</h4>
+    <div id="analysisResult" class="analysis-result">
+        <p>분석 결과가 여기에 표시됩니다.</p>
+    </div>
+</div>
+</div>
 
-        function drawPapersChart() {
-            var data = new google.visualization.DataTable();
-            data.addColumn('string', 'Year');
-            data.addColumn('number', '논문 수');
-            data.addRows([
-                {% for item in papers_count %}
-                    ['{{ item.year }}', {{ item.count }}],
-                {% endfor %}
+<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+<script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+<script type="text/javascript">
+    google.charts.load('current', { 'packages': ['corechart'] });
+    google.charts.setOnLoadCallback(drawPapersChart);
+    google.charts.setOnLoadCallback(drawAuthorChart);
+    google.charts.setOnLoadCallback(drawAffiliationChart);
+    google.charts.setOnLoadCallback(drawCountryChart);
+    google.charts.setOnLoadCallback(drawKeywordChart);
+
+    function drawPapersChart() {
+        var data = new google.visualization.DataTable();
+        data.addColumn('string', 'Year');
+        data.addColumn('number', '논문 수');
+        data.addRows([
+            {% for item in papers_count %}
+    ['{{ item.year }}', {{ item.count }}],
+        {% endfor %}
             ]);
 
-            var options = {
-                title: '연도별 논문 수',
-                legend: { position: 'bottom' },
-                chartArea: {width: '70%', height: '70%'},
-                pointSize: 5,
-                series: { 0: { lineWidth: 2 } }
-            };
+    var options = {
+        title: '연도별 논문 수',
+        legend: { position: 'bottom' },
+        chartArea: { width: '70%', height: '70%' },
+        pointSize: 5,
+        series: { 0: { lineWidth: 2 } }
+    };
 
-            var chart = new google.visualization.LineChart(document.getElementById('papersChart'));
-            chart.draw(data, options);
+    var chart = new google.visualization.LineChart(document.getElementById('papersChart'));
+    chart.draw(data, options);
         }
 
-        function drawAuthorChart() {
-            var data = new google.visualization.DataTable();
-            data.addColumn('string', 'Author');
-            data.addColumn('number', '논문 수');
-            data.addRows([
-                {% for author_name, paper_count in author_data %}
-                    ['{{ author_name }}', {{ paper_count }}],
-                {% endfor %}
+    function drawAuthorChart() {
+        var data = new google.visualization.DataTable();
+        data.addColumn('string', 'Author');
+        data.addColumn('number', '논문 수');
+        data.addRows([
+            {% for author_name, paper_count in author_data %}
+    ['{{ author_name }}', {{ paper_count }}],
+        {% endfor %}
             ]);
 
-            var options = {
-                title: '저자별 논문 수',
-                chartArea: {width: '50%'},
-                legend: 'none'
-            };
+    var options = {
+        title: '저자별 논문 수',
+        chartArea: { width: '50%' },
+        legend: 'none'
+    };
 
-            var chart = new google.visualization.BarChart(document.getElementById('authorsChart'));
-            chart.draw(data, options);
+    var chart = new google.visualization.BarChart(document.getElementById('authorsChart'));
+    chart.draw(data, options);
         }
 
-        function drawAffiliationChart() {
-            var data = new google.visualization.DataTable();
-            data.addColumn('string', 'Affiliation');
-            data.addColumn('number', '논문 수');
-            data.addRows([
-                {% for affiliation_name, paper_count in affiliation_data %}
-                    ['{{ affiliation_name }}', {{ paper_count }}],
-                {% endfor %}
+    function drawAffiliationChart() {
+        var data = new google.visualization.DataTable();
+        data.addColumn('string', 'Affiliation');
+        data.addColumn('number', '논문 수');
+        data.addRows([
+            {% for affiliation_name, paper_count in affiliation_data %}
+    ['{{ affiliation_name }}', {{ paper_count }}],
+        {% endfor %}
             ]);
 
-            var options = {
-                title: '소속 기관별 논문 수',
-                chartArea: {width: '50%'},
-                legend: 'none',
-                hAxis: {
-                    textStyle: { fontSize: 10 },
-                },
-                vAxis: {
-                    textStyle: { fontSize: 10 }
-                }
-            };
+    var options = {
+        title: '소속 기관별 논문 수',
+        chartArea: { width: '50%' },
+        legend: 'none',
+        hAxis: {
+            textStyle: { fontSize: 10 },
+        },
+        vAxis: {
+            textStyle: { fontSize: 10 }
+        }
+    };
 
-            var chart = new google.visualization.BarChart(document.getElementById('affiliationChart'));
-            chart.draw(data, options);
+    var chart = new google.visualization.BarChart(document.getElementById('affiliationChart'));
+    chart.draw(data, options);
         }
 
-        function drawCountryChart() {
-            var data = new google.visualization.DataTable();
-            data.addColumn('string', 'Country');
-            data.addColumn('number', '논문 수');
-            data.addRows([
-                {% for country_name, paper_count in country_data %}
-                    ['{{ country_name }}', {{ paper_count }}],
-                {% endfor %}
+    function drawCountryChart() {
+        var data = new google.visualization.DataTable();
+        data.addColumn('string', 'Country');
+        data.addColumn('number', '논문 수');
+        data.addRows([
+            {% for country_name, paper_count in country_data %}
+    ['{{ country_name }}', {{ paper_count }}],
+        {% endfor %}
             ]);
 
-            var options = {
-                title: '국가별 논문 수',
-                chartArea: {width: '50%'},
-                legend: 'none'
-            };
+    var options = {
+        title: '국가별 논문 수',
+        chartArea: { width: '50%' },
+        legend: 'none'
+    };
 
-            var chart = new google.visualization.BarChart(document.getElementById('countryChart'));
-            chart.draw(data, options);
+    var chart = new google.visualization.BarChart(document.getElementById('countryChart'));
+    chart.draw(data, options);
         }
 
-        function drawKeywordChart() {
-            var data = new google.visualization.DataTable();
-            data.addColumn('string', 'Keyword');
-            data.addColumn('number', 'Count');
-            data.addRows([
-                {% for keyword, count in top_keywords %}
-                    ['{{ keyword }}', {{ count }}],
-                {% endfor %}
+    function drawKeywordChart() {
+        var data = new google.visualization.DataTable();
+        data.addColumn('string', 'Keyword');
+        data.addColumn('number', 'Count');
+        data.addRows([
+            {% for keyword, count in top_keywords %}
+    ['{{ keyword }}', {{ count }}],
+        {% endfor %}
             ]);
 
-            var options = {
-                title: '많이 사용된 Top 10 키워드',
-                chartArea: {width: '50%'},
-                legend: 'none'
-            };
+    var options = {
+        title: '많이 사용된 Top 10 키워드',
+        chartArea: { width: '50%' },
+        legend: 'none'
+    };
 
-            var chart = new google.visualization.BarChart(document.getElementById('keywordChart'));
-            chart.draw(data, options);
+    var chart = new google.visualization.BarChart(document.getElementById('keywordChart'));
+    chart.draw(data, options);
+        }
+        // GPT 분석 버튼 클릭 이벤트
+        document.querySelectorAll('.gpt-analysis-btn').forEach(function(button) {
+    button.addEventListener('click', function() {
+        let chartId = this.closest('.chart-container').querySelector('div').id;
+        let analysisData = null;
+
+        if (chartId === 'papersChart') {
+            analysisData = {{ papers_count|safe }};
+        } else if (chartId === 'authorsChart') {
+            analysisData = {{ author_data|safe }};
+        } else if (chartId === 'affiliationChart') {
+            analysisData = {{ affiliation_data|safe }};
+        } else if (chartId === 'countryChart') {
+            analysisData = {{ country_data|safe }};
+        } else if (chartId === 'keywordChart') {
+            analysisData = {{ top_keywords|safe }};
         }
 
-        // 이미지 저장 로직
-        document.querySelectorAll('.pdf-btn').forEach(function(button) {
-            button.addEventListener('click', function() {
-                var chartId = this.getAttribute('data-chart');
-                var element = document.getElementById(chartId);
+        fetch('/analyze-chart/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({ chart_id: chartId, chart_data: analysisData })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.analysis) {
+                this.closest('.chart-container').querySelector('#analysisResult').innerHTML = `<p>${data.analysis}</p>`;
+            } else {
+                this.closest('.chart-container').querySelector('#analysisResult').innerHTML = `<p>분석 중 오류가 발생했습니다.</p>`;
+            }
+        });
+    });
+});
 
-                // 폴더 선택 및 이미지 이름 입력
-                var folderName = prompt("저장할 폴더 이름을 입력하세요:");
-                if (!folderName) {
-                    alert('폴더 이름을 입력해야 합니다.');
-                    return;
-                }
+    // 이미지 저장 로직
+    document.querySelectorAll('.pdf-btn').forEach(function (button) {
+        button.addEventListener('click', function () {
+            var chartId = this.getAttribute('data-chart');
+            var element = document.getElementById(chartId);
 
-                var imageName = prompt("저장할 이미지 이름을 입력하세요:", chartId);
-                if (!imageName) {
-                    alert('이미지 이름을 입력해야 합니다.');
-                    return;
-                }
+            // 폴더 선택 및 이미지 이름 입력
+            var folderName = prompt("저장할 폴더 이름을 입력하세요:");
+            if (!folderName) {
+                alert('폴더 이름을 입력해야 합니다.');
+                return;
+            }
 
-                html2canvas(element, { scale: 2 }).then(function(canvas) {
-                    var imageData = canvas.toDataURL('image/png');
+            var imageName = prompt("저장할 이미지 이름을 입력하세요:", chartId);
+            if (!imageName) {
+                alert('이미지 이름을 입력해야 합니다.');
+                return;
+            }
 
-                    // 서버에 이미지 데이터와 폴더, 이름 전송
-                    fetch('/save-image/', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRFToken': getCookie('csrftoken')
-                        },
-                        body: JSON.stringify({ imageData: imageData, folderName: folderName, imageName: imageName })
-                    })
+            html2canvas(element, { scale: 2 }).then(function (canvas) {
+                var imageData = canvas.toDataURL('image/png');
+
+                // 서버에 이미지 데이터와 폴더, 이름 전송
+                fetch('/save-image/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken')
+                    },
+                    body: JSON.stringify({ imageData: imageData, folderName: folderName, imageName: imageName })
+                })
                     .then(response => response.json())
                     .then(data => {
                         if (data.status === 'success') {
@@ -296,25 +400,25 @@
                     .catch(error => {
                         console.error('Error:', error);
                     });
-                });
             });
         });
+    });
 
-        function getCookie(name) {
-            let cookieValue = null;
-            if (document.cookie && document.cookie !== '') {
-                const cookies = document.cookie.split(';');
-                for (let i = 0; i < cookies.length; i++) {
-                    const cookie = cookies[i].trim();
-                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                        break;
-                    }
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
                 }
             }
-            return cookieValue;
         }
+        return cookieValue;
+    }
 
 
-    </script>
+</script>
 {% endblock %}
