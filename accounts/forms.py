@@ -8,7 +8,7 @@ class LoginForm(forms.ModelForm):
     class Meta:
         model = User
         fields = ["username", "password"]
-    
+
 class SignupForm(UserCreationForm):
     username = forms.CharField(label='username', widget=forms.TextInput(attrs={
         'pattern': '[a-zA-Z0-9]+',
@@ -16,6 +16,7 @@ class SignupForm(UserCreationForm):
     }))
     nickname = forms.CharField(label='nickname')
     picture = forms.ImageField(label='profile picture', required=False)
+
     class Meta(UserCreationForm.Meta):
         fields = UserCreationForm.Meta.fields + ('email',)
         
@@ -32,47 +33,14 @@ class SignupForm(UserCreationForm):
             raise forms.ValidationError('사용중인 이메일 입니다.')
         return email
 
-    def clean_picture(self):
-        picture = self.cleaned_data.get('picture')
-        if not picture:
-            picture = None
-        return picture
-    
     def save(self):
         user = super().save()
+        # 기본 이미지 경로 설정
+        picture = self.cleaned_data.get('picture') or 'default_images/default_profile.png'
+        
         Profile.objects.create(
             user=user,
             nickname=self.cleaned_data['nickname'],
-            picture=self.cleaned_data['picture'],
+            picture=picture,
         )
         return user
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
