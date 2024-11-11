@@ -226,6 +226,7 @@
                 <li><a href="#">소개</a></li>
                 <li><a href="{% url 'post:post_list' %}">IT스타그램</a></li>
                 <li><a href="{% url 'mypage' %}">마이페이지</a></li>
+                <li><a href="{% url 'analysis_page' %}">분석 페이지</a></li>
             </ul>
         </nav>
         <div class="search-container">
@@ -238,6 +239,7 @@
                         <option value="paper" {% if filter == 'paper' %}selected{% endif %}>논문</option>
                         <option value="author" {% if filter == 'author' %}selected{% endif %}>저자</option>
                         <option value="country" {% if filter == 'country' %}selected{% endif %}>나라</option>
+                        <option value="affiliation" {% if filter == 'affiliation' %}selected{% endif %}>소속</option>
                     </select>
                     <input type="text" name="query" id="search-box" placeholder="Enter search query" value="{{ query }}">
                     <button type="submit">Search</button>

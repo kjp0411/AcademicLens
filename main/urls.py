@@ -78,5 +78,8 @@ urlpatterns = [
 
     path('remove-selected-papers/', views.remove_selected_papers, name='remove_selected_papers'),
 
+    # 분석 페이지
+    path('analysis/', views.analysis_page, name='analysis_page'),
+    path('api/country_search/', views.country_search, name='country_search'),
 ]
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

@@ -1,0 +1,220 @@
+{% extends 'searchBase.html' %}
+
+{% load static %}
+
+{% block title %}분석 페이지{% endblock %}
+
+{% block content %}
+<style>
+    .folder {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        width: 100%;
+    }
+    
+    .folder-name {
+        flex: 1;
+        text-align: left;
+    }
+    
+    .folder-actions {
+        display: flex;
+        gap: 10px; /* 아이콘 간격 */
+    }
+    
+    .folder-actions button {
+        background: none;
+        border: none;
+        cursor: pointer;
+        font-size: 18px;
+    }
+
+    .delete-btn {
+        border: none;
+        background: none;
+        padding: 0;
+        cursor: pointer;
+        font-size: 16px; /* 아이콘 크기 조절 */
+        color: red;
+    }
+
+    .image-list { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; }
+    .image-item { width: 150px; text-align: center; }
+    .image-item img { width: 100%; cursor: pointer; border: 2px solid transparent; }
+    .image-item img.selected { border-color: #007bff; }
+    .report-section { margin-top: 20px; }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    th, td {
+        border: 1px solid #ddd;
+        padding: 8px;
+        text-align: center;
+    }
+    th {
+        background-color: #f2f2f2;
+    }
+    .actions button {
+        padding: 5px 10px;
+        border: none;
+        background-color: #007bff;
+        color: white;
+        cursor: pointer;
+        border-radius: 5px;
+    }
+    .actions .delete {
+        background-color: #dc3545;
+    }
+</style>
+
+<div class="container">
+    <!-- 사이드 메뉴 -->
+    <div class="sidebar">
+        <div class="sidebar-title">
+            <h2>분석 페이지</h2>
+        </div>
+        <ul>
+            <li><a href="#" onclick="showAnalysisContent('author')">저자 분석</a></li><hr>
+            <li><a href="#" onclick="showAnalysisContent('affiliation')">소속 분석</a></li><hr>
+            <li><a href="#" onclick="showAnalysisContent('country')">나라 분석</a></li><hr>
+        </ul>
+    </div>
+
+    <!-- 메인 콘텐츠 -->
+    <div class="main-content" id="content-area">
+        <!-- 기본 콘텐츠가 여기에 로드됩니다 -->
+        <h2>분석 정보를 여기에 표시합니다</h2>
+        <p>왼쪽 메뉴에서 분석 항목을 선택해주세요.</p>
+    </div>
+</div>
+
+<script>
+    function showAnalysisContent(type) {
+        if (type === 'country') {
+            // 나라 분석 콘텐츠 표시
+            document.getElementById('content-area').innerHTML = `
+                <!-- 검색 입력란과 버튼 -->
+                <div>
+                    <h3>논문 작성 상위 10개 나라</h3>
+                    <table id="top-countries">
+                        <thead>
+                            <tr>
+                                <th>순위</th>
+                                <th>나라</th>
+                                <th>논문 수</th>
+                                <th>분석</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for country in top_countries %}
+                                <tr>
+                                    <td>{{ forloop.counter }}</td>
+                                    <td>{{ country.country__name }}</td>
+                                    <td id="paper-count-{{ forloop.counter }}">로딩 중...</td>
+                                    <td>
+                                        <form action="{% url 'country_analyze' %}" method="get">
+                                            <input type="hidden" name="name" value="{{ country.country__name }}">
+                                            <button type="submit">분석하기</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- 나라 검색 입력란과 버튼 -->
+                <div>
+                    <h3>나라 검색</h3>
+                    <input type="text" id="country-search-input" placeholder="나라 이름, 코드 (AF, AFG 등)">
+                    <button onclick="searchCountries()">검색하기</button>
+                </div>
+                
+                <!-- 검색 결과 표시 -->
+                <div id="search-results">
+                    <h3>검색 결과</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>나라</th>
+                                <th>논문 수</th>
+                                <th>분석</th>
+                            </tr>
+                        </thead>
+                        <tbody id="country-list"></tbody>
+                    </table>
+                </div>
+            `;
+
+            // 각 나라의 논문 수를 불러와서 업데이트
+            updatePaperCounts();
+        }
+    }
+
+    function updatePaperCounts() {
+        const rows = document.querySelectorAll('#top-countries tbody tr');
+        
+        rows.forEach((row, index) => {
+            const countryName = row.querySelector('input[name="name"]').value;
+
+            fetch(`/api/country_total_papers/?name=${encodeURIComponent(countryName)}`)
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById(`paper-count-${index + 1}`).innerText = data.total_papers;
+                })
+                .catch(error => console.error(`Error fetching paper count for ${countryName}:`, error));
+        });
+    }
+
+        
+    function searchCountries() {
+        const query = document.getElementById('country-search-input').value.trim();
+        
+        if (!query) {
+            alert("검색어를 입력하세요.");
+            return;
+        }
+
+        // 나라 검색 요청을 서버에 보내고 결과를 화면에 표시
+        fetch(`/api/country_search/?name=${encodeURIComponent(query)}`)
+            .then(response => response.json())
+            .then(data => {
+                const countryList = document.getElementById('country-list');
+                countryList.innerHTML = '';  // 기존 결과 초기화
+
+                if (data.length === 0) {
+                    countryList.innerHTML = '<tr><td colspan="3">검색 결과가 없습니다.</td></tr>';
+                } else {
+                    data.forEach(country => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${country.name}</td>
+                            <td>${country.total_papers}</td>
+                            <td>
+                                <form action="{% url 'country_analyze' %}" method="get">
+                                    <input type="hidden" name="name" value="${country.name}">
+                                    <button type="submit">분석하기</button>
+                                </form>
+                            </td>
+                        `;
+                        countryList.appendChild(row);
+                    });
+                }
+            })
+            .catch(error => console.error('Error fetching country data:', error));
+    }
+
+    function manualSearchCountry() {
+        const query = document.getElementById('country-search-input').value.trim();
+        if (query.length < 2) {
+            alert("2글자 이상 입력해주세요.");
+            return;
+        }
+        
+        searchCountry();
+    }
+</script>
+{% endblock %}

@@ -115,6 +115,8 @@ def search(request):
             paper_ids = get_author_paper_ids(query)
         elif filter_type == 'country':
             paper_ids = get_country_paper_ids(query)
+        elif filter_type == 'affiliation':
+            paper_ids = get_affiliation_paper_ids(query)
 
         related_terms = []
         if query:
@@ -303,6 +305,42 @@ def get_author_paper_ids(user_keyword, start_year=2019, end_year=2024):
         FROM paper p
         JOIN paper_author pa ON p.id = pa.paper_id
         JOIN author a ON pa.author_id = a.id
+        WHERE {' AND '.join(query_conditions)};
+    """
+    cursor.execute(query, query_params)
+
+    # 쿼리 결과 가져오기
+    paper_ids = [row['id'] for row in cursor.fetchall()]
+
+    cursor.close()
+    db.close()
+    
+    return paper_ids
+
+def get_affiliation_paper_ids(user_keyword, start_year=2019, end_year=2024):
+    db = mariadb.connect(**db_config)
+    cursor = db.cursor(dictionary=True)
+
+    # 공백을 제거하고 비교하는 SQL 쿼리
+    query_conditions = []
+    query_params = []
+
+    # 소속 이름 검색 조건 추가
+    query_conditions.append("""
+        REPLACE(a.name, ' ', '') LIKE REPLACE(%s, ' ', '')
+    """)
+    query_params.append(f'%{user_keyword}%')
+
+    # 연도 필터링 조건 추가 (기본값: 2019 ~ 2024)
+    query_conditions.append("YEAR(p.date) BETWEEN %s AND %s")
+    query_params.extend([start_year, end_year])
+
+    # 쿼리 실행
+    query = f"""
+        SELECT p.id
+        FROM paper p
+        JOIN paper_affiliation pa ON p.id = pa.paper_id
+        JOIN affiliation a ON pa.affiliation_id = a.id
         WHERE {' AND '.join(query_conditions)};
     """
     cursor.execute(query, query_params)
@@ -2241,3 +2279,58 @@ def report_detail(request, folder_name):
         'content': content.strip(),
         'images': image_urls,
     })
+
+
+def analysis_page(request):
+    # 상위 10개 나라와 논문 수를 가져오기
+    top_countries = (
+        PaperCountry.objects
+        .values('country__name')  # Country 이름으로 그룹화
+        .annotate(total_papers=Count('paper_id'))  # 논문 수 계산
+        .order_by('-total_papers')[:10]  # 논문 수로 정렬 후 상위 10개
+    )
+
+    # 데이터를 템플릿으로 전달
+    context = {
+        'top_countries': top_countries,
+    }
+    return render(request, 'analysis_page.html', context)
+
+
+def country_get_top_10_total_papers(request):
+    with connection.cursor() as cursor:
+        cursor.execute("""
+            SELECT c.name AS country_name, COUNT(DISTINCT pc.paper_id) AS total_papers
+            FROM paper_country pc
+            JOIN country c ON pc.country_id = c.id
+            GROUP BY c.name
+            ORDER BY total_papers DESC
+            LIMIT 10;
+        """)
+        
+        rows = cursor.fetchall()
+    
+    # 데이터를 JSON 형식으로 변환
+    top_countries = [{'country_name': row[0], 'total_papers': row[1]} for row in rows]
+    
+    return JsonResponse(top_countries, safe=False)
+
+def country_search(request):
+    search_query = request.GET.get('name', '').strip()
+
+    with connection.cursor() as cursor:
+        # 'name', 'alpha_2', 'alpha_3' 중 하나와 매칭되는 국가 검색 및 논문 수 가져오기
+        cursor.execute("""
+            SELECT c.name, COUNT(DISTINCT pc.paper_id) AS total_papers
+            FROM country c
+            LEFT JOIN paper_country pc ON c.id = pc.country_id
+            WHERE c.name LIKE %s OR c.alpha_2 LIKE %s OR c.alpha_3 LIKE %s
+            GROUP BY c.name
+            ORDER BY total_papers DESC;
+        """, [f'%{search_query}%', f'%{search_query}%', f'%{search_query}%'])
+
+        rows = cursor.fetchall()
+
+    # 검색 결과를 JSON 형식으로 변환
+    results = [{'name': row[0], 'total_papers': row[1]} for row in rows]
+    return JsonResponse(results, safe=False)
