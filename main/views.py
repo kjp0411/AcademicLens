@@ -115,6 +115,8 @@ def search(request):
             paper_ids = get_author_paper_ids(query)
         elif filter_type == 'country':
             paper_ids = get_country_paper_ids(query)
+        elif filter_type == 'affiliation':
+            paper_ids = get_affiliation_paper_ids(query)
 
         related_terms = []
         if query:
@@ -303,6 +305,42 @@ def get_author_paper_ids(user_keyword, start_year=2019, end_year=2024):
         FROM paper p
         JOIN paper_author pa ON p.id = pa.paper_id
         JOIN author a ON pa.author_id = a.id
+        WHERE {' AND '.join(query_conditions)};
+    """
+    cursor.execute(query, query_params)
+
+    # 쿼리 결과 가져오기
+    paper_ids = [row['id'] for row in cursor.fetchall()]
+
+    cursor.close()
+    db.close()
+    
+    return paper_ids
+
+def get_affiliation_paper_ids(user_keyword, start_year=2019, end_year=2024):
+    db = mariadb.connect(**db_config)
+    cursor = db.cursor(dictionary=True)
+
+    # 공백을 제거하고 비교하는 SQL 쿼리
+    query_conditions = []
+    query_params = []
+
+    # 소속 이름 검색 조건 추가
+    query_conditions.append("""
+        REPLACE(a.name, ' ', '') LIKE REPLACE(%s, ' ', '')
+    """)
+    query_params.append(f'%{user_keyword}%')
+
+    # 연도 필터링 조건 추가 (기본값: 2019 ~ 2024)
+    query_conditions.append("YEAR(p.date) BETWEEN %s AND %s")
+    query_params.extend([start_year, end_year])
+
+    # 쿼리 실행
+    query = f"""
+        SELECT p.id
+        FROM paper p
+        JOIN paper_affiliation pa ON p.id = pa.paper_id
+        JOIN affiliation a ON pa.affiliation_id = a.id
         WHERE {' AND '.join(query_conditions)};
     """
     cursor.execute(query, query_params)
@@ -2241,6 +2279,7 @@ def report_detail(request, folder_name):
         'content': content.strip(),
         'images': image_urls,
     })
+
     #         return JsonResponse({'status': 'error', 'message': str(e)})
     # return JsonResponse({'status': 'error', 'message': '잘못된 요청입니다.'})
 
@@ -2283,3 +2322,120 @@ def analyze_chart(request):
             return JsonResponse({'error': f'Analysis failed: {str(e)}'}, status=500)
 
     return JsonResponse({'error': 'Invalid request method'}, status=400)
+
+
+def analysis_page(request):
+    # 상위 10개 나라와 논문 수를 가져오기
+    top_countries = (
+        PaperCountry.objects
+        .values('country__name')  # Country 이름으로 그룹화
+        .annotate(total_papers=Count('paper_id', distinct=True))  # 논문 수 계산
+        .order_by('-total_papers')[:10]  # 논문 수로 정렬 후 상위 10개
+    )
+
+    # 상위 10개 저자와 논문 수를 가져오기
+    top_authors = (
+        PaperAuthor.objects
+        .values('author__name')
+        .annotate(total_papers=Count('paper_id', distinct=True))
+        .order_by('-total_papers')[:10]
+    )
+
+    # 상위 10개 소속과 논문 수를 가져오기
+    top_affiliations = (
+        PaperAffiliation.objects
+        .values('affiliation__name')
+        .annotate(total_papers=Count('paper_id', distinct=True))  # 중복 제거
+        .order_by('-total_papers')[:10]
+    )
+
+    # 데이터를 템플릿으로 전달
+    context = {
+        'top_countries': top_countries,
+        'top_authors': top_authors,
+        'top_affiliations': top_affiliations,
+    }
+
+    return render(request, 'analysis_page.html', context)
+
+
+def country_search(request):
+    search_query = request.GET.get('name', '').strip()
+
+    with connection.cursor() as cursor:
+        # 'name', 'alpha_2', 'alpha_3' 중 하나와 매칭되는 국가 검색 및 논문 수 가져오기
+        cursor.execute("""
+            SELECT c.name, COUNT(DISTINCT pc.paper_id) AS total_papers
+            FROM country c
+            LEFT JOIN paper_country pc ON c.id = pc.country_id
+            WHERE c.name LIKE %s OR c.alpha_2 LIKE %s OR c.alpha_3 LIKE %s
+            GROUP BY c.name
+            ORDER BY total_papers DESC;
+        """, [f'%{search_query}%', f'%{search_query}%', f'%{search_query}%'])
+
+        rows = cursor.fetchall()
+
+    # 검색 결과를 JSON 형식으로 변환
+    results = [{'name': row[0], 'total_papers': row[1]} for row in rows]
+    return JsonResponse(results, safe=False)
+
+
+def author_search(request):
+    search_query = request.GET.get('name', '').strip()
+
+    with connection.cursor() as cursor:
+        # 저자 이름에 따라 매칭되는 저자와 해당 논문 수를 검색
+        cursor.execute("""
+            SELECT a.name, COUNT(DISTINCT pa.paper_id) AS total_papers
+            FROM author a
+            LEFT JOIN paper_author pa ON a.id = pa.author_id
+            WHERE REPLACE(a.name, ' ', '') LIKE REPLACE(%s, ' ', '')
+            GROUP BY a.name
+            ORDER BY total_papers DESC;
+        """, [f'%{search_query}%'])
+
+        rows = cursor.fetchall()
+
+    # 검색 결과를 JSON 형식으로 변환
+    results = [{'name': row[0], 'total_papers': row[1]} for row in rows]
+    return JsonResponse(results, safe=False)
+
+
+def affiliation_search(request):
+    search_query = request.GET.get('name', '').strip()
+    start_year = int(request.GET.get('start_year', 2019))
+    end_year = int(request.GET.get('end_year', 2024))
+
+    with connection.cursor() as cursor:
+        # 공백을 제거하여 검색하는 SQL 쿼리
+        query_conditions = []
+        query_params = []
+
+        # 소속 이름 검색 조건 추가
+        query_conditions.append("""
+            REPLACE(a.name, ' ', '') LIKE REPLACE(%s, ' ', '')
+        """)
+        query_params.append(f'%{search_query}%')
+
+        # 연도 필터링 조건 추가
+        query_conditions.append("YEAR(p.date) BETWEEN %s AND %s")
+        query_params.extend([start_year, end_year])
+
+        # 쿼리 실행
+        query = f"""
+            SELECT a.name, COUNT(DISTINCT p.id) AS total_papers
+            FROM paper p
+            JOIN paper_affiliation pa ON p.id = pa.paper_id
+            JOIN affiliation a ON pa.affiliation_id = a.id
+            WHERE {' AND '.join(query_conditions)}
+            GROUP BY a.name
+            ORDER BY total_papers DESC;
+        """
+        cursor.execute(query, query_params)
+
+        # 결과 가져오기
+        rows = cursor.fetchall()
+
+    # 검색 결과를 JSON 형식으로 변환
+    results = [{'name': row[0], 'total_papers': row[1]} for row in rows]
+    return JsonResponse(results, safe=False)

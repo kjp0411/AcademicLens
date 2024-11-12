@@ -723,24 +723,20 @@
         
         // 아직 소속 검색 구현 안함
         function redirectToFilteredPage() {
-            // `affiliationName` 요소의 텍스트를 가져와 국가 정보를 추출
-            const affiliation = document.getElementById('affiliationName').innerText;
+            // `affiliationName` 요소의 텍스트를 가져와 소속 정보를 추출
+            const affiliation = document.getElementById('affiliationName').innerText.trim();
             const keywordInput = document.getElementById('keywordInput').value.trim(); // 입력 필드에서 키워드 가져오기
 
-            if (!country) {
+            if (!affiliation) {
                 alert("소속 정보가 없습니다.");
                 return;
             }
 
+            // affiliation의 공백과 쉼표를 유지한 채 URL에 포함
+            let formattedAffiliation = affiliation.replace(/ /g, '+').replace(/,/g, '%2C');
             let newUrl;
 
-            if (keywordInput) {
-                // 키워드가 있을 경우 - query와 country를 모두 포함
-                newUrl = `/search/?filter=paper&query=${encodeURIComponent(keywordInput)}&country=${encodeURIComponent(country)}`;
-            } else {
-                // 키워드가 없을 경우 - country 필터만 사용
-                newUrl = `/search/?filter=affiliation&query=${encodeURIComponent(affiliation)}`;
-            }
+            newUrl = `/search/?filter=affiliation&query=${formattedAffiliation}`;
 
             window.location.href = newUrl;
         }

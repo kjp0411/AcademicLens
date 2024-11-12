@@ -81,5 +81,10 @@ urlpatterns = [
     # 분석페이지 gpt 분석
     path('analyze-chart/', views.analyze_chart, name='analyze_chart'),
 
+    # 분석 페이지
+    path('analysis/', views.analysis_page, name='analysis_page'),
+    path('api/country_search/', views.country_search, name='country_search'),
+    path('api/author_search/', views.author_search, name='author_search'),
+    path('api/affiliation_search/', views.affiliation_search, name='affiliation_search'),
 ]
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
