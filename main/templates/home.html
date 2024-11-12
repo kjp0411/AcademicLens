@@ -22,7 +22,7 @@
         .table-container {
             margin: 0 20px; /* 테이블 간의 간격 조정 */
             text-align: center;
-            width : 70%;
+            width : 100%;
         }
         table {
             border-collapse: collapse;
@@ -249,72 +249,76 @@
         </div>
         <!-- 콘텐츠 시작 -->
         <div class="container">
-            <div class="table-container">
-                <h2>실시간 인기 키워드</h2>
-                <div style="display: flex;">
-                    <!-- 첫 번째 테이블 (1-5위) -->
-                    <table style="margin-right: 20px;">
-                        <thead>
-                            <tr>
-                                <th>Rank</th>
-                                <th>Keyword</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for keyword in popular_keywords_1_5 %}
-                            <tr>
-                                <td>{{ forloop.counter }}</td>
-                                <td>{{ keyword.keyword }}</td>
-                            </tr>
-                            {% empty %}
-                            <tr>
-                                <td colspan="2">No popular keywords found.</td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-            
-                    <!-- 두 번째 테이블 (6-10위) -->
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Rank</th>
-                                <th>Keyword</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for keyword in popular_keywords_6_10 %}
-                            <tr>
-                                <td>{{ forloop.counter|add:5 }}</td>
-                                <td>{{ keyword.keyword }}</td>
-                            </tr>
-                            {% empty %}
-                            <tr>
-                                <td colspan="2">No popular keywords found.</td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
+            <div class="table-container" style="display: flex; justify-content: space-between;">
+                <!-- 실시간 인기 키워드 -->
+                <div style="flex: 1; margin-right: 20px;">
+                    <h2>실시간 인기 키워드</h2>
+                    <div style="display: flex;">
+                        <!-- 첫 번째 테이블 (1-5위) -->
+                        <table style="margin-right: 20px; width: 300px;">
+                            <thead>
+                                <tr>
+                                    <th style="width: 60px;">Rank</th> <!-- Rank 칸 너비 증가 -->
+                                    <th>Keyword</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for keyword in popular_keywords_1_5 %}
+                                <tr>
+                                    <td>{{ forloop.counter }}</td>
+                                    <td><a href="/search/?filter=paper&query={{ keyword.keyword }}">{{ keyword.keyword }}</a></td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="2">No popular keywords found.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                
+                        <!-- 두 번째 테이블 (6-10위) -->
+                        <table style="width: 300px;">
+                            <thead>
+                                <tr>
+                                    <th style="width: 60px;">Rank</th>
+                                    <th>Keyword</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for keyword in popular_keywords_6_10 %}
+                                <tr>
+                                    <td>{{ forloop.counter|add:5 }}</td>
+                                    <td><a href="/search/?filter=paper&query={{ keyword.keyword }}">{{ keyword.keyword }}</a></td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="2">No popular keywords found.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+        
+                <!-- 등록 논문/학회 수 -->
+                <div class="table-container" style="flex: 1; text-align: center; margin-left: 50px;">
+                    <h2>등록 논문/학회 수</h2>
+                    <div class="info-container" style="font-size: larger;">
+                        <div class="paper-info">
+                            <p>등록 논문 <br>
+                                <img src="{% static 'image/cap_paper.png' %}" alt="Paper" class="paper">
+                                <span>{{ paper_count }}건</span>
+                            </p>
+                        </div>
+                        <div class="affiliation-info">
+                            <p>등록 학회 <br>
+                                <img src="{% static 'image/cap_affiliation.png' %}" alt="Affiliation" class="affiliation">
+                                <span>{{ affiliation_count }}개</span>
+                            </p>
+                        </div>
+                    </div>
                 </div>
             </div>
-            <!-- 총 논문 수와 학회 수 -->
-        <div class="table-container">
-            <h2>등록 논문/학회 수</h2>
-            <div class="info-container">
-                <div class="paper-info">
-                    <p>등록 논문 <br>
-                        <img src="{% static 'image/cap_paper.png' %}" alt="Paper" class="paper">
-                        <span>{{ paper_count }}건</span>
-                    </p>
-                </div>
-                <div class="affiliation-info">
-                    <p>등록 학회 <br>
-                        <img src="{% static 'image/cap_affiliation.png' %}" alt="Affiliation" class="affiliation">
-                        <span>{{ affiliation_count }}개</span>
-                    </p>
-                </div>
-            </div>
-        </div>
         </div>
 
         <div class="centered-container">
@@ -326,22 +330,23 @@
                         <th>Title</th>
                         <th>URL</th>
                         <th>Saved Count</th> <!-- 저장 횟수 추가 -->
-                        <!-- 추가 필요한 다른 정보들 -->
                     </tr>
                 </thead>
                 <tbody>
                     {% for paper in popular_papers %}
-    <tr>
-        <td>{{ forloop.counter }}</td> <!-- 순위: 1부터 시작하는 인덱스 -->
-        <td>{{ paper.title }}</td>
-        <td><a href="{{ paper.url }}">{{ paper.url }}</a></td>
-        <td>{{ paper.saved_count }}</td> <!-- 저장 횟수 -->
-    </tr>
-    {% empty %}
-    <tr>
-        <td colspan="4">No papers found.</td>
-    </tr>
-    {% endfor %}
+                    <tr>
+                        <td>{{ forloop.counter }}</td> <!-- 순위: 1부터 시작하는 인덱스 -->
+                        <td>
+                            <a href="/paper/{{ paper.id }}/">{{ paper.title }}</a> <!-- Title 링크 추가 -->
+                        </td>
+                        <td><a href="{{ paper.url }}" target="_blank">{{ paper.url }}</a></td>
+                        <td>{{ paper.saved_count }}</td> <!-- 저장 횟수 -->
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4">No papers found.</td>
+                    </tr>
+                    {% endfor %}
                 </tbody>
             </table>
         </div>
