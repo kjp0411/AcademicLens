@@ -888,9 +888,24 @@ def country_analyze_html(request):
 def country_network(request):
     try:
         original_country_name = request.GET.get('name')  # 중심 국가의 이름을 지정
+        user_keyword = request.GET.get('keyword')  # 검색어를 가져옵니다
+
+        # paper_ids를 가져오기 위한 조건 추가
+        if user_keyword:
+            paper_ids = get_filtered_paper_ids(user_keyword, original_country_name)
+        else:
+            paper_ids = get_paper_ids_country(original_country_name)
 
         with connection.cursor() as cursor:
-            query = """
+            # paper_ids가 있을 경우 쿼리에서 필터링에 추가합니다
+            paper_ids_condition = ""
+            paper_ids_params = []
+            if paper_ids:
+                placeholders = ', '.join(['%s'] * len(paper_ids))
+                paper_ids_condition = f"AND pa1.paper_id IN ({placeholders}) AND pa2.paper_id IN ({placeholders})"
+                paper_ids_params = paper_ids + paper_ids
+
+            query = f"""
             WITH country_paper_count AS (
                 SELECT 
                     c.name AS country_name, 
@@ -923,6 +938,7 @@ def country_network(request):
                 country_paper_count cpc2 ON c2.name = cpc2.country_name
             WHERE 
                 c1.name = %s AND c2.name != %s
+                {paper_ids_condition}  -- 논문 ID 필터 추가
             GROUP BY 
                 c1.name, c2.name, cpc1.total_papers, cpc2.total_papers
             ORDER BY 
@@ -930,7 +946,7 @@ def country_network(request):
             LIMIT 10;
             """
             
-            cursor.execute(query, [original_country_name, original_country_name])
+            cursor.execute(query, [original_country_name, original_country_name] + paper_ids_params)
             rows = cursor.fetchall()
 
         nodes = []
@@ -958,16 +974,56 @@ def country_network(request):
 
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)
+
     
-#국가 워드클라우드
+# 워드클라우드 키워드 필터링 적용할 때 사용할 논문 id 가져오는 함수    
+def get_filtered_paper_ids(user_keyword, country, start_year=2019, end_year=2024):
+    # Step 1: 키워드 기반 논문 ID 가져오기
+    paper_ids = get_paper_ids(user_keyword, start_year, end_year)
+    
+    if not paper_ids:
+        # 키워드에 맞는 논문이 없으면 빈 결과 반환
+        return []
+
+    # Step 2: 나라 이름 기반으로 필터링된 논문 ID 가져오기
+    # 나라에 해당하는 논문 ID만 paper_ids에서 필터링
+    db = mariadb.connect(**db_config)
+    cursor = db.cursor(dictionary=True)
+
+    # 나라 필터를 적용하여 paper_ids 중에서 해당 국가의 논문만 가져오기
+    placeholders = ', '.join(['%s'] * len(paper_ids))
+    query = f"""
+        SELECT DISTINCT p.id
+        FROM paper p
+        JOIN paper_country pc ON p.id = pc.paper_id
+        JOIN country c ON pc.country_id = c.id
+        WHERE p.id IN ({placeholders}) AND c.name = %s;
+    """
+    params = paper_ids + [country]
+    cursor.execute(query, params)
+
+    # 최종 필터링된 논문 ID 가져오기
+    filtered_paper_ids = [row['id'] for row in cursor.fetchall()]
+
+    # 데이터베이스 연결 종료
+    cursor.close()
+    db.close()
+
+    return filtered_paper_ids
+    
+# 국가 워드클라우드
 def country_wordcloud(request):
-    country=request.GET.get('name')
+    country = request.GET.get('name')
+    user_keyword = request.GET.get('keyword', '').strip()  # 사용자가 입력한 키워드
 
     # 키워드 카운트 초기화
     keyword_counts = Counter()
 
-    # 여기서 get_paper_ids_country 함수는 country에 따라 paper_ids를 가져오는 사용자 정의 함수입니다.
-    paper_ids = get_paper_ids_country(country)
+    # 검색어가 있으면 필터링된 논문 ID를 가져오고, 없으면 기본 국가 기준으로 논문 ID를 가져옴
+    if user_keyword:
+        paper_ids = get_filtered_paper_ids(user_keyword, country)
+    else:
+        paper_ids = get_paper_ids_country(country)
 
     if paper_ids:
         placeholders = ', '.join(['%s'] * len(paper_ids))  # placeholders 생성
@@ -975,11 +1031,12 @@ def country_wordcloud(request):
         db = mariadb.connect(**db_config)
         cursor = db.cursor()
 
+        # 논문 ID에 해당하는 키워드를 가져오기
         cursor.execute(f"""
-        SELECT k.keyword_name
-        FROM paper_keyword pk
-        JOIN keyword k ON pk.keyword_id = k.id
-        WHERE pk.paper_id IN ({placeholders});
+            SELECT k.keyword_name
+            FROM paper_keyword pk
+            JOIN keyword k ON pk.keyword_id = k.id
+            WHERE pk.paper_id IN ({placeholders});
         """, paper_ids)
 
         # 쿼리 결과 가져오기

@@ -204,6 +204,18 @@
                 <p>발표 논문 수</p>
                 <p>논문 수 (개): <span id="totalPapers">로딩 중...</span></p>
             </div>
+            
+            <!-- 사이드바용 Top 5 키워드 버튼 형식으로 표시 -->
+            <div id="sidebarTopKeywords">
+                <h3>사이드바 Top 5 키워드</h3>
+                <div id="sidebarTopKeywordButtons"></div> <!-- 여기에 사이드바용 키워드 버튼들이 추가됨 -->
+            </div>
+            
+            <!-- 사이드바 검색 입력란과 버튼 -->
+            <div class="sidebar-search-keyword">
+                <input type="text" id="sidebarKeywordInput" placeholder="키워드를 입력하세요">
+                <button onclick="searchSidebarKeyword()">검색</button>
+            </div>
         </div>
         <div class="main">
             <div class="chart">
@@ -744,6 +756,79 @@
 
             window.location.href = newUrl;
         }
+
+        // 24/11/12 추가된 sidebar 부분
+
+        // 사이드바 키워드 검색 함수
+        function searchSidebarKeyword() {
+            const keyword = document.getElementById('sidebarKeywordInput').value.trim();
+            const country = document.getElementById('countryName').textContent;
+
+            if (!keyword) {
+                alert("키워드를 입력하세요.");
+                return;
+            }
+
+            // 키워드 검색에 따라 워드 클라우드 업데이트
+            fetch(`/country_wordcloud/?name=${encodeURIComponent(country)}&keyword=${encodeURIComponent(keyword)}`)
+                .then(response => response.json())
+                .then(data => {
+                    const words = data.map(d => [d[0], d[1]]);
+                    generateWordCloud(words);  // 워드 클라우드 업데이트
+                })
+                .catch(error => console.error('Error fetching filtered word cloud data:', error));
+
+            // 키워드 검색에 따라 네트워크 업데이트
+            updateNetworkWithKeyword(country, keyword);
+        }
+
+        // 네트워크를 키워드로 필터링하여 업데이트
+        function updateNetworkWithKeyword(country, keyword) {
+            fetch(`/country_network/?name=${encodeURIComponent(country)}&keyword=${encodeURIComponent(keyword)}`)
+                .then(response => response.json())
+                .then(data => {
+                    // 네트워크 데이터가 비어 있는지 확인합니다.
+                    if (data.nodes && data.nodes.length > 0) {
+                        document.getElementById('network').innerHTML = '';  // 기존 네트워크 초기화
+                        visualizeNetwork(data);  // 새로운 네트워크 데이터로 시각화
+                    } else {
+                        alert("필터링된 결과에 해당하는 네트워크 데이터가 없습니다.");
+                        document.getElementById('network').innerHTML = '<p>네트워크 데이터를 찾을 수 없습니다.</p>';
+                    }
+                })
+                .catch(error => console.error('Error fetching filtered network data:', error));
+        }
+
+        // 기본적으로 탑 5 키워드를 사이드바에 표시하는 함수
+        function fetchSidebarTopKeywords() {
+            const country = document.getElementById('countryName').textContent;
+            fetch(`/country_wordcloud/?name=${encodeURIComponent(country)}`)
+                .then(response => response.json())
+                .then(data => {
+                    const topKeywords = data.slice(0, 5);
+                    renderSidebarTopKeywordButtons(topKeywords);
+                })
+                .catch(error => console.error('Error fetching sidebar top keywords:', error));
+        }
+
+        // 사이드바용 탑 5 키워드 버튼 렌더링
+        function renderSidebarTopKeywordButtons(keywords) {
+            const sidebarTopKeywordButtons = document.getElementById('sidebarTopKeywordButtons');
+            sidebarTopKeywordButtons.innerHTML = ''; // 기존 버튼 초기화
+
+            keywords.forEach(([keyword]) => {
+                const button = document.createElement('button');
+                button.textContent = keyword;
+                button.onclick = () => {
+                    document.getElementById('sidebarKeywordInput').value = keyword;
+                    searchSidebarKeyword(); // 버튼 클릭 시 검색 수행
+                };
+                sidebarTopKeywordButtons.appendChild(button);
+            });
+        }
+
+        // 페이지 로드 시 기본 탑 5 키워드 로드
+        document.addEventListener('DOMContentLoaded', fetchSidebarTopKeywords);
     </script>
 </body>
 
