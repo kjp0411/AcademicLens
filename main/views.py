@@ -1146,7 +1146,7 @@ class AnalyzeNetworkData(CsrfExemptMixin, APIView):
         network_data = request.data.get('network_data', '')
 
         if network_data:
-            prompt = f"다음 네트워크 데이터가 다른 노드와 어떤 관계가 있는지 분석합니다: {network_data}"
+            prompt = f"이 네트워크 데이터에서 노드 간의 상호작용 패턴을 식별하고, 주요 관계 및 특징적인 연결을 요약해 주세요: {network_data}"
 
             response = openai.ChatCompletion.create(
                 model="gpt-3.5-turbo",  # 또는 gpt-4
@@ -1169,7 +1169,7 @@ class AnalyzeKeywordData(CsrfExemptMixin, APIView):
         keyword_data = request.data.get('keyword_data', '')
 
         if keyword_data:
-            prompt = f"다음 키워드 데이터를 설명하고 어떤 주제를 담고있는지 분석합니다: {keyword_data}"
+            prompt = f"다음 키워드 데이터를 바탕으로 주요 주제와 잠재적인 하위 주제를 설명하고, 각 키워드가 어떤 역할을 하는지 분석해 주세요: {keyword_data}"
 
             response = openai.ChatCompletion.create(
                 model="gpt-3.5-turbo",  # 또는 gpt-4
@@ -2345,19 +2345,19 @@ def analyze_chart(request):
         try:
             data = json.loads(request.body)
             chart_id = data.get('chart_id', '')
-            chart_data = data.get('chart_data', [])
+            chart_data = data.get('chart_data', '')
 
             # 각 차트에 대한 GPT 프롬프트 생성
             if chart_id == 'papersChart':
-                prompt = f"Analyze the following paper counts by year: {chart_data}"
+                prompt = f"연도별 논문 수 분포를 분석하고, 중요한 경향이나 패턴이 있는지 설명해 주세요: {chart_data}"
             elif chart_id == 'authorsChart':
-                prompt = f"Analyze the number of papers by authors: {chart_data}"
+                prompt = f"저자별 논문 수 분포를 분석하고, 주요 기여자나 두드러진 패턴이 있는지 설명해 주세요: {chart_data}"
             elif chart_id == 'affiliationChart':
-                prompt = f"Analyze the number of papers by affiliation: {chart_data}"
+                prompt = f"소속 기관별 논문 수를 분석하고, 두드러진 기관이나 기여 수준의 경향이 있는지 설명해 주세요: {chart_data}"
             elif chart_id == 'countryChart':
-                prompt = f"Analyze the number of papers by country: {chart_data}"
+                prompt = f"국가별 논문 수 분포를 분석하고, 주요 국가나 논문 수의 경향을 설명해 주세요: {chart_data}"
             elif chart_id == 'keywordChart':
-                prompt = f"Analyze the top keywords used in papers: {chart_data}"
+                prompt = f"논문에서 사용된 주요 키워드를 분석하고, 주요 키워드나 어떤 주제의 논문 수가 많은지 경향을 설명해 주세요: {chart_data}"
             else:
                 return JsonResponse({'error': 'Invalid chart ID'}, status=400)
 
