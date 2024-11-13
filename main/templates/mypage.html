@@ -93,6 +93,7 @@
     </div>
 </div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.2/html2pdf.bundle.min.js"></script>
 <script>
     function showContent(contentType, page = 1, folderName = "", resetParams = false) {
         let url;
@@ -762,6 +763,25 @@
             }
         }
         return cookieValue;
+    }
+
+    function downloadPDF() {
+        // PDF로 변환할 요소 선택
+        const reportContent = document.getElementById('report-content');
+
+        const Title = document.getElementById("reportTitle").innerText || "Report";
+        
+        // 옵션 설정
+        const options = {
+            margin: 1,
+            filename: Title +'.pdf',
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2 },
+            jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
+        };
+
+        // PDF 생성
+        html2pdf().from(reportContent).set(options).save();
     }
 </script>
 {% endblock %}

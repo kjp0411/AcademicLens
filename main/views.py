@@ -225,6 +225,7 @@ def search(request):
                 response = requests.get(url)
                 news_data = response.json()
                 articles = news_data.get('articles', [])
+                articles = [article for article in articles if article.get('title') != "[Removed]"]
             if request.headers.get('x-requested-with') == 'XMLHttpRequest':
                 return JsonResponse({'articles': articles})
         else:
@@ -237,6 +238,7 @@ def search(request):
                 response = requests.get(url)
                 news_data = response.json()
                 articles = news_data.get('articles', [])
+                articles = [article for article in articles if article.get('title') != "[Removed]"]
 
             if request.headers.get('x-requested-with') == 'XMLHttpRequest':
                 return JsonResponse({'articles': articles})
@@ -2380,7 +2382,6 @@ def analyze_chart(request):
 
     return JsonResponse({'error': 'Invalid request method'}, status=400)
 
-
 def analysis_page(request):
     # 상위 10개 나라와 논문 수를 가져오기
     top_countries = (
@@ -2496,3 +2497,12 @@ def affiliation_search(request):
     # 검색 결과를 JSON 형식으로 변환
     results = [{'name': row[0], 'total_papers': row[1]} for row in rows]
     return JsonResponse(results, safe=False)
+
+def get_folders(request):
+    user_folder = os.path.join(settings.MEDIA_ROOT, 'accounts', request.user.username)
+    if not os.path.exists(user_folder):
+        return JsonResponse({'folders': []})
+    
+    folders = [f for f in os.listdir(user_folder) if os.path.isdir(os.path.join(user_folder, f))]
+    return JsonResponse({'folders': folders})
+

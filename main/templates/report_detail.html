@@ -1,22 +1,26 @@
 
 {% block content %}
-<h2>{{ title }}</h2>
+<h2 id ="reportTitle">{{ title }}</h2>
+
 
 {% if error %}
 <p>{{ error }}</p>
 {% else %}
-<div>
-    <h3>리포트 내용</h3>
-    <pre>{{ content }}</pre>
-</div>
+<div id="report-content">
+    <div>
+        <h3>리포트 내용</h3>
+        <pre>{{ content }}</pre>
+    </div>
 
-<h3>선택된 이미지 목록</h3>
-<div class="image-list">
-    {% for image_url in images %}
-        <img src="{{ image_url }}" alt="리포트 이미지" width="500" height="300">
-    {% endfor %}
+    <h3>선택된 이미지 목록</h3>
+    <div class="image-list">
+        {% for image_url in images %}
+            <img src="{{ image_url }}" alt="리포트 이미지" width="500" height="300">
+        {% endfor %}
+    </div>
 </div>
 {% endif %}
 
+<button onclick="downloadPDF()">PDF로 저장</button>
 <a href="javascript:void(0);" onclick="showContent('report')">리포트 목록으로 돌아가기</a>
 {% endblock %}

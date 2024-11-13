@@ -212,6 +212,7 @@
                     <button id="analyzeButton" class="analyze-btn">
                         <i class="fas fa-chart-network"></i> 네트워크 데이터 분석
                     </button>
+                    <button class="pdf-btn" data-chart="network">마이페이지에 저장</button>
                 </div>
                 <div id="network-container">
                     <div id="network"></div>
@@ -248,10 +249,11 @@
                     <button id="analyzeButtonKeywords" class="analyze-btn">
                         <i class="fas fa-chart-network"></i> TOP 키워드 데이터 분석
                     </button>
+                    <button class="pdf-btn" data-chart="wordcloud">마이페이지에 저장</button>
                 </div>
                 <div class="keyword-container">
                     <div id="wordcloud"></div>
-                    <div id="analysisBoxKeywords">
+                    <div id="analysisBox">
                         <h4 class="analysis-title">TOP 키워드 데이터 분석 결과</h4>
                         <div id="analysisResultKeywords" class="analysis-result">
                             <p>분석 결과가 여기에 표시됩니다.</p>
@@ -262,6 +264,7 @@
         </div>
     </div>
 
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
     <script>
         function getCookie(name) {
             let cookieValue = null;
@@ -739,6 +742,142 @@
             newUrl = `/search/?filter=affiliation&query=${formattedAffiliation}`;
 
             window.location.href = newUrl;
+        }
+
+        // 모달을 생성하여 폴더 선택 및 이미지 이름 입력
+        function openFolderSelectModal(folders, chartId, element) {
+            // 모달 HTML 생성
+            const modalHtml = `
+                <div id="folderModal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.5); display: flex; justify-content: center; align-items: center;">
+                    <div style="background: white; padding: 20px; border-radius: 8px; max-width: 300px; width: 100%;">
+                        <h3>폴더와 이미지 이름 선택</h3>
+                        <label for="folderSelect">폴더:</label>
+                        <select id="folderSelect" style="width: 100%; margin-bottom: 15px;">
+                            <option value="">폴더를 선택하세요</option>
+                            ${folders.map(folder => `<option value="${folder}">${folder}</option>`).join('')}
+                        </select>
+                        <label for="imageName">이미지 이름:</label>
+                        <input type="text" id="imageName" value="${chartId}" style="width: 100%; margin-bottom: 15px;">
+                        <label>
+                            <input type="checkbox" id="includeAnalysis" style="margin-right: 5px;"> 분석 결과 포함
+                        </label>
+                        <button id="saveImageBtn" style="width: 100%; padding: 10px; background-color: #007bff; color: white; border: none; border-radius: 5px;">저장</button>
+                    </div>
+                </div>
+            `;
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
+
+            // 모달의 저장 버튼에 이벤트 추가
+            document.getElementById('saveImageBtn').addEventListener('click', function () {
+                const folderName = document.getElementById('folderSelect').value;
+                const imageName = document.getElementById('imageName').value;
+                const includeAnalysis = document.getElementById('includeAnalysis').checked;
+
+                if (!folderName) {
+                    alert('폴더를 선택해야 합니다.');
+                    return;
+                }
+                if (!imageName) {
+                    alert('이미지 이름을 입력해야 합니다.');
+                    return;
+                }
+
+                // 캡처할 요소 결정
+                const captureElements = [element];
+                if (includeAnalysis) {
+                    captureElements.push(document.getElementById('analysisBox'));
+                }
+
+                // html2canvas로 선택한 요소들을 저장 로직
+                html2canvasMultiple(captureElements).then(function (canvas) {
+                    const imageData = canvas.toDataURL('image/png');
+
+                    // 서버에 이미지 데이터와 폴더, 이름 전송
+                    fetch('/save-image/', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': getCookie('csrftoken')
+                        },
+                        body: JSON.stringify({ imageData: imageData, folderName: folderName, imageName: imageName })
+                    })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.status === 'success') {
+                                alert('이미지가 성공적으로 저장되었습니다!');
+                            } else {
+                                alert('이미지 저장 실패: ' + data.message);
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                        });
+                });
+
+                // 모달 닫기
+                document.getElementById('folderModal').remove();
+            });
+        }
+
+        // 여러 요소를 하나의 이미지로 캡처하는 함수
+        async function html2canvasMultiple(elements) {
+            const canvases = await Promise.all(elements.map(el => html2canvas(el, { scale: 2 })));
+            const canvas = document.createElement('canvas');
+            const context = canvas.getContext('2d');
+            const totalHeight = canvases.reduce((sum, c) => sum + c.height, 0);
+            const width = canvases[0].width;
+
+            canvas.width = width;
+            canvas.height = totalHeight;
+
+            let yOffset = 0;
+            canvases.forEach(c => {
+                context.drawImage(c, 0, yOffset);
+                yOffset += c.height;
+            });
+
+            return canvas;
+        }
+
+
+        // 이미지 저장 로직
+        document.querySelectorAll('.pdf-btn').forEach(function (button) {
+            button.addEventListener('click', async function () {
+                const chartId = this.getAttribute('data-chart');
+                const element = document.getElementById(chartId);
+
+                // 폴더 목록을 로드하여 선택하도록 함
+                const folders = await loadFolderList();
+                if (folders.length === 0) {
+                    alert("사용자 폴더가 없습니다. 먼저 폴더를 생성해주세요.");
+                    return;
+                }
+
+                // 폴더 선택 모달을 열기
+                openFolderSelectModal(folders, chartId, element);
+            });
+        });
+
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        // 폴더 목록을 불러오는 함수
+        function loadFolderList() {
+            return fetch('/get-folders/')
+                .then(response => response.json())
+                .then(data => data.folders || []);
         }
     </script>
 </body>

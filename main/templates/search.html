@@ -324,16 +324,19 @@
             <div class="news-content">
                 {% if articles %}
                     <ul>
-                    {% for article in articles|slice:":2" %}  <!-- 뉴스 2개만 출력 -->
+                    {% for article in articles|slice:":10" %}  <!-- 뉴스 10개만 출력 -->
                         <li>
                             <div class="news-title">
                                 <a href="{{ article.url }}" target="_blank">{{ article.title }}</a>
                             </div>
                             <div class="news-cont">
-                                {{ article.description }}
+                                {{ article.description|slice:":30" }}{% if article.description|length > 20 %}...{% endif %}
+                            </div>
+                            <div class="news-cont">
+                                {{ article.publishedAt}}
                             </div>
                         </li>
-                        <br>
+                        <hr>
                     {% endfor %}
                     </ul>
                 {% else %}
@@ -635,17 +638,20 @@
                 let articlesHtml = '';
                 if (data.articles.length > 0) {
                     articlesHtml = '<ul>';
-                    data.articles.slice(0, 2).forEach(article => {
+                    data.articles.slice(0, 10).forEach(article => {
                         articlesHtml += `
                             <li>
                                 <div class="news-title">
                                     <a href="${article.url}" target="_blank">${article.title}</a>
                                 </div>
                                 <div class="news-cont">
-                                    ${article.description}
+                                    ${article.description.length > 20 ? article.description.substring(0, 30) + "..." : article.description}
+                                </div>
+                                <div class="news-cont">
+                                    ${article.publishedAt}
                                 </div>
                             </li>
-                            <br>
+                            <hr>
                         `;
                     });
                     articlesHtml += '</ul>';
