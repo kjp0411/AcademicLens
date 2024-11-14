@@ -11,8 +11,13 @@
         <button class="save-btn" data-paper-id="{{ paper.id }}">
             <img src="{% if is_saved %}{% static 'image/heart-filled.png' %}{% else %}{% static 'image/heart-empty.png' %}{% endif %}" alt="save" class="save-icon">
         </button>
+        ({{ paper.saved_count }})
     </div>
     <hr>
+
+    <div class="url">
+        <button class="url-btn" onclick="openPaperUrl()">논문 사이트 이동</button>
+    </div>    
 
     <div class="paper-metadata">
         <strong>저자</strong><br> 
@@ -69,6 +74,16 @@
 
 <script>
     const csrftoken = "{{ csrf_token }}";
+
+    function openPaperUrl() {
+        const paperUrl = "{{ paper.url }}";
+
+        if (paperUrl === "none" || paperUrl === "") {
+            alert("논문 사이트가 존재하지 않습니다.");
+        } else {
+            window.open(paperUrl, '_blank');
+        }
+    }
 
     document.addEventListener('DOMContentLoaded', function() {
         const saveBtn = document.querySelector('.save-btn');  // ID 대신 클래스 선택자 사용

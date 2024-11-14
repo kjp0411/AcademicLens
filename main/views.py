@@ -95,6 +95,7 @@ def search(request):
         years = request.GET.getlist('year')
         publishers = request.GET.getlist('publisher')
         author = request.GET.get('author-search')
+        affiliation = request.GET.get('affiliation-search')
         countries = request.GET.getlist('country')
         search_query = query
         news_type = request.GET.get('news_type', 'international')  # 기본값을 'international'로 설정
@@ -145,6 +146,11 @@ def search(request):
             paper_ids_by_authors = Author.objects.filter(name__icontains=author).values_list('paperauthor__paper_id', flat=True)
             papers = papers.filter(id__in=paper_ids_by_authors)
 
+        # 소속 필터링
+        if affiliation:
+            paper_ids_by_affiliations = Affiliation.objects.filter(name__icontains=affiliation).values_list('paperaffiliation__paper_id', flat=True)
+            papers = papers.filter(id__in=paper_ids_by_affiliations)
+            
         # 국가 필터링
         if countries:
             paper_ids_by_countries = PaperCountry.objects.filter(country__name__in=countries).values_list('paper_id', flat=True)
@@ -186,8 +192,11 @@ def search(request):
             # 논문이 저장된 상태인지 확인 (로그인한 경우에만 확인)
             is_saved = paper.id in saved_paper_ids if request.user.is_authenticated else False
 
+            save_count = paper.saved_count
+            
             papers_with_authors_and_keywords.append({
                 'paper': paper,
+                'save-count': save_count,
                 'authors': authors,
                 'keywords': keywords,
                 'affiliations': affiliations,
@@ -210,6 +219,7 @@ def search(request):
             country_paper_map[country].add(paper)
 
         paper_counts_by_country = {country: len(papers) for country, papers in country_paper_map.items()}
+        paper_counts_by_country = dict(sorted(paper_counts_by_country.items(), key=lambda item: item[1], reverse=True))     # 국가별 논문 수 내림차순
 
         # 뉴스 검색 부분
         api_key = '2f963493ee124210ac91a3b54ebb3c5c'
@@ -259,6 +269,7 @@ def search(request):
             'selected_countries': selected_countries,
             'total_results': total_results,
             'author': author,
+            'affiliation': affiliation,
             'order': order,
             'sort_by': sort_by,
             'items_per_page': items_per_page,
