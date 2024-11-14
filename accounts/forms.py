@@ -10,12 +10,12 @@ class LoginForm(forms.ModelForm):
         fields = ["username", "password"]
 
 class SignupForm(UserCreationForm):
-    username = forms.CharField(label='username', widget=forms.TextInput(attrs={
+    username = forms.CharField(label='User ID', widget=forms.TextInput(attrs={
         'pattern': '[a-zA-Z0-9]+',
         'title': '특수문자, 공백 입력불가',
     }))
-    nickname = forms.CharField(label='nickname')
-    picture = forms.ImageField(label='profile picture', required=False)
+    nickname = forms.CharField(label='Nickname')
+    picture = forms.ImageField(label='Profile Picture - Image upload is optional.', required=False)
 
     class Meta(UserCreationForm.Meta):
         fields = UserCreationForm.Meta.fields + ('email',)

@@ -16,7 +16,6 @@ def photo_path(instance, filename):
 class Post(models.Model):
     author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     photo = ProcessedImageField(upload_to=photo_path,
-                                processors=[ResizeToFill(600, 600)],
                                 format='JPEG',
                                 options={'quality': 90},
                                 blank=True, null=True)
