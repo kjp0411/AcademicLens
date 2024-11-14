@@ -133,11 +133,24 @@
                         </details>
                         <br><br>
                         <details open>
+                            <summary> 소속 검색 </summary>
+                            <div>
+                                <ul class="contList affiliation" data-header="소속">
+                                    <div id="mCSB_4" class="mCustomScrollBox" tabindex="3" style="max-height: 120px;">
+                                        <div id="mCSB_4_container" class="mCSB_4_container" style="position:relative; top:0; left:0;" dir="ltr">
+                                            <input type="text" id="affiliation-search" name="affiliation-search" placeholder="소속을 입력해주세요." {% if affiliation %} value="{{ affiliation }}" {% endif %}>
+                                        </div>
+                                    </div>
+                                </ul>
+                            </div>
+                        </details>
+                        <br><br>
+                        <details open>
                             <summary> 국가 </summary>
                             <div>
                                 <ul class="contList country" data-header="국가">
-                                    <div id="mCSB_4" class="mCustomScrollBox" tabindex="3">
-                                        <div id="mCSB_4_container" class="mCSB_4_container" style="position:relative; top:0; left:0;" dir="ltr">
+                                    <div id="mCSB_5" class="mCustomScrollBox" tabindex="4">
+                                        <div id="mCSB_5_container" class="mCSB_5_container" style="position:relative; top:0; left:0;" dir="ltr">
                                             {% for country, count in paper_counts_by_country.items %}
                                                 <li>
                                                     <input type="checkbox" id="country_{{ country }}" name="country" value="{{ country }}"
@@ -146,7 +159,7 @@
                                                 </li>
                                             {% endfor %}
                                         </div>
-                                        <div id="mCSB_4_scrollbar_vertical" class="mCSB_scrollTools" style="display: block;"></div>
+                                        <div id="mCSB_5_scrollbar_vertical" class="mCSB_scrollTools" style="display: block;"></div>
                                     </div>
                                 </ul>
                             </div>
@@ -212,6 +225,7 @@
                                 <button class="save-btn" data-paper-id="{{ item.paper.id }}">
                                     <img src="{% if item.is_saved %}{% static 'image/heart-filled.png' %}{% else %}{% static 'image/heart-empty.png' %}{% endif %}" alt="save" class="save-icon">
                                 </button>
+                                ({{ item.paper.saved_count }})
                             </div>
                             <div class="preAbstract-container">
                                 <p class="preAbstract">
@@ -475,6 +489,9 @@
     
         // 저자 검색 필드 비우기
         document.getElementById('author-search').value = '';
+
+        // 소속 검색 필드 비우기
+        document.getElementById('affiliation-search').value = '';
     
         // 필터링 관련된 파라미터를 URL에서 제거
         const url = new URL(window.location.href);
@@ -483,6 +500,7 @@
         url.searchParams.delete('year');
         url.searchParams.delete('publisher');
         url.searchParams.delete('author-search');
+        url.searchParams.delete('affiliation-search');
         url.searchParams.delete('country');
     
         // URL을 새로 고침 없이 업데이트
@@ -532,6 +550,11 @@
         if (!document.getElementById('author-search').value) {
             url.searchParams.delete('author-search');
         }
+
+        // 소속 검색 필드가 비어있다면 파라미터 제거
+        if (!document.getElementById('affiliation-search').value) {
+            url.searchParams.delete('affiliation-search');
+        }
     
         // URL을 새로 고침 없이 업데이트
         window.history.replaceState(null, '', url.toString());
@@ -564,6 +587,13 @@
         url.searchParams.delete('author-search');
         if (authorSearch) {
             url.searchParams.set('author-search', authorSearch);
+        }
+
+        // 저자 검색 필드 값 갱신
+        const affiliationSearch = document.getElementById('affiliation-search').value;
+        url.searchParams.delete('affiliation-search');
+        if (affiliationSearch) {
+            url.searchParams.set('affiliation-search', affiliationSearch);
         }
     
         // 갱신된 URL로 폼을 제출합니다.

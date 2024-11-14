@@ -260,7 +260,7 @@ ul, ol {
     padding: 5px 10px; /* 적절한 내부 패딩을 설정 */
 }
 
-#author-search {
+#author-search, #affiliation-search {
     width: 192px;
     height: 30px;
     padding: 0px;
