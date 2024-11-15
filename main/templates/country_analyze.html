@@ -833,18 +833,36 @@
         // 페이지 로드 시 기본 탑 5 키워드 로드
         document.addEventListener('DOMContentLoaded', fetchSidebarTopKeywords);
 
+        // 분석 텍스트를 가져오는 함수
+        function getAnalysisText(chartId) {
+            let analysisElement;
+
+            // chartId에 따라 다른 분석 결과 요소 선택
+            if (chartId === 'network') {
+                analysisElement = document.querySelector('#network-container .analysis-result');
+            } else if (chartId === 'wordcloud') {
+                analysisElement = document.querySelector('#analysisResultKeywords'); // 정확한 요소 선택
+            }
+
+            // 분석 결과 텍스트가 있는 경우, 그 텍스트를 반환하고, 없으면 빈 문자열 반환
+            return analysisElement ? analysisElement.innerText : '';
+        }
+
+
+
         // 모달을 생성하여 폴더 선택 및 이미지 이름 입력
         function openFolderSelectModal(folders, chartId, element) {
-            // 모달 HTML 생성
             const modalHtml = `
                 <div id="folderModal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.5); display: flex; justify-content: center; align-items: center;">
-                    <div style="background: white; padding: 20px; border-radius: 8px; max-width: 300px; width: 100%;">
+                    <div style="background: white; padding: 20px; border-radius: 8px; max-width: 300px; width: 100%; position: relative;">
+                        <button id="closeModalBtn" style="position: absolute; top: 10px; right: 10px; background: transparent; border: none; font-size: 18px; cursor: pointer;">&times;</button>
                         <h3>폴더와 이미지 이름 선택</h3>
                         <label for="folderSelect">폴더:</label>
                         <select id="folderSelect" style="width: 100%; margin-bottom: 15px;">
                             <option value="">폴더를 선택하세요</option>
                             ${folders.map(folder => `<option value="${folder}">${folder}</option>`).join('')}
                         </select>
+                        <button id="addFolderBtn" style="width: 100%; margin: 10px 0; padding: 8px; background-color: #28a745; color: white; border: none; border-radius: 5px;">새 폴더 추가</button>
                         <label for="imageName">이미지 이름:</label>
                         <input type="text" id="imageName" value="${chartId}" style="width: 100%; margin-bottom: 15px;">
                         <label>
@@ -855,6 +873,16 @@
                 </div>
             `;
             document.body.insertAdjacentHTML('beforeend', modalHtml);
+
+            // 모달 닫기 버튼 클릭 시 모달을 닫음
+            document.getElementById('closeModalBtn').addEventListener('click', function () {
+                document.getElementById('folderModal').remove();
+            });
+
+            // 새 폴더 추가 버튼 클릭 시 폴더 생성 함수 호출
+            document.getElementById('addFolderBtn').addEventListener('click', function () {
+                createNewFolder();
+            });
 
             // 모달의 저장 버튼에 이벤트 추가
             document.getElementById('saveImageBtn').addEventListener('click', function () {
@@ -873,12 +901,15 @@
 
                 // 캡처할 요소 결정
                 const captureElements = [element];
+                let analysisText = '';
+
+                // 분석 결과 포함이 선택된 경우, 해당 차트의 분석 텍스트를 가져옴
                 if (includeAnalysis) {
-                    captureElements.push(document.getElementById('analysisBox'));
+                    analysisText = getAnalysisText(chartId);
                 }
 
                 // html2canvas로 선택한 요소들을 저장 로직
-                html2canvasMultiple(captureElements).then(function (canvas) {
+                html2canvasMultiple(captureElements, analysisText).then(function (canvas) {
                     const imageData = canvas.toDataURL('image/png');
 
                     // 서버에 이미지 데이터와 폴더, 이름 전송
@@ -890,44 +921,148 @@
                         },
                         body: JSON.stringify({ imageData: imageData, folderName: folderName, imageName: imageName })
                     })
-                        .then(response => response.json())
-                        .then(data => {
-                            if (data.status === 'success') {
-                                alert('이미지가 성공적으로 저장되었습니다!');
-                            } else {
-                                alert('이미지 저장 실패: ' + data.message);
-                            }
-                        })
-                        .catch(error => {
-                            console.error('Error:', error);
-                        });
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.status === 'success') {
+                            alert('이미지가 성공적으로 저장되었습니다!');
+                        } else {
+                            alert('이미지 저장 실패: ' + data.message);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                    });
                 });
 
                 // 모달 닫기
                 document.getElementById('folderModal').remove();
             });
+
         }
 
-        // 여러 요소를 하나의 이미지로 캡처하는 함수
-        async function html2canvasMultiple(elements) {
-            const canvases = await Promise.all(elements.map(el => html2canvas(el, { scale: 2 })));
+
+        // 텍스트를 줄바꿈하여 canvas에 추가하고 최종 높이를 반환하는 함수
+        async function calculateTextHeight(context, text, canvasWidth, fontSize = 30) {
+            context.font = `${fontSize}px Arial`;
+            const lineHeight = fontSize * 1.5; // 줄 간격
+
+            let words = text.split(" ");
+            let line = "";
+            const lines = [];
+
+            // 텍스트를 줄바꿈하여 여러 줄로 나눔
+            for (let n = 0; n < words.length; n++) {
+                let testLine = line + words[n] + " ";
+                let metrics = context.measureText(testLine);
+                let testWidth = metrics.width;
+
+                if (testWidth > canvasWidth - 40 && n > 0) {
+                    lines.push(line);
+                    line = words[n] + " ";
+                } else {
+                    line = testLine;
+                }
+            }
+            lines.push(line); // 마지막 줄 추가
+
+            return lines.length * lineHeight; // 예상되는 텍스트의 전체 높이 반환
+        }
+
+        async function addTextToCanvas(context, text, canvasWidth, startY, fontSize = 30) {
+            context.font = `${fontSize}px Arial`;
+            context.fillStyle = "#000";
+            const lineHeight = fontSize * 1.5; // 줄 간격
+
+            let words = text.split(" ");
+            let line = "";
+            let y = startY;
+
+            for (let n = 0; n < words.length; n++) {
+                let testLine = line + words[n] + " ";
+                let metrics = context.measureText(testLine);
+                let testWidth = metrics.width;
+
+                if (testWidth > canvasWidth - 40 && n > 0) {
+                    context.fillText(line, 20, y);
+                    line = words[n] + " ";
+                    y += lineHeight;
+                } else {
+                    line = testLine;
+                }
+            }
+            context.fillText(line, 20, y); // 남은 텍스트 출력
+            return y + lineHeight; // 최종 y 위치 반환
+        }
+
+        // 여러 요소를 하나의 이미지로 캡처하고 분석 텍스트 추가하는 함수
+        async function html2canvasMultiple(elements, analysisText) {
+            const canvases = await Promise.all(
+                elements.map(el => 
+                    html2canvas(el, { 
+                        scale: 2,
+                        useCORS: true,
+                        logging: true,
+                        willReadFrequently: true // willReadFrequently 속성 추가
+                    })
+                )
+            );
+
             const canvas = document.createElement('canvas');
-            const context = canvas.getContext('2d');
-            const totalHeight = canvases.reduce((sum, c) => sum + c.height, 0);
+            const context = canvas.getContext('2d', { willReadFrequently: true });
+            const fontSize = 30; // 폰트 크기
             const width = canvases[0].width;
 
-            canvas.width = width;
-            canvas.height = totalHeight;
-
             let yOffset = 0;
+            let imageHeight = canvases.reduce((sum, c) => sum + c.height, 0);
+
+            // 분석 텍스트의 높이를 미리 계산
+            let analysisTextHeight = 0;
+            if (analysisText) {
+                analysisTextHeight = await calculateTextHeight(context, analysisText, width, fontSize);
+            }
+
+            // 캔버스 높이를 이미지 높이와 정확한 텍스트 높이를 합쳐 설정
+            canvas.width = width;
+            canvas.height = imageHeight + analysisTextHeight + 20;
+
+            // 이미지들을 캔버스에 그리기
             canvases.forEach(c => {
                 context.drawImage(c, 0, yOffset);
                 yOffset += c.height;
             });
 
+            // 분석 결과 텍스트를 이미지 아래에 추가
+            if (analysisText) {
+                await addTextToCanvas(context, analysisText, width, yOffset + 20, fontSize);
+            }
+
             return canvas;
         }
 
+
+
+        // 새 폴더 생성 함수
+        function createNewFolder() {
+            const folderName = prompt("새 폴더 이름을 입력하세요:");
+            if (folderName) {
+                // 새 폴더 생성 요청을 서버에 보냄
+                fetch('/create-folder/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken')
+                    },
+                    body: JSON.stringify({ 'folder_name': folderName })
+                }).then(response => {
+                    if (response.ok) {
+                        alert("새 폴더가 성공적으로 생성되었습니다!");
+                        location.reload();  // 페이지 새로고침하여 폴더 목록 갱신
+                    } else {
+                        alert("폴더 생성 실패!");
+                    }
+                });
+            }
+        }
 
         // 이미지 저장 로직
         document.querySelectorAll('.pdf-btn').forEach(function (button) {
