@@ -2,6 +2,9 @@ from django.conf import settings
 from django.db import models
 from imagekit.models import ProcessedImageField
 from imagekit.processors import ResizeToFill
+from django.contrib.auth.models import User
+from django.utils import timezone
+from datetime import timedelta
 
 def user_path(instance, filename):
     from random import choice
@@ -87,3 +90,13 @@ class Follow(models.Model):
         unique_together = (
             ('from_user', 'to_user')
         )
+    
+
+
+class PasswordResetCode(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    code = models.CharField(max_length=6)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def is_valid(self):
+        return timezone.now() < self.created_at + timedelta(minutes=5)

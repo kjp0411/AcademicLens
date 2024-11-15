@@ -87,6 +87,7 @@ urlpatterns = [
     path('api/author_search/', views.author_search, name='author_search'),
     path('api/affiliation_search/', views.affiliation_search, name='affiliation_search'),
 
-    path('get-folders/',views.get_folders, name='get_folders')
+    path('get-folders/',views.get_folders, name='get_folders'),
+    path('accounts/', include('accounts.urls')),
 ]
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

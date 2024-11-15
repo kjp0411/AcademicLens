@@ -9,7 +9,16 @@ from django.http import HttpResponse
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_POST
 
+import random
+import string
+from django.conf import settings
+from django.core.mail import send_mail
+from django.utils import timezone
+from django.contrib.auth.models import User
+from .models import PasswordResetCode
+from .forms import PasswordResetRequestForm, PasswordResetForm
 
+from .forms import FindUsernameForm
 
 def signup(request):
     if request.method == 'POST':
@@ -85,3 +94,80 @@ def follow(request):
         'status': status,
     }
     return HttpResponse(json.dumps(context), content_type="application/json")
+
+
+
+def generate_code():
+    return ''.join(random.choices(string.digits, k=6))
+
+def password_reset_request(request):
+    if request.method == 'POST':
+        form = PasswordResetRequestForm(request.POST)
+        if form.is_valid():
+            email = form.cleaned_data['email']
+            try:
+                user = User.objects.get(email=email)
+                code = generate_code()
+                PasswordResetCode.objects.create(user=user, code=code)
+                send_mail(
+                    'Password Reset Verification',
+                    f'Your verification code is: {code}',
+                    settings.EMAIL_HOST_USER,
+                    [email],
+                    fail_silently=False,
+                )
+                messages.success(request, "Verification code sent to your email.")
+                return redirect('password_reset_verify')
+            except User.DoesNotExist:
+                form.add_error('email', 'Email not registered.')
+    else:
+        form = PasswordResetRequestForm()
+    return render(request, 'accounts/password_reset_request.html', {'form': form})
+
+
+
+def password_reset_verify(request):
+    if request.method == 'POST':
+        form = PasswordResetForm(request.POST)
+        if form.is_valid():
+            code = form.cleaned_data['code']
+            try:
+                reset_code = PasswordResetCode.objects.get(code=code)
+                if reset_code.is_valid():
+                    user = reset_code.user
+                    user.set_password(form.cleaned_data['new_password'])
+                    user.save()
+                    reset_code.delete()  # 사용된 코드 삭제
+                    messages.success(request, "Password reset successfully.")
+                    return redirect('accounts:login')
+                else:
+                    messages.error(request, "Code expired.")
+            except PasswordResetCode.DoesNotExist:
+                messages.error(request, "Invalid code.")
+    else:
+        form = PasswordResetForm()
+    return render(request, 'accounts/password_reset_verify.html', {'form': form})
+
+
+
+def find_username(request):
+    if request.method == 'POST':
+        form = FindUsernameForm(request.POST)
+        if form.is_valid():
+            email = form.cleaned_data['email']
+            try:
+                user = User.objects.get(email=email)
+                send_mail(
+                    'Your Username',
+                    f'Your username is: {user.username}',
+                    settings.EMAIL_HOST_USER,
+                    [email],
+                    fail_silently=False,
+                )
+                messages.success(request, "Your username has been sent to your email.")
+                return redirect('accounts:login')
+            except User.DoesNotExist:
+                form.add_error('email', 'No user with this email exists.')
+    else:
+        form = FindUsernameForm()
+    return render(request, 'accounts/find_username.html', {'form': form})
