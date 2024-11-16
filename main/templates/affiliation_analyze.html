@@ -571,9 +571,10 @@
             let isDragging = false;
 
             node.call(drag)
-                .on("click", function (d) {
+                .on("click", function (event, d) {
                     if (!isDragging) {
-                        window.location.href = `/affiliation-analyze/?name=${d.id}`;
+                        const nodeName = d.id;
+                        window.location.href = `/affiliation-analyze/?name=${nodeName}`;
                     }
                 });
 
@@ -626,6 +627,7 @@
                 analyzeNetworkData(networkText);
             });
         }
+
 
         fetchNetworkData().then(data => {
             if (data) {
@@ -723,7 +725,7 @@
                 console.error('Error analyzing keyword data', response.statusText);
             }
         }
-        
+
         // 아직 소속 검색 구현 안함
         function redirectToFilteredPage() {
             // `affiliationName` 요소의 텍스트를 가져와 소속 정보를 추출
@@ -832,17 +834,17 @@
                         },
                         body: JSON.stringify({ imageData: imageData, folderName: folderName, imageName: imageName })
                     })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.status === 'success') {
-                            alert('이미지가 성공적으로 저장되었습니다!');
-                        } else {
-                            alert('이미지 저장 실패: ' + data.message);
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                    });
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.status === 'success') {
+                                alert('이미지가 성공적으로 저장되었습니다!');
+                            } else {
+                                alert('이미지 저장 실패: ' + data.message);
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                        });
                 });
 
                 // 모달 닫기
@@ -908,8 +910,8 @@
         // 여러 요소를 하나의 이미지로 캡처하고 분석 텍스트 추가하는 함수
         async function html2canvasMultiple(elements, analysisText) {
             const canvases = await Promise.all(
-                elements.map(el => 
-                    html2canvas(el, { 
+                elements.map(el =>
+                    html2canvas(el, {
                         scale: 2,
                         useCORS: true,
                         logging: true,
