@@ -1,10 +1,8 @@
-from django.urls import path
-from . import views
-from django.contrib import admin
-from django.urls import include
+from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
-
+from django.contrib import admin
+from . import views
 from django.shortcuts import redirect
 
 urlpatterns = [
@@ -12,21 +10,24 @@ urlpatterns = [
     path('search/', views.search, name='search'),
     path('analyze/', views.analyze, name='total_graph'),
     path('paper/<int:paper_id>/', views.paper_detail, name='paper_detail'),
-    
+
+    # 국가 분석
     path('country-analyze/', views.country_analyze_html, name='country_analyze'),
-    path('country_network/',views.country_network,name='country-network'),
+    path('country_network/', views.country_network, name='country-network'),
     path('country_wordcloud/', views.country_wordcloud, name='country-wordcloud'),
     path('api/country_paper_counts_by_year/', views.country_get_paper_counts_by_year, name='paper_counts_by_year'),
     path('api/country_recent_papers/', views.country_get_recent_papers, name='recent_papers'),
     path('api/country_total_papers/', views.country_get_total_papers, name='total_papers'),
 
+    # 소속 분석
     path('affiliation-analyze/', views.affiliation_analyze_html, name='affiliation_analyze'),
-    path('affiliation_network/',views.affiliation_network,name='affiliation-network'),
+    path('affiliation_network/', views.affiliation_network, name='affiliation-network'),
     path('affiliation_wordcloud/', views.affiliation_wordcloud, name='affiliation-wordcloud'),
     path('api/affiliation_paper_counts_by_year/', views.affiliation_get_paper_counts_by_year, name='affiliation_paper_counts_by_year'),
     path('api/affiliation_recent_papers/', views.affiliation_get_recent_papers, name='affiliation_recent_papers'),
     path('api/affiliation_total_papers/', views.affiliation_get_total_papers, name='affiliation_total_papers'),
 
+    # 저자 분석
     path('author-analyze/', views.author_analyze_html, name='author_analyze'),
     path('author_network/', views.author_network, name='author-network'),
     path('author_wordcloud/', views.author_wordcloud, name='author-wordcloud'),
@@ -35,19 +36,27 @@ urlpatterns = [
     path('api/author_total_papers/', views.author_get_total_papers, name='author_total_papers'),
     path('author/affiliation/', views.author_get_affiliation, name='author_get_affiliation'),
 
+    # 기타 API
     path('api/analyze_network_data/', views.AnalyzeNetworkData.as_view(), name='analyze_network_data'),
     path('api/analyze_keyword_data/', views.AnalyzeKeywordData.as_view(), name='analyze_keyword_data'),
 
+    # 관리자 페이지
     path('admin/', admin.site.urls),
-    path('accounts/', include('accounts.urls')),
-    path('accounts/', include('allauth.urls')),
+
+    # 계정 관련 URL 포함
+    path('accounts/', include('accounts.urls')),  # Django의 accounts 앱 URL
+    path('accounts/', include('allauth.urls')),  # Django Allauth URL
+
+    # 기타 URL
     path('post/', include('post.urls', namespace='post')),
     path('', lambda r: redirect('accounts:login'), name='root'),
     path('board/', include('board.urls')),
 
+    # 로그인 및 회원가입 페이지
     path('login/', views.login_html, name='login'),
     path('signup/', views.signup_html, name='signup'),
-    
+
+    # 마이페이지 관련
     path('mypage/', views.mypage_html, name='mypage'),
     path('mypage/recommended-papers/', views.recommended_papers, name='recommended_papers'),
     path('mypage/recent-papers/', views.recent_papers, name='recent_papers'),
@@ -68,7 +77,7 @@ urlpatterns = [
     # 폴더 이미지 보여주기
     path('folder-images/', views.get_folder_images, name='folder_images'),
 
-    # 리포팅
+    # 리포팅 관련
     path('get-images/', views.get_images, name='get_images'),
     path('submit-report/', views.submit_report, name='submit_report'),
     path('reporting/', views.reporting, name='reporting'),
@@ -87,7 +96,8 @@ urlpatterns = [
     path('api/author_search/', views.author_search, name='author_search'),
     path('api/affiliation_search/', views.affiliation_search, name='affiliation_search'),
 
-    path('get-folders/',views.get_folders, name='get_folders'),
-    path('accounts/', include('accounts.urls')),
+    path('get-folders/', views.get_folders, name='get_folders'),
 ]
+
+# 미디어 파일 설정
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

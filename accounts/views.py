@@ -109,6 +109,8 @@ def password_reset_request(request):
                 user = User.objects.get(email=email)
                 code = generate_code()
                 PasswordResetCode.objects.create(user=user, code=code)
+                
+                # 인증 코드 이메일 전송
                 send_mail(
                     'Password Reset Verification',
                     f'Your verification code is: {code}',
@@ -117,7 +119,8 @@ def password_reset_request(request):
                     fail_silently=False,
                 )
                 messages.success(request, "Verification code sent to your email.")
-                return redirect('password_reset_verify')
+                # 인증 코드 확인 페이지로 리다이렉트
+                return redirect('accounts:password_reset_verify')
             except User.DoesNotExist:
                 form.add_error('email', 'Email not registered.')
     else:
