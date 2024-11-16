@@ -255,27 +255,37 @@
         var data = new google.visualization.DataTable();
         data.addColumn('string', 'Affiliation');
         data.addColumn('number', '논문 수');
+        data.addColumn({ type: 'string', role: 'tooltip' });  // 툴팁에 표시될 전체 소속 이름
+
+        // 최대 글자 수 설정
+        var maxLength = 30;
+
         data.addRows([
             {% for affiliation_name, paper_count in affiliation_data %}
-    ['{{ affiliation_name }}', {{ paper_count }}],
-        {% endfor %}
-            ]);
+            [
+                // 30자 초과 시 글자를 잘라서 표시하고, 툴팁에는 전체 이름을 포함
+                '{% if affiliation_name|length > 30 %}{{ affiliation_name|slice:":30" }}...{% else %}{{ affiliation_name }}{% endif %}',
+                {{ paper_count }},
+                '{{ affiliation_name }}'  // 툴팁으로 전체 이름
+            ],
+            {% endfor %}
+        ]);
 
-    var options = {
-        title: '소속 기관별 논문 수',
-        chartArea: { width: '50%' },
-        legend: 'none',
-        hAxis: {
-            textStyle: { fontSize: 10 },
-        },
-        vAxis: {
-            textStyle: { fontSize: 10 }
-        }
-    };
+        var options = {
+            title: '소속 기관별 논문 수',
+            chartArea: { width: '50%' },
+            legend: 'none',
+            hAxis: {
+                textStyle: { fontSize: 10 },
+            },
+            vAxis: {
+                textStyle: { fontSize: 10 }
+            }
+        };
 
-    var chart = new google.visualization.BarChart(document.getElementById('affiliationChart'));
-    chart.draw(data, options);
-        }
+        var chart = new google.visualization.BarChart(document.getElementById('affiliationChart'));
+        chart.draw(data, options);
+    }
 
     function drawCountryChart() {
         var data = new google.visualization.DataTable();

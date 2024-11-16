@@ -1,0 +1,135 @@
+{% extends 'searchBase.html' %}
+
+{% load static %}
+
+{% block title %}AcademicLens{% endblock %}
+
+{% block content %}
+<style>
+    main {
+        width: 100%;
+    }
+    
+    /* 메인 컨테이너 설정 */
+    .container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        max-width: 800px;
+        margin: auto;
+        padding: 20px;
+    }
+
+    h1 {
+        font-size: 2.5em;
+        color: #004085;
+        margin-bottom: 20px;
+        line-height: 1.2;
+        text-align: center;
+    }
+
+    .intro-text {
+        font-size: 1.2em;
+        line-height: 1.6;
+        color: #555;
+        margin-bottom: 40px;
+        max-width: 750px;
+        text-align: center;
+    }
+
+    .section {
+        max-width: 800px;
+        width: 100%;
+        margin-top: 30px;
+    }
+
+    .section-title {
+        font-size: 1.4em;
+        color: #007bff;
+        font-weight: bold;
+        margin-top: 20px;
+    }
+
+    .section-content {
+        padding: 15px 20px;
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        line-height: 1.6;
+    }
+
+    /* 반응형 설정 */
+    @media (max-width: 768px) {
+        h1 {
+            font-size: 1.8em;
+        }
+
+        .intro-text {
+            font-size: 1em;
+        }
+
+        .section-title {
+            font-size: 1.2em;
+        }
+
+        .section-content {
+            font-size: 1em;
+            padding: 10px 15px;
+        }
+    }
+
+    @media (max-width: 480px) {
+        h1 {
+            font-size: 1.5em;
+            margin-bottom: 15px;
+        }
+
+        .intro-text {
+            font-size: 0.9em;
+            margin-bottom: 30px;
+        }
+
+        .section-title {
+            font-size: 1.1em;
+        }
+
+        .section-content {
+            font-size: 0.9em;
+            padding: 10px;
+        }
+    }
+</style>
+
+<div class="container">
+    <h1>AcademicLens</h1>
+    <p class="intro-text">AcademicLens는 국제 저명학술지 논문을 기반으로 IT 분야의 최신 연구 동향을 분석하는 시스템입니다.</p>
+
+    <!-- 활용 방법 및 기대 효과 설명 섹션 -->
+    <div class="section">
+        <p class="section-title">○ 연구 효율성 증대</p>
+        <p class="section-content">
+            연구자와 개발자는 최신 연구 동향, 주요 키워드, 주요 연구자 및 국가 간 연구 협력 관계 등을 신속히 파악할 수 있습니다. 이를 통해 연구 주제 선정과 연구 방향 설정에 도움이 되며, 새로운 연구 아이디어와 협력 기회를 발견할 수 있습니다.
+        </p>
+
+        <p class="section-title">○ 연구 질적 향상</p>
+        <p class="section-content">
+            관련 키워드와 네트워크 시각화 기능을 통해 연구 분야뿐만 아니라 인접 분야의 연구 동향까지 쉽게 파악할 수 있습니다. 이는 다학제적 접근을 촉진하고 연구의 질적 수준을 향상시키는 데 기여합니다.
+        </p>
+
+        <p class="section-title">○ 실시간 정보 접근성 향상</p>
+        <p class="section-content">
+            연구 주제와 관련된 최신 뉴스와 사회적 동향을 실시간으로 확인할 수 있어, 연구와 개발이 사회적 요구와 밀접하게 연결되도록 합니다. 이를 통해 연구의 사회적 가치와 영향력을 증대시킬 수 있습니다.
+        </p>
+
+        <p class="section-title">○ 교육 및 학습 자료로서의 활용</p>
+        <p class="section-content">
+            본 시스템은 교육 기관에서 학생들에게 최신 연구 동향을 교육하고 연구 방법론을 학습하는 자료로 활용될 수 있습니다. 특히, 연구 방향성을 탐색하는 대학원생과 연구 초기 단계의 연구자에게 귀중한 정보원이 됩니다.
+        </p>
+
+        <p class="section-title">○ 산업계 및 정부의 정책 수립 지원</p>
+        <p class="section-content">
+            산업계와 정부 기관은 IT 분야의 최신 연구 동향과 기술 개발 방향을 파악하여, 효과적인 기술 개발 전략과 연구 및 개발 투자 결정에 필요한 기초 자료로 활용할 수 있습니다. 관련 정책 및 규제 수립에도 중요한 참고 자료가 됩니다.
+        </p>
+    </div>
+</div>
+{% endblock %}

@@ -13,39 +13,55 @@
         main {
             width: 100%;
         }
+        .header {
+            display: flex;
+            justify-content: space-between; /* 로고와 버튼 사이의 공간을 확보 */
+            align-items: center; /* 수직 가운데 정렬 */
+            padding: 10px 20px; /* 상하 여백과 좌우 여백 설정 */
+            background-color: #ffffff; /* 배경색 설정 */
+        }
 
-        .container {
-            margin-left: 300px;
-            display: flex; /* 자식 요소들을 가로로 배치 */
-            width : 70%;
+        .auth-buttons {
+            display: flex;
+            gap: 10px; /* 버튼 사이의 간격 설정 */
+            align-items: center; /* 세로 중앙 정렬 */
+            margin-right: 1%;
         }
-        .table-container {
-            margin: 0 20px; /* 테이블 간의 간격 조정 */
-            text-align: center;
-            width : 100%;
+
+        .btn-login, .btn-signup {
+            padding: 8px 15px; /* 버튼 내부 여백 설정 */
+            color: #ffffff; /* 글자색 설정 */
+            background-color: #1E90FF; /* 버튼 배경색 설정 */
+            text-decoration: none; /* 밑줄 제거 */
+            border-radius: 5px; /* 버튼 모서리 둥글게 설정 */
+            border: none; /* 버튼 테두리 제거 */
+            cursor: pointer; /* 마우스 커서 포인터로 변경 */
+            font-size: 14px; /* 글자 크기 설정 */
         }
-        table {
-            border-collapse: collapse;
-            width: 100%;
+
+        .btn-login:hover, .btn-signup:hover {
+            background-color: #4682B4; /* 호버 시 배경색 변경 */
         }
-        th, td {
-            border: 1px solid #ddd;
-            padding: 8px;
-            text-align: left;
+
+        .btn-logout {
+            padding: 8px 15px;
+            color: #ffffff;
+            background-color: #1E90FF;
+            text-decoration: none;
+            border-radius: 5px;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            margin-left: 10px; /* 로그아웃 버튼과 환영 메시지 사이의 간격 추가 */
         }
-        th {
-            background-color: #f2f2f2;
+
+        .btn-logout:hover {
+            background-color: #4682B4;
         }
-        .centered-container {
-            display: flex; /* flexbox 레이아웃 사용 */
-            flex-direction: column; /* 수직 정렬 */
-            justify-content: center; /* 수평 중앙 정렬 */
-            text-align: center; /* 텍스트 중앙 정렬 */
-            width : 70%;
-            margin-left: 300px;
-        }
-        .info-container {
-            text-align: center; /* 텍스트 중앙 정렬 */
+
+        .welcome-message {
+            margin-right: 2px; /* 환영 메시지와 로그아웃 버튼 사이 간격 */
+            font-size: 16px;
         }
 
         /* 네비게이션 바 스타일링 */
@@ -152,57 +168,78 @@
             width: 40px; /* 버튼 이미지 크기 */
             height: 40px;
         }
+        
+        .container {
+            margin: 0 auto;
+            width: 92%;
+        }
+        
+        .top-section, .bottom-section {
+            width: 100%;
+        }
+        
+        .bottom-section .table-container {
+            margin: 0 20px; /* 테이블 간의 간격 조정 */
+            text-align: center;
+            width : 100%;
+        }
+        
+        table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
 
-        .header {
+        .info-container {
+            text-align: center; /* 텍스트 중앙 정렬 */
+        }
+
+        .bottom-section {
             display: flex;
-            justify-content: space-between; /* 로고와 버튼 사이의 공간을 확보 */
-            align-items: center; /* 수직 가운데 정렬 */
-            padding: 10px 20px; /* 상하 여백과 좌우 여백 설정 */
-            background-color: #ffffff; /* 배경색 설정 */
+            justify-content: space-around;
+            margin-top: 20px;
         }
-
-        .auth-buttons {
-            display: flex;
-            gap: 10px; /* 버튼 사이의 간격 설정 */
-            align-items: center; /* 세로 중앙 정렬 */
-            margin-right: 1%;
+        
+        .stat-container {
+            text-align: center;
+            padding: 20px;
+            width: 200px; /* Adjust width as needed */
         }
-
-        .btn-login, .btn-signup {
-            padding: 8px 15px; /* 버튼 내부 여백 설정 */
-            color: #ffffff; /* 글자색 설정 */
-            background-color: #1E90FF; /* 버튼 배경색 설정 */
-            text-decoration: none; /* 밑줄 제거 */
-            border-radius: 5px; /* 버튼 모서리 둥글게 설정 */
-            border: none; /* 버튼 테두리 제거 */
-            cursor: pointer; /* 마우스 커서 포인터로 변경 */
-            font-size: 14px; /* 글자 크기 설정 */
+        
+        .stat-icon {
+            width: 120px;
+            height: 120px;
+            border: 2px solid #ddd;
+            border-radius: 50%;
+            padding: 20px;
+            box-sizing: border-box;
+            margin-bottom: 10px;
         }
-
-        .btn-login:hover, .btn-signup:hover {
-            background-color: #4682B4; /* 호버 시 배경색 변경 */
+        
+        .stat-number {
+            font-size: 24px; /* Large number font size */
+            font-weight: bold;
+            color: #d32f2f; /* Red color similar to DBpia */
         }
-
-        .btn-logout {
-            padding: 8px 15px;
-            color: #ffffff;
-            background-color: #1E90FF;
-            text-decoration: none;
-            border-radius: 5px;
-            border: none;
-            cursor: pointer;
+        
+        .stat-label {
+            font-size: 18px;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+        
+        .stat-description {
             font-size: 14px;
-            margin-left: 10px; /* 로그아웃 버튼과 환영 메시지 사이의 간격 추가 */
-        }
-
-        .btn-logout:hover {
-            background-color: #4682B4;
-        }
-
-        .welcome-message {
-            margin-right: 2px; /* 환영 메시지와 로그아웃 버튼 사이 간격 */
-            font-size: 16px;
-        }
+            color: #555; /* Subtle color for description */
+            margin-top: 5px;
+        }        
     </style>
 </head>
 <body>
@@ -223,7 +260,7 @@
     <main>
         <nav class="navbar">
             <ul>
-                <li><a href="#">소개</a></li>
+                <li><a href="{% url 'introduce' %}">소개</a></li>
                 <li><a href="{% url 'post:post_list' %}">IT스타그램</a></li>
                 <li><a href="{% url 'mypage' %}">마이페이지</a></li>
                 <li><a href="{% url 'analysis_page' %}">분석 페이지</a></li>
@@ -249,16 +286,16 @@
         </div>
         <!-- 콘텐츠 시작 -->
         <div class="container">
-            <div class="table-container" style="display: flex; justify-content: space-between;">
+            <div class="top-section" style="display: flex; justify-content: space-between; width: 100%;">
                 <!-- 실시간 인기 키워드 -->
-                <div style="flex: 1; margin-right: 20px;">
+                <div class="keyword-section" style="flex: 1; margin-right: 20px;">
                     <h2>실시간 인기 키워드</h2>
                     <div style="display: flex;">
                         <!-- 첫 번째 테이블 (1-5위) -->
                         <table style="margin-right: 20px; width: 300px;">
                             <thead>
                                 <tr>
-                                    <th style="width: 60px;">Rank</th> <!-- Rank 칸 너비 증가 -->
+                                    <th style="width: 60px;">Rank</th>
                                     <th>Keyword</th>
                                 </tr>
                             </thead>
@@ -275,7 +312,7 @@
                                 {% endfor %}
                             </tbody>
                         </table>
-                
+
                         <!-- 두 번째 테이블 (6-10위) -->
                         <table style="width: 300px;">
                             <thead>
@@ -299,56 +336,60 @@
                         </table>
                     </div>
                 </div>
-        
-                <!-- 등록 논문/학회 수 -->
-                <div class="table-container" style="flex: 1; text-align: center; margin-left: 50px;">
-                    <h2>등록 논문/학회 수</h2>
-                    <div class="info-container" style="font-size: larger;">
-                        <div class="paper-info">
-                            <p>등록 논문 <br>
-                                <img src="{% static 'image/cap_paper.png' %}" alt="Paper" class="paper">
-                                <span>{{ paper_count }}건</span>
-                            </p>
-                        </div>
-                        <div class="affiliation-info">
-                            <p>등록 학회 <br>
-                                <img src="{% static 'image/cap_affiliation.png' %}" alt="Affiliation" class="affiliation">
-                                <span>{{ affiliation_count }}개</span>
-                            </p>
-                        </div>
-                    </div>
+
+                <!-- 실시간 인기 자료 -->
+                <div class="data-section" style="flex: 1; margin-left: 20px;">
+                    <h2>실시간 인기 자료</h2>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Rank</th>
+                                <th>Title</th>
+                                <th>Saved</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for paper in popular_papers %}
+                            <tr>
+                                <td>{{ forloop.counter }}</td>
+                                <td><a href="/paper/{{ paper.id }}/">{{ paper.title }}</a></td>
+                                <td>{{ paper.saved_count }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="3">No papers found.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
                 </div>
             </div>
-        </div>
 
-        <div class="centered-container">
-            <h2>실시간 인기 자료</h2>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Rank</th>
-                        <th>Title</th>
-                        <th>URL</th>
-                        <th>Saved Count</th> <!-- 저장 횟수 추가 -->
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for paper in popular_papers %}
-                    <tr>
-                        <td>{{ forloop.counter }}</td> <!-- 순위: 1부터 시작하는 인덱스 -->
-                        <td>
-                            <a href="/paper/{{ paper.id }}/">{{ paper.title }}</a> <!-- Title 링크 추가 -->
-                        </td>
-                        <td><a href="{{ paper.url }}" target="_blank">{{ paper.url }}</a></td>
-                        <td>{{ paper.saved_count }}</td> <!-- 저장 횟수 -->
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="4">No papers found.</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+            <div class="bottom-section" style="display: flex; justify-content: space-around; margin-top: 20px;">
+                <!-- 등록 논문 -->
+                <div class="stat-container">
+                    <img src="{% static 'image/cap_paper.png' %}" alt="Paper" class="stat-icon">
+                    <p class="stat-number">{{ paper_count }}건</p>
+                    <p class="stat-label">등록 논문</p>
+                    <p class="stat-description">연구와 학술 자료를 제공하는 등록 논문 수입니다.</p>
+                </div>
+            
+                <!-- 등록 학회 -->
+                <div class="stat-container">
+                    <img src="{% static 'image/cap_affiliation.png' %}" alt="Affiliation" class="stat-icon">
+                    <p class="stat-number">{{ affiliation_count }}개</p>
+                    <p class="stat-label">등록 학회</p>
+                    <p class="stat-description">등록된 학회 수입니다.</p>
+                </div>
+            
+                <!-- 가입된 사용자 수 -->
+                <div class="stat-container">
+                    <img src="{% static 'image/cap_user.png' %}" alt="User Icon" class="stat-icon">
+                    <p class="stat-number">{{ user_count }}명</p>
+                    <p class="stat-label">가입된 사용자 수</p>
+                    <p class="stat-description">AcademicLens 가입된 사용자 수입니다.</p>
+                </div>
+            </div>            
         </div>
         <!-- 콘텐츠 끝 -->
     </main>
