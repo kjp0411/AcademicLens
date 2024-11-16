@@ -1,6 +1,6 @@
 import mariadb
 from django.shortcuts import render, get_object_or_404
-from .models import Paper, Author, Keyword, Affiliation, Country, PaperAuthor, PaperAffiliation, PaperKeyword, PaperCountry, SavedPaper, RecentPaper, SearchKeyword
+from .models import Paper, Author, Keyword, Affiliation, Country, PaperAuthor, PaperAffiliation, PaperKeyword, PaperCountry, SavedPaper, RecentPaper, SearchKeyword, AuthUser
 from django.db import connection
 from collections import Counter
 from datetime import datetime
@@ -80,13 +80,21 @@ def home(request):
     popular_keywords_1_5 = SearchKeyword.objects.all().order_by('-count')[:5]
     popular_keywords_6_10 = SearchKeyword.objects.all().order_by('-count')[5:10]
 
+    # 유저 수 가져오기
+    user_count = AuthUser.objects.count()
+    
     return render(request, 'home.html', {
         'paper_count': paper_count,
         'affiliation_count': affiliation_count,
         'popular_papers': popular_papers,  # 인기 논문 데이터
         'popular_keywords_1_5': popular_keywords_1_5,  # 상위 1-5위 인기 키워드
         'popular_keywords_6_10': popular_keywords_6_10,  # 상위 6-10위 인기 키워드
+        'user_count': user_count,
     })
+
+# 소개 화면
+def introduce(request):
+    return render(request, 'introduce.html')
 
 # 검색 시 논문 출력 및 필터링
 def search(request):

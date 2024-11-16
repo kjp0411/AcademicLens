@@ -12,6 +12,7 @@ urlpatterns = [
     path('search/', views.search, name='search'),
     path('analyze/', views.analyze, name='total_graph'),
     path('paper/<int:paper_id>/', views.paper_detail, name='paper_detail'),
+    path('introduce/', views.introduce, name='introduce'),
     
     path('country-analyze/', views.country_analyze_html, name='country_analyze'),
     path('country_network/',views.country_network,name='country-network'),

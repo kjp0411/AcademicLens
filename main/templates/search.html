@@ -173,7 +173,11 @@
             <div class="search-header">
                 <div class="search-query-container">
                     <span class="search-query">
-                        검색키워드 &nbsp;&nbsp;&nbsp; <span class="highlight">{{ query }}</span>&nbsp;&nbsp;&nbsp; (검색결과 {{ total_results }}건)
+                        검색키워드 &nbsp;&nbsp;&nbsp;
+                        <span class="highlight">
+                            {{ query|slice:":30" }}{% if query|length > 30 %}...{% endif %}
+                        </span>
+                        &nbsp;&nbsp;&nbsp; (검색결과 {{ total_results }}건)
                     </span>
                     <div class="analysis-button-container">
                         <form action="{% url 'total_graph' %}" method="get" id="analysis-form">
