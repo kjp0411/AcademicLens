@@ -3,6 +3,7 @@
 {% block title %}연도별 논문 수 및 저자별 논문 수{% endblock %}
 
 {% block content %}
+
 <style>
     #papersChart,
     #authorsChart,
@@ -202,12 +203,16 @@
 <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
 <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
 <script type="text/javascript">
+
     google.charts.load('current', { 'packages': ['corechart'] });
     google.charts.setOnLoadCallback(drawPapersChart);
     google.charts.setOnLoadCallback(drawAuthorChart);
     google.charts.setOnLoadCallback(drawAffiliationChart);
     google.charts.setOnLoadCallback(drawCountryChart);
     google.charts.setOnLoadCallback(drawKeywordChart);
+
+
+    const isAuthenticated = {{ user.is_authenticated|yesno:"true,false" }};
 
     function drawPapersChart() {
         var data = new google.visualization.DataTable();
@@ -559,6 +564,13 @@
     // 이미지 저장 로직
     document.querySelectorAll('.pdf-btn').forEach(function (button) {
         button.addEventListener('click', async function () {
+
+            if (!isAuthenticated) {
+                alert("로그인 후 이용이 가능합니다.");
+                window.location.href = "{% url 'accounts:login' %}";  // 로그인 페이지로 리디렉션
+                return;
+            }
+
             const chartId = this.getAttribute('data-chart');
             const element = document.getElementById(chartId);
 
