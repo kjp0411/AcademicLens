@@ -206,6 +206,17 @@
                 <p>논문 수 (개): <span id="totalPapers">로딩 중...</span></p>
                 <p>소속: <span id="affiliation">로딩 중...</span></p>
             </div>
+            <!-- 사이드바용 Top 5 키워드 버튼 형식으로 표시 -->
+            <div id="sidebarTopKeywords">
+                <h3>사이드바 Top 5 키워드</h3>
+                <div id="sidebarTopKeywordButtons"></div> <!-- 여기에 사이드바용 키워드 버튼들이 추가됨 -->
+            </div>
+            
+            <!-- 사이드바 검색 입력란과 버튼 -->
+            <div class="sidebar-search-keyword">
+                <input type="text" id="sidebarKeywordInput" placeholder="키워드를 입력하세요">
+                <button onclick="searchSidebarKeyword()">검색</button>
+            </div>
         </div>
         <div class="main">
             <div class="chart">
@@ -270,10 +281,8 @@
 
     <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
     <script>
-
         const isAuthenticated = {{ user.is_authenticated|yesno:"true,false" }};
-
-
+        let paperChart; // 전역 변수로 그래프 객체 선언
         function getCookie(name) {
             let cookieValue = null;
             if (document.cookie && document.cookie !== '') {
@@ -314,18 +323,23 @@
             return data;
         }
 
+        // 연도별 논문 수 데이터를 받아 그래프를 렌더링하는 함수
         function renderPaperChart(data) {
             const ctx = document.getElementById('paperChart').getContext('2d');
-            const years = data.map(d => d.year);
-            const paperCounts = data.map(d => d.paper_count);
+            
+            // 기존 그래프가 있을 경우 삭제
+            if (paperChart) {
+                paperChart.destroy();
+            }
 
-            new Chart(ctx, {
+            // 새로운 데이터로 그래프 생성
+            paperChart = new Chart(ctx, {
                 type: 'line',
                 data: {
-                    labels: years,
+                    labels: data.map(d => d.year),
                     datasets: [{
                         label: '논문 수',
-                        data: paperCounts,
+                        data: data.map(d => d.paper_count),
                         borderColor: 'rgba(75, 192, 192, 1)',
                         borderWidth: 1,
                         fill: false
@@ -369,24 +383,25 @@
             return text;
         }
 
-        // 탑 키워드 5개 가져오기
+        // 탑 5 키워드를 가져와 논문 리스트 위에 표시하는 함수
         async function fetchTopKeywords() {
-            // author 이름을 기반으로 20개의 키워드를 가져옴
+            const authorName = document.getElementById('authorName').textContent;
             const response = await fetch(`/author_wordcloud/?name=${encodeURIComponent(authorName)}`);
             if (!response.ok) {
                 console.error('Error fetching top keywords:', response.statusText);
                 return;
             }
             const allKeywords = await response.json();
-            // 상위 5개 키워드만 선택
-            const topKeywords = allKeywords.slice(0, 5);
+            const topKeywords = allKeywords.slice(0, 5); // 상위 5개 키워드만 선택
             renderTopKeywordButtons(topKeywords);
         }
 
-        // 페이지 로드 시 topKeywords를 가져옴
-        fetchTopKeywords();
+       // 페이지 로드 시 탑 5 키워드를 가져와 표시
+        fetchTopKeywords().catch(error => {
+            console.error('Error fetching top keywords:', error);
+        });
 
-        // 워드클라우드 탑 5 키워드로 논문 리스트 검색
+        // 탑 5 키워드 버튼 클릭 시 네트워크와 연도별 논문 수 업데이트
         function renderTopKeywordButtons(keywords) {
             const topKeywordButtons = document.getElementById('topKeywordButtons');
             topKeywordButtons.innerHTML = ''; // 기존 버튼 제거
@@ -1055,6 +1070,156 @@
                 .then(response => response.json())
                 .then(data => data.folders || []);
         }
+
+        // 사이드바에 탑 5 키워드를 가져와서 버튼으로 표시하는 함수
+        async function fetchSidebarTopKeywords() {
+            try {
+                const response = await fetch(`/author_wordcloud/?name=${encodeURIComponent(authorName)}`);
+                
+                if (!response.ok) {
+                    throw new Error("Error fetching top keywords");
+                }
+
+                const allKeywords = await response.json();
+                const topKeywords = allKeywords.slice(0, 5); // 상위 5개의 키워드 선택
+                renderSidebarTopKeywordButtons(topKeywords);
+            } catch (error) {
+                console.error("Error fetching sidebar top keywords:", error);
+            }
+        }
+
+        // 탑 5 키워드를 사이드바에 버튼 형태로 표시하는 함수
+        function renderSidebarTopKeywordButtons(keywords) {
+            const sidebarTopKeywordButtons = document.getElementById('sidebarTopKeywordButtons');
+            sidebarTopKeywordButtons.innerHTML = ''; // 기존 버튼 초기화
+
+            keywords.forEach(([keyword]) => {
+                const button = document.createElement('button');
+                button.textContent = keyword;
+                button.onclick = () => {
+                    document.getElementById('sidebarKeywordInput').value = keyword;
+                    searchSidebarKeyword(keyword); // 버튼 클릭 시 검색 수행
+                };
+                sidebarTopKeywordButtons.appendChild(button);
+            });
+        }
+
+        // 네트워크를 키워드로 필터링하여 업데이트
+        function updateNetworkWithKeyword(author, keyword) {
+            fetch(`/author_network/?name=${encodeURIComponent(author)}&keyword=${encodeURIComponent(keyword)}`)
+                .then(response => response.json())
+                .then(data => {
+                    const networkContainer = document.getElementById('network');
+                    networkContainer.innerHTML = ''; // 기존 네트워크 초기화
+
+                    if (data.nodes && data.nodes.length > 0) {
+                        // 데이터가 있을 경우 시각화
+                        visualizeNetwork(data);
+                    } else {
+                        // 데이터가 없을 경우 메시지 표시
+                        networkContainer.innerHTML = '<p>검색 결과에 해당하는 네트워크 데이터가 없습니다.</p>';
+                    }
+                })
+                .catch(error => console.error('Error fetching filtered network data:', error));
+        }
+
+        // 사이드바에서 키워드 검색 시 호출되는 함수
+        function searchSidebarKeyword() {
+            const keyword = document.getElementById('sidebarKeywordInput').value.trim();
+            const author = document.getElementById('authorName').innerText;
+
+            if (!keyword) {
+                alert("키워드를 입력하세요.");
+                return;
+            }
+
+            // 네트워크, 연도별 논문 수, 워드클라우드 모두 업데이트
+            updateNetworkWithKeyword(author, keyword);
+            updatePaperCountsByYear(author, keyword); // 연도별 논문 수 업데이트
+            updateWordCloudWithKeyword(keyword);
+        }
+
+        // 연도별 논문 수 데이터를 업데이트하는 함수
+        function updatePaperCountsByYear(author, keyword) {
+            fetch(`/api/author_paper_counts_by_year/?name=${encodeURIComponent(author)}&keyword=${encodeURIComponent(keyword)}`)
+                .then(response => response.json())
+                .then(data => {
+                    renderPaperChart(data); // 새 데이터로 그래프 렌더링
+                })
+                .catch(error => console.error('Error fetching paper counts by year:', error));
+        }
+
+        // 워드 클라우드 데이터를 가져오는 함수
+        async function fetchWordCloudData(keyword = '') {
+            const authorName = document.getElementById('authorName').textContent;
+            let url = `/author_wordcloud/?name=${encodeURIComponent(authorName)}`;
+
+            // 키워드가 있을 경우 쿼리 파라미터에 추가
+            if (keyword) {
+                url += `&keyword=${encodeURIComponent(keyword)}`;
+            }
+
+            const response = await fetch(url);
+            if (!response.ok) {
+                console.error('Network response was not ok', response.statusText);
+                return;
+            }
+            const data = await response.json();
+            return data;
+        }
+
+        // 워드 클라우드를 렌더링하는 함수
+        function renderWordCloud(data) {
+            const words = data.map(d => [d[0], d[1]]);
+            const wordCloudContainer = document.getElementById('wordcloud');
+
+            // 기존 워드클라우드를 초기화
+            wordCloudContainer.innerHTML = '';
+
+            WordCloud(wordCloudContainer, {
+                list: words,
+                gridSize: 5,
+                weightFactor: function (size) {
+                    return Math.max(12, size * 5);
+                },
+                fontFamily: 'Arial, sans-serif',
+                color: function () {
+                    return getRandomColor();
+                },
+                rotateRatio: 0.5,
+                rotationSteps: 2,
+                backgroundColor: '#fff',
+                drawOutOfBound: false,
+                click: function (item) {
+                    alert(item[0] + ': ' + item[1]);
+                }
+            });
+        }
+
+        // 사이드바 키워드를 클릭하거나 입력 키워드로 검색할 때 워드 클라우드를 업데이트하는 함수
+        function updateWordCloudWithKeyword(keyword) {
+            fetchWordCloudData(keyword)
+                .then(data => {
+                    if (data) {
+                        renderWordCloud(data);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching word cloud data with keyword:', error);
+                });
+        }
+
+        // 초기 로드 시 기본 워드 클라우드 데이터를 가져옴
+        fetchWordCloudData().then(data => {
+            if (data) {
+                renderWordCloud(data);
+            }
+        }).catch(error => {
+            console.error('Error fetching initial word cloud data:', error);
+        });
+
+        // 페이지 로드 시 기본 탑 5 키워드를 로드하여 사이드바에 표시
+        document.addEventListener('DOMContentLoaded', fetchSidebarTopKeywords);
     </script>
 </body>
 
