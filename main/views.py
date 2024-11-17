@@ -553,6 +553,8 @@ def analyze(request):
             paper_ids = get_author_paper_ids(user_keyword, start_year=start_year, end_year=end_year)
         elif filter_type == 'country':
             paper_ids = get_country_paper_ids(user_keyword, start_year=start_year, end_year=end_year)
+        elif filter_type == 'affiliation':
+            paper_ids = get_affiliation_paper_ids(user_keyword, start_year=start_year, end_year=end_year)
 
         papers = Paper.objects.filter(id__in=paper_ids)
         total_results = papers.count()
@@ -686,69 +688,6 @@ def analyze(request):
 
         return render(request, 'total_graph.html', context)
     
-
-# Django orm 사용
-# from collections import Counter
-# from django.db.models import Count
-# from django.shortcuts import render
-# from .models import Paper, Author, Affiliation, Country, Keyword
-
-# def analyze(request):
-#     if 'query' in request.GET:
-#         user_keyword = request.GET['query']
-#         paper_ids = get_paper_ids(user_keyword)
-
-#         papers_count = []
-#         if paper_ids:
-#             papers_count = (Paper.objects
-#                             .filter(id__in=paper_ids)
-#                             .values('date__year')
-#                             .annotate(count=Count('id'))
-#                             .order_by('date__year'))
-
-#         author_counts = []
-#         if paper_ids:
-#             author_counts = (Author.objects
-#                              .filter(paperauthor__paper_id__in=paper_ids)
-#                              .values('name')
-#                              .annotate(publications_count=Count('paperauthor__paper'))
-#                              .order_by('-publications_count')[:10])
-
-#         affiliation_counts = []
-#         if paper_ids:
-#             affiliation_counts = (Affiliation.objects
-#                                   .filter(paperaffiliation__paper_id__in=paper_ids)
-#                                   .values('name')
-#                                   .annotate(publications_count=Count('paperaffiliation__paper'))
-#                                   .order_by('-publications_count')[:10])
-
-#         country_counts = []
-#         if paper_ids:
-#             country_counts = (Country.objects
-#                               .filter(papercountry__paper_id__in=paper_ids)
-#                               .values('name')
-#                               .annotate(publications_count=Count('papercountry__paper'))
-#                               .order_by('-publications_count')[:10])
-
-#         keyword_counts = Counter()
-#         if paper_ids:
-#             keywords = (Keyword.objects
-#                         .filter(paperkeyword__paper_id__in=paper_ids)
-#                         .values_list('keyword_name', flat=True))
-#             keyword_counts.update(keywords)
-
-#         top_keywords = keyword_counts.most_common(10)
-
-#         context = {
-#             'papers_count': list(papers_count),
-#             'author_data': [(item['name'], item['publications_count']) for item in author_counts],
-#             'affiliation_data': [(item['name'], item['publications_count']) for item in affiliation_counts],
-#             'country_data': [(item['name'], item['publications_count']) for item in country_counts],
-#             'top_keywords': top_keywords,
-#             'keyword': user_keyword
-#         }
-
-#         return render(request, 'total_graph.html', context)
 
 def get_paper_ids_country(country):
     # MariaDB 데이터베이스 연결
@@ -905,7 +844,10 @@ def country_network(request):
 
         # paper_ids를 가져오기 위한 조건 추가
         if user_keyword:
-            paper_ids = get_filtered_paper_ids(user_keyword, original_country_name)
+            paper_ids = country_get_filtered_paper_ids(user_keyword, original_country_name)
+            # 검색 결과가 없을 경우 빈 네트워크 데이터 반환
+            if not paper_ids:
+                return JsonResponse({"nodes": [], "links": [], "center_node": original_country_name})
         else:
             paper_ids = get_paper_ids_country(original_country_name)
 
@@ -990,7 +932,7 @@ def country_network(request):
 
     
 # 워드클라우드 키워드 필터링 적용할 때 사용할 논문 id 가져오는 함수    
-def get_filtered_paper_ids(user_keyword, country, start_year=2019, end_year=2024):
+def country_get_filtered_paper_ids(user_keyword, country, start_year=2019, end_year=2024):
     # Step 1: 키워드 기반 논문 ID 가져오기
     paper_ids = get_paper_ids(user_keyword, start_year, end_year)
     
@@ -1034,7 +976,7 @@ def country_wordcloud(request):
 
     # 검색어가 있으면 필터링된 논문 ID를 가져오고, 없으면 기본 국가 기준으로 논문 ID를 가져옴
     if user_keyword:
-        paper_ids = get_filtered_paper_ids(user_keyword, country)
+        paper_ids = country_get_filtered_paper_ids(user_keyword, country)
     else:
         paper_ids = get_paper_ids_country(country)
 
@@ -1069,19 +1011,31 @@ def country_wordcloud(request):
 # 국가의 연도별 논문 수 함수
 def country_get_paper_counts_by_year(request):
     country_name = request.GET.get('name')
-    with connection.cursor() as cursor:
-        cursor.execute("""
-            SELECT YEAR(p.date) AS year, COUNT(DISTINCT p.id) AS paper_count
-            FROM paper p
-            JOIN paper_country pc ON p.id = pc.paper_id
-            JOIN country c ON pc.country_id = c.id
-            WHERE c.name = %s
-            GROUP BY YEAR(p.date)
-            ORDER BY YEAR(p.date);
-        """, [country_name])
-        
-        rows = cursor.fetchall()
-    
+    user_keyword = request.GET.get('keyword', '').strip()  # 사용자가 입력한 키워드
+
+    # 키워드가 있으면 필터링된 논문 ID 가져오기
+    if user_keyword:
+        paper_ids = country_get_filtered_paper_ids(user_keyword, country_name)
+    else:
+        paper_ids = get_paper_ids_country(country_name)
+
+    if paper_ids:
+        placeholders = ', '.join(['%s'] * len(paper_ids))  # placeholders 생성
+        with connection.cursor() as cursor:
+            cursor.execute(f"""
+                SELECT YEAR(p.date) AS year, COUNT(DISTINCT p.id) AS paper_count
+                FROM paper p
+                JOIN paper_country pc ON p.id = pc.paper_id
+                JOIN country c ON pc.country_id = c.id
+                WHERE c.name = %s AND p.id IN ({placeholders})
+                GROUP BY YEAR(p.date)
+                ORDER BY YEAR(p.date);
+            """, [country_name] + paper_ids)
+            
+            rows = cursor.fetchall()
+    else:
+        rows = []
+
     # 데이터를 JSON 형식으로 변환
     data = [{'year': row[0], 'paper_count': row[1]} for row in rows]
     
@@ -1202,13 +1156,56 @@ class AnalyzeKeywordData(CsrfExemptMixin, APIView):
 def affiliation_analyze_html(request):
     return render(request, 'affiliation_analyze.html')
 
+def affiliation_get_filtered_paper_ids(user_keyword, affiliation):
+    # Step 1: 키워드 기반 논문 ID 가져오기
+    paper_ids = get_paper_ids(user_keyword)
+
+    if not paper_ids:
+        # 키워드에 맞는 논문이 없으면 빈 결과 반환
+        return []
+
+    # Step 2: 소속 필터를 적용하여 논문 ID 필터링
+    db = mariadb.connect(**db_config)
+    cursor = db.cursor(dictionary=True)
+
+    placeholders = ', '.join(['%s'] * len(paper_ids))
+    query = f"""
+        SELECT DISTINCT p.id
+        FROM paper p
+        JOIN paper_affiliation pa ON p.id = pa.paper_id
+        JOIN affiliation a ON pa.affiliation_id = a.id
+        WHERE p.id IN ({placeholders}) AND a.name = %s;
+    """
+    params = paper_ids + [affiliation]
+    cursor.execute(query, params)
+
+    # 최종 필터링된 논문 ID 가져오기
+    filtered_paper_ids = [row['id'] for row in cursor.fetchall()]
+
+    cursor.close()
+    db.close()
+
+    return filtered_paper_ids
+
 # 소속 네트워크 시각화
 def affiliation_network(request):
     try:
-        original_affiliation_name = request.GET.get('name')  # 중심 노드의 이름을 지정
+        original_affiliation_name = request.GET.get('name')
+        user_keyword = request.GET.get('keyword', '').strip()
 
+        # 논문 ID 필터링 적용
+        if user_keyword:
+            paper_ids = affiliation_get_filtered_paper_ids(user_keyword, original_affiliation_name)
+        else:
+            paper_ids = get_paper_ids_affiliation(original_affiliation_name)
+
+        if not paper_ids:
+            return JsonResponse({"nodes": [], "links": []})
+
+        placeholders = ', '.join(['%s'] * len(paper_ids))
+        
         with connection.cursor() as cursor:
-            query = """
+            query = f"""
             WITH affiliation_paper_count AS (
                 SELECT 
                     a.name AS affiliation_name, 
@@ -1220,7 +1217,6 @@ def affiliation_network(request):
                 GROUP BY 
                     a.name
             )
-
             SELECT 
                 a1.name AS original_affiliation, 
                 a2.name AS co_affiliation,
@@ -1240,38 +1236,32 @@ def affiliation_network(request):
             JOIN 
                 affiliation_paper_count apc2 ON a2.name = apc2.affiliation_name
             WHERE 
-                a1.name = %s AND a2.name != %s
+                a1.name = %s AND a2.name != %s AND pa1.paper_id IN ({placeholders})
             GROUP BY 
                 a1.name, a2.name, apc1.total_papers, apc2.total_papers
             ORDER BY 
                 num_papers DESC;
             """
             
-            cursor.execute(query, [original_affiliation_name, original_affiliation_name])
+            cursor.execute(query, [original_affiliation_name, original_affiliation_name] + paper_ids)
             rows = cursor.fetchall()
 
-        nodes = []
-        links = []
-        node_set = set()
+        nodes, links, node_set = [], [], set()
 
         for row in rows:
-            original_affiliation = row[0]
-            co_affiliation = row[1]
-            num_papers = row[2] * 10
-            original_affiliation_total_papers = row[3] * 100
-            co_affiliation_total_papers = row[4] * 50
+            original_affiliation, co_affiliation, num_papers = row[0], row[1], row[2] * 10
+            original_total_papers, co_total_papers = row[3] * 100, row[4] * 50
 
             if original_affiliation not in node_set:
-                nodes.append({"id": original_affiliation, "total_papers": original_affiliation_total_papers})
+                nodes.append({"id": original_affiliation, "total_papers": original_total_papers})
                 node_set.add(original_affiliation)
             if co_affiliation not in node_set:
-                nodes.append({"id": co_affiliation, "total_papers": co_affiliation_total_papers})
+                nodes.append({"id": co_affiliation, "total_papers": co_total_papers})
                 node_set.add(co_affiliation)
             
             links.append({"source": original_affiliation, "target": co_affiliation, "value": num_papers})
 
-        network_data = {"nodes": nodes, "links": links, "center_node": original_affiliation_name}
-        return JsonResponse(network_data)
+        return JsonResponse({"nodes": nodes, "links": links, "center_node": original_affiliation_name})
 
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)
@@ -1279,25 +1269,30 @@ def affiliation_network(request):
 # 소속 워드클라우드
 def affiliation_wordcloud(request):
     affiliation = request.GET.get('name')
-    # 키워드 카운트 초기화
+    user_keyword = request.GET.get('keyword', '').strip()  # 키워드 파라미터 추가
     keyword_counts = Counter()
 
-    paper_ids = get_paper_ids_affiliation(affiliation)
+    # 키워드가 있을 경우 필터링된 논문 ID를 가져옴
+    if user_keyword:
+        paper_ids = affiliation_get_filtered_paper_ids(user_keyword, affiliation)
+    else:
+        paper_ids = get_paper_ids_affiliation(affiliation)
 
     if paper_ids:
-        placeholders = ', '.join(['%s'] * len(paper_ids))  # placeholders 생성
-        # MariaDB 연결
+        placeholders = ', '.join(['%s'] * len(paper_ids))
+        
+        # 데이터베이스 연결
         db = mariadb.connect(**db_config)
         cursor = db.cursor()
-
+        
         cursor.execute(f"""
-        SELECT k.keyword_name
-        FROM paper_keyword pk
-        JOIN keyword k ON pk.keyword_id = k.id
-        WHERE pk.paper_id IN ({placeholders});
+            SELECT k.keyword_name
+            FROM paper_keyword pk
+            JOIN keyword k ON pk.keyword_id = k.id
+            WHERE pk.paper_id IN ({placeholders});
         """, paper_ids)
 
-        # 쿼리 결과 가져오기
+        # 쿼리 결과를 가져와서 키워드 카운트 업데이트
         keywords = [row[0] for row in cursor.fetchall()]
         keyword_counts.update(keywords)
 
@@ -1305,7 +1300,7 @@ def affiliation_wordcloud(request):
         cursor.close()
         db.close()
 
-    # 빈도수가 높은 top 10 키워드 출력하기
+    # 상위 20개 키워드만 반환
     top_keywords = keyword_counts.most_common(20)
     top_keywords_list = [[keyword, count] for keyword, count in top_keywords]
 
@@ -1314,21 +1309,37 @@ def affiliation_wordcloud(request):
 # 소속 연도별 논문 수
 def affiliation_get_paper_counts_by_year(request):
     affiliation_name = request.GET.get('name')
+    user_keyword = request.GET.get('keyword', '').strip()
+
+    # 검색어가 있는 경우 필터링된 paper_ids 가져오기
+    if user_keyword:
+        paper_ids = affiliation_get_filtered_paper_ids(user_keyword, affiliation_name)
+        # 검색 결과가 없을 경우 빈 리스트 반환
+        if not paper_ids:
+            return JsonResponse([], safe=False)
+        
+        placeholders = ', '.join(['%s'] * len(paper_ids))
+        query_filter = f"AND p.id IN ({placeholders})"
+        query_params = [affiliation_name] + paper_ids
+    else:
+        # 검색어가 없을 경우 소속 이름만으로 필터링
+        query_filter = ""
+        query_params = [affiliation_name]
+
     with connection.cursor() as cursor:
-        cursor.execute("""
+        cursor.execute(f"""
             SELECT YEAR(p.date) AS year, COUNT(DISTINCT p.id) AS paper_count
             FROM paper p
             JOIN paper_affiliation pa ON p.id = pa.paper_id
-            JOIN affiliation a ON pa.affiliation_id = a.id
-            WHERE a.name = %s
+            WHERE pa.affiliation_id IN (SELECT id FROM affiliation WHERE name = %s)
+            {query_filter}
             GROUP BY YEAR(p.date)
             ORDER BY YEAR(p.date);
-        """, [affiliation_name])
+        """, query_params)
         
         rows = cursor.fetchall()
     
     data = [{'year': row[0], 'paper_count': row[1]} for row in rows]
-    
     return JsonResponse(data, safe=False)
 
 #소속 논문 리스트 함수
@@ -1398,13 +1409,59 @@ def affiliation_get_total_papers(request):
 def author_analyze_html(request):
     return render(request, 'author_analyze.html')
 
+
+# 저자 워드클라우드 키워드 필터링 적용할 때 사용할 논문 id 가져오는 함수
+def author_get_filtered_paper_ids(user_keyword, author, start_year=2019, end_year=2024):
+    # Step 1: 키워드와 연도 범위 기반 논문 ID 가져오기
+    paper_ids = get_paper_ids(user_keyword, start_year, end_year)
+    
+    if not paper_ids:
+        # 키워드에 맞는 논문이 없으면 빈 결과 반환
+        return []
+
+    # Step 2: 저자 이름 기반으로 필터링된 논문 ID 가져오기
+    # 저자에 해당하는 논문 ID만 paper_ids에서 필터링
+    db = mariadb.connect(**db_config)
+    cursor = db.cursor(dictionary=True)
+
+    # 저자 필터를 적용하여 paper_ids 중에서 해당 저자의 논문만 가져오기
+    placeholders = ', '.join(['%s'] * len(paper_ids))
+    query = f"""
+        SELECT DISTINCT p.id
+        FROM paper p
+        JOIN paper_author pa ON p.id = pa.paper_id
+        JOIN author a ON pa.author_id = a.id
+        WHERE p.id IN ({placeholders}) AND a.name = %s;
+    """
+    params = paper_ids + [author]
+    cursor.execute(query, params)
+
+    # 최종 필터링된 논문 ID 가져오기
+    filtered_paper_ids = [row['id'] for row in cursor.fetchall()]
+
+    # 데이터베이스 연결 종료
+    cursor.close()
+    db.close()
+
+    return filtered_paper_ids
+
+
 # 저자 네트워크 시각화
 def author_network(request):
-    try:
-        original_author_name = request.GET.get('name')  # 중심 노드의 이름을 지정
+    original_author_name = request.GET.get('name')
+    user_keyword = request.GET.get('keyword')
 
-        with connection.cursor() as cursor:
-            query = """
+    # 키워드에 따라 필터링된 논문 ID 가져오기
+    if user_keyword:
+        paper_ids = author_get_filtered_paper_ids(user_keyword, original_author_name)
+        if not paper_ids:
+            return JsonResponse({"nodes": [], "links": [], "center_node": original_author_name})
+    else:
+        paper_ids = get_paper_ids_author(original_author_name)
+
+    with connection.cursor() as cursor:
+        placeholders = ', '.join(['%s'] * len(paper_ids))
+        query = f"""
             WITH author_paper_count AS (
                 SELECT 
                     a.name AS author_name, 
@@ -1438,71 +1495,66 @@ def author_network(request):
                 author_paper_count apc2 ON a2.name = apc2.author_name
             WHERE 
                 a1.name = %s AND a2.name != %s
+                AND pa1.paper_id IN ({placeholders}) AND pa2.paper_id IN ({placeholders})
             GROUP BY 
                 a1.name, a2.name, apc1.total_papers, apc2.total_papers
             ORDER BY 
                 num_papers DESC;
-            """
-            
-            cursor.execute(query, [original_author_name, original_author_name])
-            rows = cursor.fetchall()
+        """
+        cursor.execute(query, [original_author_name, original_author_name] + paper_ids * 2)
+        rows = cursor.fetchall()
 
-        nodes = []
-        links = []
-        node_set = set()
+    nodes = []
+    links = []
+    node_set = set()
 
-        for row in rows:
-            original_author = row[0]
-            co_author = row[1]
-            num_papers = row[2] * 10
-            original_author_total_papers = row[3] * 100
-            co_author_total_papers = row[4] * 50
+    for row in rows:
+        original_author = row[0]
+        co_author = row[1]
+        num_papers = row[2] * 10
+        original_author_total_papers = row[3] * 100
+        co_author_total_papers = row[4] * 50
 
-            if original_author not in node_set:
-                nodes.append({"id": original_author, "total_papers": original_author_total_papers})
-                node_set.add(original_author)
-            if co_author not in node_set:
-                nodes.append({"id": co_author, "total_papers": co_author_total_papers})
-                node_set.add(co_author)
-            
-            links.append({"source": original_author, "target": co_author, "value": num_papers})
+        if original_author not in node_set:
+            nodes.append({"id": original_author, "total_papers": original_author_total_papers})
+            node_set.add(original_author)
+        if co_author not in node_set:
+            nodes.append({"id": co_author, "total_papers": co_author_total_papers})
+            node_set.add(co_author)
+        
+        links.append({"source": original_author, "target": co_author, "value": num_papers})
 
-        network_data = {"nodes": nodes, "links": links, "center_node": original_author_name}
-        return JsonResponse(network_data)
-
-    except Exception as e:
-        return JsonResponse({"error": str(e)}, status=500)
+    network_data = {"nodes": nodes, "links": links, "center_node": original_author_name}
+    return JsonResponse(network_data)
     
 # 저자 워드클라우드 시각화
 def author_wordcloud(request):
     author = request.GET.get('name')
-    # 키워드 카운트 초기화
+    user_keyword = request.GET.get('keyword', '').strip()
     keyword_counts = Counter()
 
-    paper_ids = get_paper_ids_author(author)
+    if user_keyword:
+        paper_ids = author_get_filtered_paper_ids(user_keyword, author)
+    else:
+        paper_ids = get_paper_ids_author(author)
 
     if paper_ids:
-        placeholders = ', '.join(['%s'] * len(paper_ids))  # placeholders 생성
-        # MariaDB 연결
+        placeholders = ', '.join(['%s'] * len(paper_ids))
         db = mariadb.connect(**db_config)
         cursor = db.cursor()
-
         cursor.execute(f"""
-        SELECT k.keyword_name
-        FROM paper_keyword pk
-        JOIN keyword k ON pk.keyword_id = k.id
-        WHERE pk.paper_id IN ({placeholders});
+            SELECT k.keyword_name
+            FROM paper_keyword pk
+            JOIN keyword k ON pk.keyword_id = k.id
+            WHERE pk.paper_id IN ({placeholders});
         """, paper_ids)
 
-        # 쿼리 결과 가져오기
         keywords = [row[0] for row in cursor.fetchall()]
         keyword_counts.update(keywords)
 
-        # 데이터베이스 연결 종료
         cursor.close()
         db.close()
 
-    # 빈도수가 높은 top 10 키워드 출력하기
     top_keywords = keyword_counts.most_common(20)
     top_keywords_list = [[keyword, count] for keyword, count in top_keywords]
 
@@ -1511,21 +1563,30 @@ def author_wordcloud(request):
 # 저자 연도별 논문 수
 def author_get_paper_counts_by_year(request):
     author_name = request.GET.get('name')
-    with connection.cursor() as cursor:
-        cursor.execute("""
-            SELECT YEAR(p.date) AS year, COUNT(*) AS paper_count
-            FROM paper p
-            JOIN paper_author pa ON p.id = pa.paper_id
-            JOIN author a ON pa.author_id = a.id
-            WHERE a.name = %s
-            GROUP BY YEAR(p.date)
-            ORDER BY YEAR(p.date);
-        """, [author_name])
-        
-        rows = cursor.fetchall()
-    
+    user_keyword = request.GET.get('keyword', '').strip()
+
+    if user_keyword:
+        paper_ids = author_get_filtered_paper_ids(user_keyword, author_name)
+    else:
+        paper_ids = get_paper_ids_author(author_name)
+
+    if paper_ids:
+        placeholders = ', '.join(['%s'] * len(paper_ids))
+        with connection.cursor() as cursor:
+            cursor.execute(f"""
+                SELECT YEAR(p.date) AS year, COUNT(DISTINCT p.id) AS paper_count
+                FROM paper p
+                JOIN paper_author pa ON p.id = pa.paper_id
+                WHERE pa.author_id IN (SELECT id FROM author WHERE name = %s)
+                AND p.id IN ({placeholders})
+                GROUP BY YEAR(p.date)
+                ORDER BY YEAR(p.date);
+            """, [author_name] + paper_ids)
+            rows = cursor.fetchall()
+    else:
+        rows = []
+
     data = [{'year': row[0], 'paper_count': row[1]} for row in rows]
-    
     return JsonResponse(data, safe=False)
 
 # 저자 논문 리스트 함수

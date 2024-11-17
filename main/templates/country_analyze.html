@@ -279,6 +279,8 @@
 
     <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
     <script>
+        let paperChart; 
+        
         function getCookie(name) {
             let cookieValue = null;
             if (document.cookie && document.cookie !== '') {
@@ -309,8 +311,12 @@
         const countryName = getParameterByName('name');
         document.getElementById('countryName').textContent = countryName;
 
-        async function fetchPaperCountsByYear() {
-            const response = await fetch(`/api/country_paper_counts_by_year/?name=${encodeURIComponent(countryName)}`);
+        async function fetchPaperCountsByYear(keyword = '') {
+            const url = keyword 
+                ? `/api/country_paper_counts_by_year/?name=${encodeURIComponent(countryName)}&keyword=${encodeURIComponent(keyword)}`
+                : `/api/country_paper_counts_by_year/?name=${encodeURIComponent(countryName)}`;
+
+            const response = await fetch(url);
             if (!response.ok) {
                 console.error('Network response was not ok', response.statusText);
                 return;
@@ -319,36 +325,58 @@
             return data;
         }
 
+        // 기존 그래프가 있을 경우 삭제하고 새 그래프 렌더링
         function renderPaperChart(data) {
             const ctx = document.getElementById('paperChart').getContext('2d');
             const years = data.map(d => d.year);
             const paperCounts = data.map(d => d.paper_count);
 
-            new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: years,
-                    datasets: [{
-                        label: '논문 수',
-                        data: paperCounts,
-                        borderColor: 'rgba(75, 192, 192, 1)',
-                        borderWidth: 1,
-                        fill: false
-                    }]
-                },
-                options: {
-                    scales: {
-                        x: {
-                            beginAtZero: true
-                        },
-                        y: {
-                            beginAtZero: true
+            // 기존에 그래프가 존재하면 데이터 업데이트, 존재하지 않으면 새로 생성
+            if (paperChart) {
+                paperChart.data.labels = years;
+                paperChart.data.datasets[0].data = paperCounts;
+                paperChart.update();
+            } else {
+                paperChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: years,
+                        datasets: [{
+                            label: '논문 수',
+                            data: paperCounts,
+                            borderColor: 'rgba(75, 192, 192, 1)',
+                            borderWidth: 1,
+                            fill: false
+                        }]
+                    },
+                    options: {
+                        scales: {
+                            x: {
+                                beginAtZero: true
+                            },
+                            y: {
+                                beginAtZero: true
+                            }
                         }
                     }
-                }
-            });
+                });
+            }
         }
 
+        // 탑 5 키워드 버튼 클릭 시 그래프 업데이트
+        function updateChartWithKeyword(keyword) {
+            fetchPaperCountsByYear(keyword)
+                .then(data => {
+                    if (data) {
+                        renderPaperChart(data);  // 그래프를 초기화하고 새 데이터로 렌더링
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching paper counts by year with keyword:', error);
+                });
+        }
+
+        // 초기 로드 시 연도별 논문 수 그래프 데이터 불러오기
         fetchPaperCountsByYear().then(data => {
             if (data) {
                 renderPaperChart(data);
@@ -762,7 +790,7 @@
 
         // 24/11/12 추가된 sidebar 부분
 
-        // 사이드바 키워드 검색 함수
+        // 사이드바 키워드 검색 함수 업데이트
         function searchSidebarKeyword() {
             const keyword = document.getElementById('sidebarKeywordInput').value.trim();
             const country = document.getElementById('countryName').textContent;
@@ -783,6 +811,9 @@
 
             // 키워드 검색에 따라 네트워크 업데이트
             updateNetworkWithKeyword(country, keyword);
+
+            // 키워드 검색에 따라 연도별 논문 수 그래프 업데이트
+            updateChartWithKeyword(keyword);
         }
 
         // 네트워크를 키워드로 필터링하여 업데이트
@@ -790,13 +821,16 @@
             fetch(`/country_network/?name=${encodeURIComponent(country)}&keyword=${encodeURIComponent(keyword)}`)
                 .then(response => response.json())
                 .then(data => {
-                    // 네트워크 데이터가 비어 있는지 확인합니다.
+                    // 네트워크 데이터가 비어 있는지 확인
+                    const networkContainer = document.getElementById('network');
+                    networkContainer.innerHTML = ''; // 기존 네트워크 초기화
+
                     if (data.nodes && data.nodes.length > 0) {
-                        document.getElementById('network').innerHTML = '';  // 기존 네트워크 초기화
-                        visualizeNetwork(data);  // 새로운 네트워크 데이터로 시각화
+                        // 데이터가 있을 경우 시각화
+                        visualizeNetwork(data);
                     } else {
-                        alert("필터링된 결과에 해당하는 네트워크 데이터가 없습니다.");
-                        document.getElementById('network').innerHTML = '<p>네트워크 데이터를 찾을 수 없습니다.</p>';
+                        // 데이터가 없을 경우 메시지 표시
+                        networkContainer.innerHTML = '<p>검색 결과에 해당하는 네트워크 데이터가 없습니다.</p>';
                     }
                 })
                 .catch(error => console.error('Error fetching filtered network data:', error));
@@ -814,7 +848,7 @@
                 .catch(error => console.error('Error fetching sidebar top keywords:', error));
         }
 
-        // 사이드바용 탑 5 키워드 버튼 렌더링
+        // 사이드바용 탑 5 키워드 버튼 렌더링 함수 업데이트
         function renderSidebarTopKeywordButtons(keywords) {
             const sidebarTopKeywordButtons = document.getElementById('sidebarTopKeywordButtons');
             sidebarTopKeywordButtons.innerHTML = ''; // 기존 버튼 초기화
@@ -824,14 +858,12 @@
                 button.textContent = keyword;
                 button.onclick = () => {
                     document.getElementById('sidebarKeywordInput').value = keyword;
-                    searchSidebarKeyword(); // 버튼 클릭 시 검색 수행
+                    searchSidebarKeyword(); // 키워드에 맞게 워드클라우드 및 네트워크 업데이트
+                    updateChartWithKeyword(keyword); // 키워드에 맞게 그래프 업데이트
                 };
                 sidebarTopKeywordButtons.appendChild(button);
             });
         }
-
-        // 페이지 로드 시 기본 탑 5 키워드 로드
-        document.addEventListener('DOMContentLoaded', fetchSidebarTopKeywords);
 
         // 모달을 생성하여 폴더 선택 및 이미지 이름 입력
         function openFolderSelectModal(folders, chartId, element) {
@@ -968,6 +1000,9 @@
                 .then(response => response.json())
                 .then(data => data.folders || []);
         }
+
+        // 페이지 로드 시 기본 탑 5 키워드 로드
+        document.addEventListener('DOMContentLoaded', fetchSidebarTopKeywords); 
     </script>
 </body>
 
