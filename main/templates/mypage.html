@@ -543,7 +543,8 @@
                 body: JSON.stringify({ 'folder_name': folderName })
             }).then(response => {
                 if (response.ok) {
-                    location.reload();
+                    alert("새 폴더가 생성되었습니다.");
+                    window.location.href = "{% url 'mypage' %}";
                 } else {
                     alert("폴더 생성 실패!");
                 }
@@ -565,7 +566,8 @@
                 body: JSON.stringify({ 'old_name': folderName, 'new_name': newFolderName })
             }).then(response => {
                 if (response.ok) {
-                    location.reload();
+                    alert("폴더명이 수정되었습니다.")
+                    window.location.href = "{% url 'mypage' %}";
                 } else {
                     alert("폴더 이름 수정 실패!");
                 }
@@ -586,7 +588,8 @@
                 body: JSON.stringify({ 'folder_name': folderName })
             }).then(response => {
                 if (response.ok) {
-                    location.reload();
+                    alert("폴더가 삭제되었습니다.")
+                    window.location.href = "{% url 'mypage' %}";
                 } else {
                     alert("폴더 삭제 실패!");
                 }
@@ -608,7 +611,7 @@
             .catch(error => console.error('Error fetching images:', error));
     }
 
-    // 이미지 목록을 표시하는 함수
+    // 이미지 목록 표시 함수
     function displayImages(images, folderName) {
         const contentArea = document.getElementById('content-area');
         let html = `
@@ -624,25 +627,25 @@
             for (let i = 0; i < images.length; i += 2) {
                 html += `<tr>`;
 
-                // 첫 번째 이미지 셀
                 const imageUrl1 = new URL(images[i].url, window.location.origin).href;
                 html += `
                     <td>
-                        <div style="display: flex; flex-direction: column; align-items: center;">
-                            <img src="${imageUrl1}" alt="${images[i].name}" width="600" height="400" style="margin-bottom: 5px; cursor: pointer;" onclick="showImagePopup('${imageUrl1}', '${images[i].name}')">
+                        <div style="display: flex; flex-direction: column; align-items: center; position: relative;">
+                            <img src="${imageUrl1}" alt="${images[i].name}" width="600" height="400" style="margin-bottom: 5px; cursor: pointer;">
                             <span>${images[i].name}</span>
+                            <button onclick="deleteImage('${folderName}', '${images[i].name}')" style="position: absolute; top: 5px; right: 5px;">X</button>
                         </div>
                     </td>
                 `;
 
-                // 두 번째 이미지 셀 (있을 때만 추가)
                 if (i + 1 < images.length) {
                     const imageUrl2 = new URL(images[i + 1].url, window.location.origin).href;
                     html += `
                         <td>
-                            <div style="display: flex; flex-direction: column; align-items: center;">
-                                <img src="${imageUrl2}" alt="${images[i + 1].name}" width="600" height="400" style="margin-bottom: 5px; cursor: pointer;" onclick="showImagePopup('${imageUrl2}', '${images[i + 1].name}')">
+                            <div style="display: flex; flex-direction: column; align-items: center; position: relative;">
+                                <img src="${imageUrl2}" alt="${images[i + 1].name}" width="600" height="400" style="margin-bottom: 5px; cursor: pointer;">
                                 <span>${images[i + 1].name}</span>
+                                <button onclick="deleteImage('${folderName}', '${images[i + 1].name}')" style="position: absolute; top: 5px; right: 5px;">X</button>
                             </div>
                         </td>
                     `;
@@ -658,11 +661,34 @@
         contentArea.innerHTML = html;
     }
 
+
+    // 이미지 삭제
+    function deleteImage(folderName, imageName) {
+        fetch(`/delete-image/?folder=${encodeURIComponent(folderName)}&image=${encodeURIComponent(imageName)}`, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')  // CSRF 토큰이 필요할 경우 추가
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                alert(data.message);
+                window.location.href = "{% url 'mypage' %}";
+            } else {
+                alert(data.message);
+            }
+        })
+        .catch(error => console.error('Error deleting image:', error));
+    }
+
+
+
     // 이미지 팝업을 표시하는 함수
     function showImagePopup(imageUrl, imageName) {
         const popupHtml = `
             <div id="imagePopup" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(255, 255, 255, 0.8); display: flex; justify-content: center; align-items: center; z-index: 1000;" onclick="closeImagePopup()">
-                <div style="position: relative; text-align: center;" onclick="event.stopPropagation();">
+                <div style="position: relative; text-align: center; overflow: auto; max-width: 90%; max-height: 90%; " onclick="event.stopPropagation();">
                     <img src="${imageUrl}" alt="${imageName}" style="max-width: 50%; max-height: 50%; border: 2px solid #333; padding: 5px; border-radius: 8px;">
                     <span style="display: block; margin-top: 10px; color: #000;">${imageName}</span>
                     <span style="display: block; margin-top: 10px; color: #555; font-size: 14px;">팝업을 닫고 싶으면 닫기 버튼이나 외부 아무 곳이나 클릭하세요.</span>

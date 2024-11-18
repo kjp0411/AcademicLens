@@ -577,7 +577,6 @@
 
             if (!isAuthenticated) {
                 alert("로그인 후 이용이 가능합니다.");
-                window.location.href = "{% url 'accounts:login' %}";  // 로그인 페이지로 리디렉션
                 return;
             }
 

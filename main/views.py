@@ -472,6 +472,9 @@ def get_paper_ids(user_keyword, start_year=2019, end_year=2024):
 
 # 주어진 논문 ID 목록에 대한 abstract를 가져오는 함수
 def get_abstracts(paper_ids):
+
+    if not paper_ids:
+        return pd.DataFrame(columns=['abstract'])
     # MariaDB 데이터베이스 연결
     db = mariadb.connect(**db_config)
     # 커서 생성
@@ -1725,11 +1728,19 @@ def top3_word(username):
     abstract_data = get_abstracts(paper_ids)
 
     # abstract 컬럼 내용 추출
-    abstracts = abstract_data["abstract"]
+    abstracts = abstract_data["abstract"].tolist()
+
+    if not abstracts or all(not abstract.strip() for abstract in abstracts):
+        return []
 
     # TF-IDF 벡터화 (불용어 처리)
     tfidf_vectorizer = TfidfVectorizer(stop_words='english')
-    tfidf_matrix = tfidf_vectorizer.fit_transform(abstracts)
+    try:
+        tfidf_matrix = tfidf_vectorizer.fit_transform(abstracts)
+    except ValueError:
+        # TF-IDF에 유효한 단어가 없을 때 빈 리스트 반환
+        return []
+
 
     # 각 단어의 인덱스 확인
     feature_names = tfidf_vectorizer.get_feature_names_out()
@@ -2315,6 +2326,24 @@ def get_images(request):
             'name': filename
         })
     return JsonResponse(images, safe=False)
+
+# 이미지 삭제 뷰
+def delete_image(request):
+    if request.method == "DELETE":
+        folder_name = request.GET.get('folder')  # 폴더 이름
+        image_name = request.GET.get('image')    # 이미지 파일 이름
+        
+        # 이미지 파일의 전체 경로 구성
+        image_path = os.path.join(settings.MEDIA_ROOT, 'accounts', request.user.username, folder_name, image_name)
+
+        # 파일 존재 여부 확인 후 삭제
+        if os.path.isfile(image_path):
+            os.remove(image_path)
+            return JsonResponse({'status': 'success', 'message': '이미지가 삭제되었습니다.'})
+        else:
+            return JsonResponse({'status': 'error', 'message': '이미지를 찾을 수 없습니다.'}, status=404)
+
+    return JsonResponse({'status': 'error', 'message': '잘못된 요청입니다.'}, status=400)
 
 # 리포트 제출 및 저장
 @csrf_exempt

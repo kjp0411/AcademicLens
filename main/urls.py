@@ -77,7 +77,8 @@ urlpatterns = [
 
     # 폴더 이미지 보여주기
     path('folder-images/', views.get_folder_images, name='folder_images'),
-
+    path('delete-image/', views.delete_image, name='delete_image'),
+    
     # 리포팅 관련
     path('get-images/', views.get_images, name='get_images'),
     path('submit-report/', views.submit_report, name='submit_report'),
