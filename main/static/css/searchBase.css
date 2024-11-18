@@ -7,21 +7,27 @@ body {
     height: 100vh;
     max-width: 100%;
     overflow-x: hidden;
+    align-items: center;
 }
 
 /* 헤더 검색창 및 추천검색어 */
 .header {
     display: flex;
     align-items: center;
+    justify-content: space-between; /* 양쪽 끝에 정렬 */
     background-color: #ffffff;
     border-bottom: 1px solid #e7e7e7;
     padding: 10px 20px;
     width: 100%;
+    flex-wrap: wrap; /* 작은 화면에서 줄바꿈 허용 */
 }
 
+/* 로고 */
 .logo-container {
-    margin-top: 10px;
-    margin-left: 30%;
+    display: flex;
+    align-items: center;
+    margin-right: auto; /* 로고를 왼쪽 정렬 */
+    margin-left: 25%;
 }
 
 .logo {
@@ -30,21 +36,21 @@ body {
     margin-right: 10px;
 }
 
+/* 검색 컨테이너 */
 .search-container {
     display: flex;
     align-items: center;
     position: relative;
-    flex-wrap: nowrap;
-    margin-left: 1%;
-    margin-right: 15%;
+    flex-grow: 1;
 }
 
 .search-form {
     display: flex;
+    width: 100%;
 }
 
 .search-form input {
-    width: 500px;
+    width: 58%;
     height: 30px;
     padding: 10px;
     font-size: 20px;
@@ -69,12 +75,13 @@ body {
     background-color: #007aab;
 }
 
+/* 추천 검색어 */
 .related-terms-container {
     display: flex;
     justify-content: center;
-    margin-top: 7%;
-    margin-left: -65%;
+    width: 100%;
     text-align: center;
+    margin-top: 10px; /* 추천 검색어와 헤더 간격 */
 }
 
 .related-terms-list {
@@ -97,6 +104,48 @@ body {
 
 .related-term:hover {
     background: #f0f0f0;
+}
+
+/* 인증 버튼 */
+.auth-buttons {
+    display: flex;
+    gap: 10px; /* 버튼 간 간격 */
+    align-items: center;
+    margin-left: auto;
+    margin-right: 2%;
+}
+
+/* 반응형 미디어 쿼리 */
+@media (max-width: 768px) {
+    .header {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .search-container, .auth-buttons {
+        width: 100%;
+        justify-content: center;
+        margin-top: 10px;
+    }
+
+    .search-form input {
+        font-size: 16px;
+    }
+}
+
+@media (max-width: 480px) {
+    .logo {
+        width: 120px;
+    }
+
+    .auth-buttons {
+        flex-direction: column;
+        gap: 5px;
+    }
+
+    .search-form input {
+        font-size: 14px;
+    }
 }
 
 /* 네비게이션바 */
@@ -138,6 +187,16 @@ body {
     margin-top: 50px; /* 네비게이션바 높이만큼 여백 설정 */
 }
 
+/* 콘텐츠 영역 */
+.container {
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+    flex-wrap: wrap; /* 작은 화면에서 줄바꿈 허용 */
+    width: 92%;
+    margin: 0 auto;
+}
+
 /* 본문 */
 .content-container {
     display: flex;
@@ -155,9 +214,6 @@ ul, ol {
 
 /* 필터 컨테이너 */
 .filter-container {
-    padding: 20px;
-    margin-right: 10px;
-    margin-left: 10px;
     width: 200px;
 }
 
@@ -166,7 +222,7 @@ ul, ol {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 10px;
+    margin-top: 3%;
 }
 
 .limSearch p {
@@ -186,7 +242,7 @@ ul, ol {
 
 /* 필터 리스트 */
 .filterList {
-    padding: 0;
+    margin-top: 4%;
 }
 
 /* 필터 리스트 항목 */
@@ -309,16 +365,16 @@ ul, ol {
 
 /* 뉴스 */
 .news-container {
-    margin-left: 20px;
-    margin-right: 20px;
     border: 1px solid #333;
     width: 200px;
-    height: 500px;
+    height: 545px;
     background-color: #f9f9f9;
     overflow-y: hidden; /* 스크롤을 숨깁니다. */
     position: relative;
     display: flex;
     flex-direction: column;
+    margin-right: 2%;
+    margin-top: 5.4%;
 }
 
 .news-type {
@@ -421,52 +477,6 @@ ul, ol {
     flex-grow: 1;
 }
 
-/* 페이징 */
-.pagination {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    margin-top: 20px;
-}
-
-.pagination a {
-    color: #555;
-    float: left;
-    padding: 8px 16px;
-    text-decoration: none;
-    transition: background-color 0.3s;
-    border: 1px solid #ddd;
-    margin: 0 4px;
-    border-radius: 1px;
-}
-
-.pagination a.current {
-    background-color: #007aab;
-    color: white;
-    border: 1px solid #007aab;
-}
-
-.pagination a:hover:not(.current) {
-    background-color: #ddd;
-}
-
-.pagination a:focus {
-    outline: none;
-}
-
-.pagination .step-links a:first-child {
-    border-radius: 1px 0 0 1px;
-}
-
-.pagination .step-links a:last-child {
-    border-radius: 0 1px 1px 0;
-}
-
-.pagination .step-links {
-    display: flex;
-    align-items: center;
-}
-
 /* 논문 */
 .checkbox-container {
     position: absolute;
@@ -479,6 +489,7 @@ ul, ol {
 .cont {
     position: relative;
     padding-left: 40px; /* 체크박스의 너비를 고려하여 padding 추가 */
+    margin-right: 1%;
 }
 
 .cont-container {
@@ -488,10 +499,11 @@ ul, ol {
 .title-container {
     display: flex;
     justify-content: space-between;
+    align-items: center;
 }
 
 .title {
-    font-size: 20px;
+    flex-grow: 1; /* 제목이 가능한 넓이를 차지하도록 설정 */
 }
 
 .title a {
@@ -501,6 +513,29 @@ ul, ol {
 
 .title a:hover {
     text-decoration: underline; /* 마우스를 올렸을 때 밑줄 표시 */
+}
+
+.save-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    margin: 0;
+}
+
+.save-btn img {
+    width: 25px;
+    height: 25px;
+}
+
+.save-count {
+    display: flex;
+    align-items: center;
+}
+
+.saved-count {
+    margin-left: 5px;
+    font-weight: bold;
 }
 
 .highlight {
@@ -516,19 +551,6 @@ ul, ol {
 
 .preAbstract a:hover {
     text-decoration: underline;
-}
-
-.save-btn {
-    background: none;
-    border: none;
-    cursor: pointer;
-    padding: 0;
-    margin: 0;
-}
-
-.save-btn img {
-    width: 25px;
-    height: 25px;
 }
 
 .keyword {
@@ -631,4 +653,50 @@ ul, ol {
 
 .analysis-button-container button:hover {
     background-color: #007aab;
+}
+
+/* 페이징 */
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 20px;
+}
+
+.pagination a {
+    color: #555;
+    float: left;
+    padding: 8px 16px;
+    text-decoration: none;
+    transition: background-color 0.3s;
+    border: 1px solid #ddd;
+    margin: 0 4px;
+    border-radius: 1px;
+}
+
+.pagination a.current {
+    background-color: #007aab;
+    color: white;
+    border: 1px solid #007aab;
+}
+
+.pagination a:hover:not(.current) {
+    background-color: #ddd;
+}
+
+.pagination a:focus {
+    outline: none;
+}
+
+.pagination .step-links a:first-child {
+    border-radius: 1px 0 0 1px;
+}
+
+.pagination .step-links a:last-child {
+    border-radius: 0 1px 1px 0;
+}
+
+.pagination .step-links {
+    display: flex;
+    align-items: center;
 }

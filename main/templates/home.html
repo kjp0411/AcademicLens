@@ -5,242 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AcademicLens</title>
     {% load static %}
-    <link rel="stylesheet" href="{% static 'css/base.css' %}">
     <link rel="stylesheet" href="{% static 'css/home.css' %}">
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
     <link rel="stylesheet" href="{% static 'css/paperDetail.css' %}">
-    <style>
-        main {
-            width: 100%;
-        }
-        .header {
-            display: flex;
-            justify-content: space-between; /* 로고와 버튼 사이의 공간을 확보 */
-            align-items: center; /* 수직 가운데 정렬 */
-            padding: 10px 20px; /* 상하 여백과 좌우 여백 설정 */
-            background-color: #ffffff; /* 배경색 설정 */
-        }
-
-        .auth-buttons {
-            display: flex;
-            gap: 10px; /* 버튼 사이의 간격 설정 */
-            align-items: center; /* 세로 중앙 정렬 */
-            margin-right: 1%;
-        }
-
-        .btn-login, .btn-signup {
-            padding: 8px 15px; /* 버튼 내부 여백 설정 */
-            color: #ffffff; /* 글자색 설정 */
-            background-color: #1E90FF; /* 버튼 배경색 설정 */
-            text-decoration: none; /* 밑줄 제거 */
-            border-radius: 5px; /* 버튼 모서리 둥글게 설정 */
-            border: none; /* 버튼 테두리 제거 */
-            cursor: pointer; /* 마우스 커서 포인터로 변경 */
-            font-size: 14px; /* 글자 크기 설정 */
-        }
-
-        .btn-login:hover, .btn-signup:hover {
-            background-color: #4682B4; /* 호버 시 배경색 변경 */
-        }
-
-        .btn-logout {
-            padding: 8px 15px;
-            color: #ffffff;
-            background-color: #1E90FF;
-            text-decoration: none;
-            border-radius: 5px;
-            border: none;
-            cursor: pointer;
-            font-size: 14px;
-            margin-left: 10px; /* 로그아웃 버튼과 환영 메시지 사이의 간격 추가 */
-        }
-
-        .btn-logout:hover {
-            background-color: #4682B4;
-        }
-
-        .welcome-message {
-            margin-right: 2px; /* 환영 메시지와 로그아웃 버튼 사이 간격 */
-            font-size: 16px;
-        }
-
-        /* 네비게이션 바 스타일링 */
-        .navbar {
-            background-color: #1E90FF; /* 네비게이션 바 배경색 */
-            overflow: hidden;
-            display: flex;
-            justify-content: center; /* 가운데 정렬 */
-            margin-bottom: 0; /* 하단 여백 제거 */
-        }
-
-        .navbar ul {
-            list-style-type: none;
-            margin: 0;
-            padding: 0;
-            display: flex;
-        }
-
-        .navbar ul li {
-            float: left;
-        }
-
-        .navbar ul li a {
-            display: block;
-            color: white; /* 글자 색상 */
-            text-align: center;
-            padding: 10px;
-            text-decoration: none;
-        }
-
-        .navbar ul li a:hover {
-            background-color: #4682B4; /* 호버 시 배경색 */
-            color: white;
-        }
-
-        /* 검색창 스타일 */
-        .search-container {
-            background-color: #B0C4DE; /* 파란색 배경 */
-            padding: 20px;
-            text-align: center;
-            margin: 0; /* 상단 여백 제거 */
-            margin-bottom: 20px;
-            width: 100%; /* 창의 너비에 맞게 조정 */
-            max-width: 100%; /* 최대 너비를 100%로 설정 */
-            box-sizing: border-box; /* 패딩 포함하여 크기 계산 */
-            display: flex;
-            flex-direction: column; /* 자식 요소들을 세로로 배치 */
-            align-items: center; /* 자식 요소들을 수평으로 가운데 정렬 */
-            margin-left: 0; /* 가운데 정렬을 위한 여백 제거 */
-        }
-
-        .search-icon-wrapper {
-            margin-right: 535px;
-        }
-
-        .search-icon {
-            width: 120px;  /* 원하는 너비 */
-            height: 40px; /* 원하는 높이 */
-            margin-top: 20px;
-        }
-
-        .search-container form {
-            display: flex; /* 자식 요소들을 가로로 배치 */
-            justify-content: center; /* 가운데 정렬 */
-            max-width: 1200px; /* 최대 너비 설정 (원하는 대로 조정 가능) */
-            margin: 0 auto; /* 양쪽 여백을 자동으로 설정하여 가운데 정렬 */
-            margin-top: -10px;
-        }
-
-        .search-container select, 
-        .search-container input[type="text"], 
-        .search-container button {
-            padding: 10px;
-            font-size: 16px;
-            margin: 5px;
-            border-radius: 5px;
-            border: 1px solid #ccc;
-        }
-
-        .search-container select {
-            background-color: white;
-        }
-
-        .search-container input[type="text"] {
-            flex-grow: 1; /* 입력창이 가능한 공간을 채우도록 설정 */
-        }
-
-        .search-container button {
-            background-color: #1E90FF; /* 파란색 버튼 */
-            color: white;
-            border: none;
-            cursor: pointer;
-            display: flex; /* 이미지와 텍스트가 함께 정렬되도록 설정 */
-            align-items: center;
-            justify-content: center;
-            padding: 0; /* 버튼 내부 여백 제거 */
-        }
-
-        .search-container button:hover {
-            background-color: #4682B4; /* 버튼 호버시 색상 */
-        }
-
-        .search-container button img {
-            width: 40px; /* 버튼 이미지 크기 */
-            height: 40px;
-        }
-        
-        .container {
-            margin: 0 auto;
-            width: 92%;
-        }
-        
-        .top-section, .bottom-section {
-            width: 100%;
-        }
-        
-        .bottom-section .table-container {
-            margin: 0 20px; /* 테이블 간의 간격 조정 */
-            text-align: center;
-            width : 100%;
-        }
-        
-        table {
-            border-collapse: collapse;
-            width: 100%;
-        }
-        th, td {
-            border: 1px solid #ddd;
-            padding: 8px;
-            text-align: left;
-        }
-        th {
-            background-color: #f2f2f2;
-        }
-
-        .info-container {
-            text-align: center; /* 텍스트 중앙 정렬 */
-        }
-
-        .bottom-section {
-            display: flex;
-            justify-content: space-around;
-            margin-top: 20px;
-        }
-        
-        .stat-container {
-            text-align: center;
-            padding: 20px;
-            width: 200px; /* Adjust width as needed */
-        }
-        
-        .stat-icon {
-            width: 120px;
-            height: 120px;
-            border: 2px solid #ddd;
-            border-radius: 50%;
-            padding: 20px;
-            box-sizing: border-box;
-            margin-bottom: 10px;
-        }
-        
-        .stat-number {
-            font-size: 24px; /* Large number font size */
-            font-weight: bold;
-            color: #d32f2f; /* Red color similar to DBpia */
-        }
-        
-        .stat-label {
-            font-size: 18px;
-            font-weight: bold;
-            margin-top: 10px;
-        }
-        
-        .stat-description {
-            font-size: 14px;
-            color: #555; /* Subtle color for description */
-            margin-top: 5px;
-        }        
-    </style>
 </head>
 <body>
     <header class="header">
@@ -286,83 +53,81 @@
         </div>
         <!-- 콘텐츠 시작 -->
         <div class="container">
-            <div class="top-section" style="display: flex; justify-content: space-between; width: 100%;">
-                <!-- 실시간 인기 키워드 -->
-                <div class="keyword-section" style="flex: 1; margin-right: 20px;">
-                    <h2>실시간 인기 키워드</h2>
-                    <div style="display: flex;">
-                        <!-- 첫 번째 테이블 (1-5위) -->
-                        <table style="margin-right: 20px; width: 300px;">
-                            <thead>
-                                <tr>
-                                    <th style="width: 60px;">Rank</th>
-                                    <th>Keyword</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for keyword in popular_keywords_1_5 %}
-                                <tr>
-                                    <td>{{ forloop.counter }}</td>
-                                    <td><a href="/search/?filter=paper&query={{ keyword.keyword }}">{{ keyword.keyword }}</a></td>
-                                </tr>
-                                {% empty %}
-                                <tr>
-                                    <td colspan="2">No popular keywords found.</td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-
-                        <!-- 두 번째 테이블 (6-10위) -->
-                        <table style="width: 300px;">
-                            <thead>
-                                <tr>
-                                    <th style="width: 60px;">Rank</th>
-                                    <th>Keyword</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for keyword in popular_keywords_6_10 %}
-                                <tr>
-                                    <td>{{ forloop.counter|add:5 }}</td>
-                                    <td><a href="/search/?filter=paper&query={{ keyword.keyword }}">{{ keyword.keyword }}</a></td>
-                                </tr>
-                                {% empty %}
-                                <tr>
-                                    <td colspan="2">No popular keywords found.</td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <!-- 실시간 인기 자료 -->
-                <div class="data-section" style="flex: 1; margin-left: 20px;">
-                    <h2>실시간 인기 자료</h2>
-                    <table>
+            <!-- 실시간 인기 키워드 -->
+            <div class="keyword-section">
+                <h2>실시간 인기 키워드</h2>
+                <div style="display: flex;">
+                    <!-- 첫 번째 테이블 (1-5위) -->
+                    <table style="margin-right: 20px; width: 300px;">
                         <thead>
                             <tr>
-                                <th>Rank</th>
-                                <th>Title</th>
-                                <th>Saved</th>
+                                <th style="width: 60px;">Rank</th>
+                                <th>Keyword</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {% for paper in popular_papers %}
+                            {% for keyword in popular_keywords_1_5 %}
                             <tr>
                                 <td>{{ forloop.counter }}</td>
-                                <td><a href="/paper/{{ paper.id }}/">{{ paper.title }}</a></td>
-                                <td>{{ paper.saved_count }}</td>
+                                <td><a href="/search/?filter=paper&query={{ keyword.keyword }}">{{ keyword.keyword }}</a></td>
                             </tr>
                             {% empty %}
                             <tr>
-                                <td colspan="3">No papers found.</td>
+                                <td colspan="2">No popular keywords found.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+        
+                    <!-- 두 번째 테이블 (6-10위) -->
+                    <table style="width: 300px;">
+                        <thead>
+                            <tr>
+                                <th style="width: 60px;">Rank</th>
+                                <th>Keyword</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for keyword in popular_keywords_6_10 %}
+                            <tr>
+                                <td>{{ forloop.counter|add:5 }}</td>
+                                <td><a href="/search/?filter=paper&query={{ keyword.keyword }}">{{ keyword.keyword }}</a></td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="2">No popular keywords found.</td>
                             </tr>
                             {% endfor %}
                         </tbody>
                     </table>
                 </div>
+            </div>
+        
+            <!-- 실시간 인기 자료 -->
+            <div class="data-section">
+                <h2>실시간 인기 자료</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Rank</th>
+                            <th>Title</th>
+                            <th>Saved</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for paper in popular_papers %}
+                        <tr>
+                            <td>{{ forloop.counter }}</td>
+                            <td><a href="/paper/{{ paper.id }}/">{{ paper.title }}</a></td>
+                            <td>{{ paper.saved_count }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="3">No papers found.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
             </div>
 
             <div class="bottom-section" style="display: flex; justify-content: space-around; margin-top: 20px;">

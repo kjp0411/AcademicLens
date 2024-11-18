@@ -226,10 +226,12 @@
                                         {{ item.paper.title|highlight:query }}
                                     </a></strong>                                                                
                                 </p>
-                                <button class="save-btn" data-paper-id="{{ item.paper.id }}">
-                                    <img src="{% if item.is_saved %}{% static 'image/heart-filled.png' %}{% else %}{% static 'image/heart-empty.png' %}{% endif %}" alt="save" class="save-icon">
-                                </button>
-                                ({{ item.paper.saved_count }})
+                                <div class="save-count">
+                                    <button class="save-btn" data-paper-id="{{ item.paper.id }}">
+                                        <img src="{% if item.is_saved %}{% static 'image/heart-filled.png' %}{% else %}{% static 'image/heart-empty.png' %}{% endif %}" alt="save" class="save-icon">
+                                    </button>
+                                    <span class="saved-count">({{ item.paper.saved_count }})</span>
+                                </div>
                             </div>
                             <div class="preAbstract-container">
                                 <p class="preAbstract">

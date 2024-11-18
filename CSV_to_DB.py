@@ -1,6 +1,9 @@
 import pandas as pd
 import mariadb
 import ast  # 문자열을 리스트나 딕셔너리로 변환하기 위한 모듈
+import time
+
+start_time = time.time()
 
 # mariadb 연결 설정(이건 개인별로 다르게 설정하면 됨)
 conn = mariadb.connect(
@@ -145,3 +148,7 @@ for index, row in data.iterrows():
 # 변경사항 커밋 및 연결 닫기
 conn.commit()
 conn.close()
+
+end_time = time.time()
+execution_time = end_time - start_time
+print(f"Code execution time: {execution_time:.2f} seconds")

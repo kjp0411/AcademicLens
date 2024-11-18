@@ -1,4 +1,178 @@
-/* home.html에서 표랑 논문, 학회수(이미지까지) */
+/* 기본 스타일 */
+main {
+    width: 100%;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    height: 100vh;
+    max-width: 100%;
+    overflow-x: hidden;
+}
+
+/* 헤더 */
+.header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background-color: #ffffff;
+    border-bottom: 1px solid #e7e7e7;
+    padding: 10px 20px;
+    width: 100%;
+}
+
+.auth-buttons {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    margin-right: 1%;
+}
+
+.btn-login, .btn-signup, .btn-logout {
+    padding: 8px 15px;
+    color: #ffffff;
+    background-color: #1E90FF;
+    text-decoration: none;
+    border-radius: 5px;
+    border: none;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.btn-login:hover, .btn-signup:hover, .btn-logout:hover {
+    background-color: #4682B4;
+}
+
+.welcome-message {
+    margin-right: 2px;
+    font-size: 16px;
+}
+
+/* 로고 */
+.logo-container {
+    display: flex;
+    align-items: center;
+    padding-left: 24%;
+}
+
+.logo {
+    width: 150px;
+    height: auto;
+}
+
+/* 네비게이션 바 */
+.navbar {
+    background-color: #1E90FF;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    width: 100%;
+}
+
+.navbar ul {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+}
+
+.navbar ul li a {
+    display: block;
+    color: white;
+    text-align: center;
+    padding: 10px;
+    text-decoration: none;
+}
+
+.navbar ul li a:hover {
+    background-color: #4682B4;
+    color: white;
+}
+
+/* 검색창 */
+.search-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    padding: 20px;
+    background-color: #B0C4DE;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.search-icon-wrapper {
+    margin-left: -34%;
+}
+
+.search-icon {
+    width: 120px;  /* 원하는 너비 */
+    height: 40px; /* 원하는 높이 */
+    margin-top: 20px;
+}
+
+.search-form {
+    display: flex;
+    flex-direction: row;
+    max-width: 800px;
+    width: 100%;
+    margin: 0;
+}
+
+.search-form input[type="text"], 
+.search-form select, 
+.search-form button {
+    padding: 10px;
+    font-size: 16px;
+    margin: 5px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+}
+
+.search-form input[type="text"] {
+    flex-grow: 1;
+}
+
+.search-form button {
+    background-color: #1E90FF;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+
+.search-form button:hover {
+    background-color: #4682B4;
+}
+
+/* 콘텐츠 영역 */
+.container {
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+    flex-wrap: wrap; /* 작은 화면에서 줄바꿈 허용 */
+    width: 92%;
+    margin: 0 auto;
+}
+
+.top-section, .bottom-section {
+    width: 100%;
+}
+
+.bottom-section .table-container {
+    margin: 0 20px; /* 테이블 간의 간격 조정 */
+    text-align: center;
+    width : 100%;
+}
+
+.keyword-section, .data-section {
+    flex: 1;
+    min-width: 300px;
+}
 
 table {
     width: 100%;
@@ -6,49 +180,121 @@ table {
     margin-bottom: 20px;
 }
 
-/* 표 헤더 스타일 */
+th, td {
+    border: 1px solid #ddd;
+    padding: 10px;
+}
+
 th {
     background-color: #f2f2f2;
-    padding: 10px;
-    text-align: left;
 }
 
-/* 표 셀 스타일 */
-td {
-    border: 1px solid #dddddd;
-    padding: 10px;
-}
-
-/* 짝수 행 배경색 스타일 */
 tbody tr:nth-child(even) {
     background-color: #f9f9f9;
 }
 
-/* 마우스 호버 스타일 */
 tbody tr:hover {
     background-color: #f2f2f2;
 }
 
-.info-container {
-    display: flex; /* 플렉스 박스 설정 */
-    justify-content: center; /* 가운데 정렬 */
-    gap: 40px; /* 요소 사이의 간격 */
-    border: 2px solid #f2f2f2;
+.stat-container {
+    text-align: center;
+    padding: 20px;
+    width: 200px;
 }
 
-.paper-info, .affiliation-info {
-    font-weight: bold; /* 글씨 굵게 */
-    text-align: center; /* 텍스트 가운데 정렬 */
+.stat-icon {
+    width: 120px;
+    height: 120px;
+    border: 2px solid #ddd;
+    border-radius: 50%;
+    padding: 20px;
+    box-sizing: border-box;
+    margin-bottom: 10px;
 }
 
-.paper-info p, .affiliation-info p {
-    margin: 20px 0; /* 위아래 여백 추가 */
-    margin-inline: 30px;
+.stat-number {
+    font-size: 24px;
+    font-weight: bold;
+    color: #d32f2f;
 }
 
-.paper, .affiliation {
-    display: block; /* 이미지를 블록 요소로 설정하여 텍스트 아래에 위치 */
-    margin: 0 auto; /* 이미지 가운데 정렬 */
-    width: 70px; /* 이미지 크기 조정, 필요에 따라 조정 가능 */
-    height: 70px; /* 이미지 비율 유지 */
+.stat-label {
+    font-size: 18px;
+    font-weight: bold;
+    margin-top: 10px;
+}
+
+/* 반응형 미디어 쿼리 */
+
+/* 태블릿 크기 (768px 이하) */
+@media (max-width: 768px) {
+    .header, .navbar {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .search-container, .auth-buttons {
+        width: 100%;
+        justify-content: center;
+        margin-top: 10px;
+    }
+
+    .search-form {
+        flex-direction: column;
+        width: 100%;
+        align-items: center;
+    }
+
+    .container {
+        flex-direction: column;
+    }
+
+    .keyword-section, .data-section {
+        width: 100%;
+    }
+
+    .stat-container {
+        width: 100%;
+        margin-bottom: 20px;
+    }
+}
+
+/* 모바일 크기 (480px 이하) */
+@media (max-width: 480px) {
+    .logo {
+        width: 120px;
+    }
+
+    .auth-buttons {
+        flex-direction: column;
+        gap: 5px;
+    }
+
+    .search-form input[type="text"] {
+        font-size: 14px;
+        width: 100%;
+    }
+
+    .navbar ul {
+        flex-direction: column;
+    }
+
+    .navbar ul li a {
+        padding: 10px;
+        font-size: 14px;
+    }
+
+    .stat-icon {
+        width: 100px;
+        height: 100px;
+    }
+
+    .stat-number {
+        font-size: 20px;
+    }
+
+    .stat-label {
+        font-size: 16px;
+    }
 }

@@ -26,6 +26,7 @@ from django.views.decorators.http import require_POST
 from django.utils import timezone
 from django.template.loader import render_to_string
 from django.http import HttpResponse
+from django.db.models import Case, When, IntegerField
 
 # gpt api 라이브러리
 import openai
@@ -136,8 +137,15 @@ def search(request):
 
         # 정렬 처리
         if sort_by == 'title':
-            papers = papers.annotate(search_rank=Count('title', filter=Q(title__icontains=query)))
-            papers = papers.order_by('-search_rank' if order == 'desc' else 'search_rank')
+            # 정확하게 단어 경계로 일치하는 경우 우선순위 높이기
+            papers = papers.annotate(
+                exact_word_match=Case(
+                    When(title__iregex=r'\b' + query + r'\b', then=1),  # 단어 경계를 포함하여 정규식 검색
+                    default=0,
+                    output_field=IntegerField()
+                ),
+                search_rank=Count('title', filter=Q(title__icontains=query))
+            ).order_by('-exact_word_match', '-search_rank' if order == 'desc' else 'search_rank')
         elif sort_by == 'latest':
             papers = papers.order_by('date' if order == 'asc' else '-date')
 
