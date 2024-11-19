@@ -374,14 +374,14 @@
             <div id="folderModal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.5); display: flex; justify-content: center; align-items: center;">
                 <div style="background: white; padding: 20px; border-radius: 8px; max-width: 300px; width: 100%; position: relative;">
                     <button id="closeModalBtn" style="position: absolute; top: 10px; right: 10px; background: transparent; border: none; font-size: 18px; cursor: pointer;">&times;</button>
-                    <h3>폴더와 이미지 이름 선택</h3>
+                    <h3>폴더와 분석 결과 이름 선택</h3>
                     <label for="folderSelect">폴더:</label>
                     <select id="folderSelect" style="width: 100%; margin-bottom: 15px;">
                         <option value="">폴더를 선택하세요</option>
                         ${folders.map(folder => `<option value="${folder}">${folder}</option>`).join('')}
                     </select>
                     <button id="addFolderBtn" style="width: 100%; margin: 10px 0; padding: 8px; background-color: #28a745; color: white; border: none; border-radius: 5px;">새 폴더 추가</button>
-                    <label for="imageName">이미지 이름:</label>
+                    <label for="imageName">분석 결과 이름:</label>
                     <input type="text" id="imageName" value="${chartId}" style="width: 100%; margin-bottom: 15px;">
                     <label>
                         <input type="checkbox" id="includeAnalysis" style="margin-right: 5px;"> 분석 결과 포함
@@ -413,7 +413,7 @@
                 return;
             }
             if (!imageName) {
-                alert('이미지 이름을 입력해야 합니다.');
+                alert('분석 결과 이름을 입력해야 합니다.');
                 return;
             }
 
@@ -442,9 +442,9 @@
                 .then(response => response.json())
                 .then(data => {
                     if (data.status === 'success') {
-                        alert('이미지가 성공적으로 저장되었습니다!');
+                        alert('분석 결과가 성공적으로 저장되었습니다!');
                     } else {
-                        alert('이미지 저장 실패: ' + data.message);
+                        alert('분석 결과 저장 실패: ' + data.message);
                     }
                 })
                 .catch(error => {
