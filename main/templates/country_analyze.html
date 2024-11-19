@@ -842,13 +842,15 @@
         }
 
         function generateWordCloud(words) {
-            const wordCount = words.length;
-
+            // 최대 빈도를 계산
+            const maxCount = Math.max(...words.map(word => word[1]));
+        
+            // 워드클라우드 생성
             WordCloud(document.getElementById('wordcloud'), {
-                list: words,
-                gridSize: 5,
+                list: words.map(([keyword, count]) => [keyword, (count / maxCount) * 100]), // 비율로 크기 조정
+                gridSize: 2,
                 weightFactor: function (size) {
-                    return Math.max(12, size * (wordCount > 50 ? 1 : 10 / wordCount));
+                    return size / 2; // 비율 기반 크기 설정
                 },
                 fontFamily: 'Arial, sans-serif',
                 color: function () {
@@ -858,19 +860,37 @@
                 rotationSteps: 2,
                 backgroundColor: '#fff',
                 drawOutOfBound: false,
+                hover: function (item, dimension, event) {
+                    // 툴팁 표시
+                    tooltip.style.display = "block";
+                    tooltip.style.left = event.pageX + 10 + "px";
+                    tooltip.style.top = event.pageY + 10 + "px";
+                    tooltip.innerHTML = `
+                        <strong>${item[0]}</strong><br>
+                        키워드 사용 횟수: ${words.find(([keyword]) => keyword === item[0])[1]}
+                    `;
+                },
+                away: function (item) {
+                    // 마우스가 키워드에서 벗어날 때 툴팁 숨김
+                    tooltip.style.display = "none";
+                },
                 click: function (item) {
-                    alert(item[0] + ': ' + item[1]);
-                }
+                    const keyword = item[0];
+                    const count = words.find(([key]) => key === keyword)[1]; // 실제 값 가져오기
+                    alert(`${keyword}: 키워드 사용 횟수는 ${count}입니다.`);
+                },
+            });
+            
+            document.getElementById('wordcloud').addEventListener('mouseleave', () => {
+                tooltip.style.display = "none";
             });
         }
-
+        
+        // 워드클라우드 데이터 가져오기
         fetch(`/country_wordcloud/?name=${encodeURIComponent(countryName)}`)
             .then(response => response.json())
             .then(data => {
-                var words = data.map(function (d) {
-                    return [d[0], d[1]];
-                });
-                generateWordCloud(words);
+                generateWordCloud(data); // 데이터 전달
             })
             .catch(error => console.error('Error fetching data:', error));
 
@@ -942,8 +962,45 @@
             fetch(`/country_wordcloud/?name=${encodeURIComponent(country)}&keyword=${encodeURIComponent(keyword)}`)
                 .then(response => response.json())
                 .then(data => {
+                    // 워드 클라우드 데이터 가져오기
                     const words = data.map(d => [d[0], d[1]]);
-                    generateWordCloud(words);  // 워드 클라우드 업데이트
+                    const maxCount = Math.max(...words.map(word => word[1])); // 최대 빈도 계산
+
+                    // 워드클라우드 생성
+                    WordCloud(document.getElementById('wordcloud'), {
+                        list: words.map(([keyword, count]) => [keyword, (count / maxCount) * 100]), // 최대 크기 50으로 조정
+                        gridSize: 2,
+                        weightFactor: function (size) {
+                            return size / 2; // 비율 기반 크기 설정
+                        },
+                        fontFamily: 'Arial, sans-serif',
+                        color: function () {
+                            return getRandomColor();
+                        },
+                        rotateRatio: 0.5,
+                        rotationSteps: 2,
+                        backgroundColor: '#fff',
+                        drawOutOfBound: false,
+                        hover: function (item, dimension, event) {
+                            const tooltip = document.getElementById("tooltip");
+                            tooltip.style.display = "block";
+                            tooltip.style.left = event.pageX + 10 + "px";
+                            tooltip.style.top = event.pageY + 10 + "px";
+                            tooltip.innerHTML = `
+                                <strong>${item[0]}</strong><br>
+                                키워드 사용 횟수: ${words.find(([keyword]) => keyword === item[0])[1]}
+                            `;
+                        },
+                        away: function () {
+                            const tooltip = document.getElementById("tooltip");
+                            tooltip.style.display = "none";
+                        },
+                        click: function (item) {
+                            const keyword = item[0];
+                            const count = words.find(([key]) => key === keyword)[1]; // 실제 값 가져오기
+                            alert(`${keyword}: 키워드 사용 횟수는 ${count}입니다.`);
+                        },
+                    });
                 })
                 .catch(error => console.error('Error fetching filtered word cloud data:', error));
 
