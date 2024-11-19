@@ -19,7 +19,7 @@ cursor = conn.cursor()
 csv_file = r"total_result.csv"
 selected_columns = ["search", "title", "url", "author", "date", "citations", "publisher", "abstract", "affiliation", "keywords"]
 # data = pd.read_csv(csv_file, usecols=selected_columns, encoding='utf-8') 데이터 추가시 오류나서 아래 코드로 변경함
-data = pd.read_csv(csv_file, usecols=selected_columns, encoding='latin1')
+data = pd.read_csv(csv_file, usecols=selected_columns, encoding='utf-8')
 
 # "none" 값을 None으로 변경
 data.loc[data['date'] == "none", 'date'] = None
@@ -142,7 +142,7 @@ for index, row in data.iterrows():
                 # paper_keyword 테이블에 paper_id와 keyword_id를 삽입
                 sql = "INSERT INTO paper_keyword (paper_id, keyword_id) VALUES (%s, %s)"
                 cursor.execute(sql, (paper_id, keyword_id))
-        except SyntaxError:  # affiliations 파싱에서 SyntaxError가 발생하면
+        except Exception:  # 오류 발생
             continue  # 다음 행으로 넘어갑니다.
 
 # 변경사항 커밋 및 연결 닫기
