@@ -16,7 +16,9 @@
         </div>
         <div class="auth-buttons">
             {% if user.is_authenticated %}
-                <span class="welcome-message">{{ user.profile.nickname }}님, 환영합니다.</span>
+                <span class="welcome-message">
+                    <strong>{{ user.profile.nickname }}</strong>님, 환영합니다.
+                </span>
                 <a href="{% url 'accounts:logout' %}" class="btn-logout">로그아웃</a>
             {% else %}
                 <a href="{% url 'accounts:login' %}" class="btn-login">로그인</a>
@@ -34,23 +36,18 @@
             </ul>
         </nav>
         <div class="search-container">
-            <div class="search-icon-wrapper">
-                <img src="{% static 'image/search_icon2.png' %}" alt="Search" class="search-icon">
-            </div>
-            <div class="search-container">
-                <form action="{% url 'search' %}" method="get" class="search-form" id="search-form">
-                    <select name="filter" id="filter">
-                        <option value="paper" {% if filter == 'paper' %}selected{% endif %}>논문</option>
-                        <option value="author" {% if filter == 'author' %}selected{% endif %}>저자</option>
-                        <option value="country" {% if filter == 'country' %}selected{% endif %}>나라</option>
-                        <option value="affiliation" {% if filter == 'affiliation' %}selected{% endif %}>소속</option>
-                    </select>
-                    <input type="text" name="query" id="search-box" placeholder="Enter search query" value="{{ query }}">
-                    <button type="submit">Search</button>
-                </form>
-            </div>
-            
-        </div>
+            <div class="background-layer"></div>
+            <form action="{% url 'search' %}" method="get" class="search-form" id="search-form">
+                <select name="filter" id="filter">
+                    <option value="paper" {% if filter == 'paper' %}selected{% endif %}>논문</option>
+                    <option value="author" {% if filter == 'author' %}selected{% endif %}>저자</option>
+                    <option value="country" {% if filter == 'country' %}selected{% endif %}>나라</option>
+                    <option value="affiliation" {% if filter == 'affiliation' %}selected{% endif %}>소속</option>
+                </select>
+                <input type="text" name="query" id="search-box" placeholder="Enter search query" value="{{ query }}">
+                <button type="submit">Search</button>
+            </form>    
+        </div>        
         <!-- 콘텐츠 시작 -->
         <div class="container">
             <!-- 실시간 인기 키워드 -->
@@ -154,7 +151,7 @@
                     <p class="stat-label">가입된 사용자 수</p>
                     <p class="stat-description">AcademicLens 가입된 사용자 수입니다.</p>
                 </div>
-            </div>            
+            </div>
         </div>
         <!-- 콘텐츠 끝 -->
     </main>

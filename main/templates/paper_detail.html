@@ -6,62 +6,75 @@
 
 {% block content %}
 <div class="paper-container">
+    <!-- 제목과 저장 버튼 -->
     <div class="title-container">
         <h1 class="paper-title">{{ paper.title }}</h1>
         <button class="save-btn" data-paper-id="{{ paper.id }}">
             <img src="{% if is_saved %}{% static 'image/heart-filled.png' %}{% else %}{% static 'image/heart-empty.png' %}{% endif %}" alt="save" class="save-icon">
         </button>
-        ({{ paper.saved_count }})
     </div>
-    <hr>
+    <hr class="custom1-hr">
 
-    <div class="url">
-        <button class="url-btn" onclick="openPaperUrl()">논문 사이트 이동</button>
-    </div>    
+    <!-- 메인 콘텐츠 -->
+    <div class="main-container">
+        <!-- 왼쪽 컨테이너 -->
+        <div class="left-container">
+            <div class="paper-metadata">
+                <strong>저자</strong><br>
+                {% for author in authors %}
+                <span>{{ forloop.counter }}) </span>
+                    <a href="#" class="author-link">{{ author.name }}</a>
+                    {% if not forloop.last %}, {% endif %}
+                {% endfor %}
+                <hr class="custom-hr">
+                <strong>소속기관</strong><br>
+                {% for affiliation in affiliations %}
+                <span>{{ forloop.counter }}) </span>
+                    <a href="#" class="affiliation-link">{{ affiliation.name }}</a>{% if not forloop.last %}<br> {% endif %}
+                {% endfor %}
+                <hr class="custom-hr">
+                <strong>국가</strong><br>
+                {% for country in countries %}
+                    <a href="#" class="country-link">{{ country }}</a>{% if not forloop.last %}, {% endif %}
+                {% endfor %}
+            </div>
+        </div>
 
-    <div class="paper-metadata">
-        <strong>저자</strong><br> 
-        <p>
-            {% for author in authors %}
-            <span>{{ forloop.counter }}) </span>
-                <a href="#" class="author-link">{{ author.name }}</a> 
-                {% if not forloop.last %}, {% endif %}
-            {% endfor %}
-        </p><br>
-
-        <strong>국가</strong><br>
-        <p>
-            {% for country in countries %}
-                <a href="#" class="country-link">{{ country }}</a>{% if not forloop.last %}, {% endif %}
-            {% endfor %}
-        </p><br>
-
-        <strong>소속기관</strong><br> 
-        <p>
-            {% for affiliation in affiliations %}
-            <span>{{ forloop.counter }}) </span>
-                <a href="#" class="affiliation-link">{{ affiliation.name }}</a>{% if not forloop.last %}<br> {% endif %}
-            {% endfor %}
-        </p><br>
-
-
-        <strong>발행연도</strong><br>
-        <p>{{ paper.date|date:"Y-m-d" }}</p><br>
-
-        <strong>인용 수</strong><br>
-        <p>{{ paper.citations }}</p><br>
-
-        <strong>출판사</strong><br>
-        <p>{{ paper.publisher }}</p><br>
+        <!-- 오른쪽 컨테이너 -->
+        <div class="right-container">
+            <div class="paper-info-box">
+                <button class="url-btn" onclick="openPaperUrl()">논문 사이트 이동</button>
+                <hr>
+                <div class="info-row">
+                    <strong>발행연도</strong>
+                    <p>{{ paper.date|date:"Y-m-d" }}</p>
+                </div>
+                <hr>
+                <div class="info-row">
+                    <strong>인용 수</strong>
+                    <p>{{ paper.citations }}</p>
+                </div>
+                <hr>
+                <div class="info-row">
+                    <strong>출판사</strong>
+                    <p>{{ paper.publisher }}</p>
+                </div>
+                <hr>
+                <div class="info-row">
+                    <strong>좋아요 수</strong>
+                    <p>{{ paper.saved_count }}</p>
+                </div>
+            </div>
+        </div>
     </div>
-
+    <hr class="custom-hr">
+    <!-- 초록 섹션 -->
     <div class="paper-abstract">
-        <h2>부가정보</h2>
-        <strong>초록</strong><br>
+        <strong>초록</strong>
         <p>{{ paper.abstract }}</p>
     </div>
-    <hr>
-
+    <hr class="custom-hr">
+    <!-- 키워드 섹션 -->
     <div class="paper-keywords">
         <strong>키워드</strong><br>
         <p>

@@ -137,10 +137,6 @@
             background-color: #0056b3;
         }
 
-        .analyze-btn i {
-            margin-right: 5px;
-        }
-
         .analysis-title {
             font-size: 1.25em;
             font-weight: bold;
@@ -182,16 +178,135 @@
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
         }
 
-        @media screen and (max-width: 768px) {
-            .keyword-container {
-                flex-direction: column;
-            }
+        /* 연도별 논문 수 그래프 크기 */
+        .graph canvas {
+            width: 100% !important;
+            height: 400px !important;
+        }
 
-            #wordcloud,
-            #analysisBoxKeywords {
-                width: 100%;
-                margin-bottom: 20px;
-            }
+        /* 네트워크 데이터 분석, 마이페이지 저장 버튼 오른쪽 정렬 */
+        .chart-header {
+            display: flex;
+            justify-content: flex-end; /* 버튼들을 오른쪽 정렬 */
+            align-items: center;
+            gap: 10px; /* 버튼 간격 조정 */
+        }
+        
+        .chart-title {
+            margin-right: auto; /* 제목을 왼쪽 정렬 */
+        }
+
+        .chart-header .analyze-btn, 
+        .chart-header .pdf-btn {
+            margin-left: 10px;
+        }
+
+        /* 논문 리스트 사이에 <hr> 스타일 */
+        .paper-list hr {
+            border: 0;
+            border-top: 1px solid #ddd;
+            margin: 10px 0;
+        }
+
+        /* TOP 키워드 데이터 분석, 저장 버튼 오른쪽 정렬 */
+        .keyword-container .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* 마이페이지에 저장 버튼 */
+        .pdf-btn {
+            background-color: green; /* 기본 색상 */
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 10px 15px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        .pdf-btn:hover {
+            background-color: #006400; /* 호버 시 더 어두운 초록색 */
+        }
+        .pdf-btn:active {
+            background-color: #004700; /* 클릭 시 더 짙은 초록색 */
+            transform: scale(0.98); /* 클릭 시 살짝 작아짐 */
+        }
+
+        /* 키워드 */
+        .keyword {
+            display: inline-block;
+            margin-right: 10px;
+            margin-bottom: 5px;
+            padding: 5px 10px;
+            background-color: #007BFF;
+            color: #fff !important;
+            border-radius: 20px;
+            text-decoration: none;
+            font-size: 0.9em;
+        }
+        
+        .keyword:hover {
+            background-color: #0061c8;
+        }
+
+        /* 검색 바 스타일 */
+        .search-bar {
+            display: flex;
+            align-items: center;
+            justify-content: left;
+        }
+
+        .search-bar input {
+            width: 70%;
+            max-width: 300px;
+            padding: 5px;
+            border: 1px solid #ddd;
+            outline: none;
+            font-size: 14px;
+        }
+
+        .search-bar button {
+            padding: 4px 10px;
+            border: none;
+            background-color: #007BFF;
+            color: #fff;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            transition: background-color 0.3s ease;
+        }
+
+        .search-bar button:hover {
+            background-color: #0056b3;
+        }
+
+        .search-bar .refresh-btn {
+            margin-left: 10px;
+            background-color: #28a745;
+            border-radius: 20px;
+        }
+
+        .search-bar .refresh-btn:hover {
+            background-color: #1e7e34;
+        }
+
+        /* "더보기" 버튼 스타일 */
+        .more-btn {
+            margin-top: -25px;
+            padding: 5px 10px;
+            border: none;
+            background-color: #6c757d;
+            color: white;
+            cursor: pointer;
+            border-radius: 20px;
+            transition: background-color 0.3s ease;
+            text-align: center;
+            float: right; /* 버튼을 오른쪽 정렬 */
+        }
+
+        .more-btn:hover {
+            background-color: #5a6268;
         }
     </style>
 </head>
@@ -212,7 +327,7 @@
             </div>
             
             <!-- 사이드바 검색 입력란과 버튼 -->
-            <div class="sidebar-search-keyword">
+            <div class="sidebar-search-keyword search-bar">
                 <input type="text" id="sidebarKeywordInput" placeholder="키워드를 입력하세요">
                 <button onclick="searchSidebarKeyword()">검색</button>
             </div>
@@ -245,24 +360,29 @@
                 <h3>논문 리스트</h3>
                 <div id="topKeywords">
                     <h3>Top 5 키워드</h3>
-                    <div id="topKeywordButtons"></div>
+                    <div id="topKeywordButtons" class="keyword-buttons">
+                        <!-- 키워드 버튼들이 추가됩니다 -->
+                    </div>
                 </div>
                 <br>
-                <div>
+                <div class="search-bar">
                     <input type="text" id="keywordInput" placeholder="키워드를 입력하세요">
                     <button onclick="searchPapersByKeyword()">검색</button>
-                    <button onclick="refreshPaperList()">새로고침</button>
+                    <button class="refresh-btn" onclick="refreshPaperList()">새로고침</button>
                 </div>
-                <button onclick="redirectToFilteredPage()">더보기</button>
+                <button class="more-btn" onclick="redirectToFilteredPage()">더보기</button>                
+                <hr>
                 <ul id="paperList"></ul>
             </div>
             <div class="keywords">
                 <div class="chart-header">
                     <h3 class="chart-title">TOP 키워드</h3>
-                    <button id="analyzeButtonKeywords" class="analyze-btn">
-                        <i class="fas fa-chart-network"></i> TOP 키워드 데이터 분석
-                    </button>
-                    <button class="pdf-btn" data-chart="wordcloud">마이페이지에 저장</button>
+                    <div>
+                        <button id="analyzeButtonKeywords" class="analyze-btn">
+                            <i class="fas fa-chart-network"></i> TOP 키워드 데이터 분석
+                        </button>
+                        <button class="pdf-btn" data-chart="wordcloud">마이페이지에 저장</button>
+                    </div>
                 </div>
                 <div class="keyword-container">
                     <div id="wordcloud"></div>
@@ -428,6 +548,7 @@
             keywords.forEach(([keyword]) => {
                 const button = document.createElement('button');
                 button.textContent = keyword;
+                button.className = 'keyword';
                 button.onclick = () => {
                     document.getElementById('keywordInput').value = keyword;
                     searchPapersByKeyword();
@@ -512,6 +633,7 @@
                 li.appendChild(abstract);
                 li.appendChild(document.createElement('br'));
                 li.appendChild(savedCount);  // 좋아요 수 추가
+                li.appendChild(document.createElement('hr'));
 
                 paperList.appendChild(li);
             });
@@ -1051,6 +1173,7 @@
             keywords.forEach(([keyword]) => {
                 const button = document.createElement('button');
                 button.textContent = keyword;
+                button.className = 'keyword';
                 button.onclick = () => {
                     document.getElementById('sidebarKeywordInput').value = keyword;
                     searchSidebarKeyword(); // 키워드에 맞게 워드클라우드 및 네트워크 업데이트

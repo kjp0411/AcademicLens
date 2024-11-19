@@ -6,6 +6,7 @@
 
 {% block content %}
 <style>
+    /* 분석저장소 */
     .folder {
         display: flex;
         justify-content: space-between;
@@ -57,6 +58,7 @@
     th {
         background-color: #f2f2f2;
     }
+
     .actions button {
         padding: 5px 10px;
         border: none;
@@ -64,9 +66,187 @@
         color: white;
         cursor: pointer;
         border-radius: 5px;
+        transition: background-color 0.3s ease, box-shadow 0.3s ease, transform 0.2s ease;
     }
     .actions .delete {
         background-color: #dc3545;
+        transition: background-color 0.3s ease, box-shadow 0.3s ease, transform 0.2s ease;
+    }
+    .actions button:hover {
+        background-color: #0056b3; /* 호버 시 더 어두운 파란색 */
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* 그림자 추가 */
+    }
+    .actions .delete:hover {
+        background-color: #c82333; /* 호버 시 더 어두운 빨간색 */
+        box-shadow: 0 4px 8px rgba(255, 0, 0, 0.3); /* 빨간 그림자 */
+    }
+    .actions button:active {
+        background-color: #003f7f; /* 클릭 시 더 짙은 파란색 */
+        transform: scale(0.98); /* 클릭 시 살짝 작아짐 */
+    }
+    .actions .delete:active {
+        background-color: #a71d2a; /* 클릭 시 더 짙은 빨간색 */
+        transform: scale(0.98); /* 클릭 시 살짝 작아짐 */
+    }
+
+    .header-container {
+        display: flex;
+        justify-content: space-between; /* 제목과 버튼을 양쪽 끝으로 배치 */
+        align-items: center; /* 수직 정렬 */
+        margin-bottom: 20px;
+    }
+    .button-container {
+        margin: 20px 0;
+        display: flex;
+        gap: 10px; /* 버튼 간격 */
+    }
+    .styled-btn {
+        padding: 8px 15px;
+        background-color: #007bff; /* 버튼 색상 */
+        color: white;
+        border: none;
+        border-radius: 5px;
+        font-size: 14px;
+        cursor: pointer;
+        transition: background-color 0.3s ease, box-shadow 0.3s ease, transform 0.2s ease;
+    }
+    .styled-btn:hover {
+        background-color: #0056b3;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+    .styled-btn:active {
+        background-color: #003f7f;
+        transform: scale(0.98);
+    }
+    .button-container .report {
+        padding: 8px 15px;
+        background-color: green; /* 버튼 색상 */
+        color: white;
+        border: none;
+        border-radius: 5px;
+        font-size: 14px;
+        cursor: pointer;
+        transition: background-color 0.3s ease, box-shadow 0.3s ease, transform 0.2s ease;
+    }
+    .button-container .report:hover {
+        background-color: #006400; /* 호버 시 더 어두운 초록색 */
+        box-shadow: 0 4px 8px rgba(0, 128, 0, 0.3); /* 초록 그림자 */
+    }
+    .button-container .report:active {
+        background-color: #004700; /* 클릭 시 더 짙은 초록색 */
+        transform: scale(0.98); /* 클릭 시 살짝 작아짐 */
+    }
+
+    /* 분석저장소 폴더 내 버튼*/
+    .back-btn {
+        padding: 5px 10px;
+        border: none;
+        background-color: #007bff; /* 기본 색상 */
+        color: white;
+        cursor: pointer;
+        border-radius: 5px;
+        font-size: 14px;
+        transition: background-color 0.3s ease, box-shadow 0.3s ease, transform 0.2s ease;
+    }
+    .back-btn:hover {
+        background-color: #0056b3; /* 호버 시 더 어두운 파란색 */
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* 그림자 추가 */
+    }
+    .back-btn:active {
+        background-color: #003f7f; /* 클릭 시 더 짙은 파란색 */
+        transform: scale(0.98); /* 클릭 시 살짝 작아짐 */
+    }
+
+    .x-btn {
+        background: none;
+        border: none;
+        color: red;
+        font-size: 16px;
+        font-weight: bold;
+        cursor: pointer;
+        position: absolute;
+        top: 5px;
+        right: 5px;
+        transition: color 0.3s ease, transform 0.2s ease;
+    }
+    .x-btn:hover {
+        color: darkred; /* 호버 시 더 어두운 빨간색 */
+        transform: scale(1.1); /* 호버 시 살짝 커짐 */
+    }
+    .x-btn:active {
+        transform: scale(0.9); /* 클릭 시 살짝 작아짐 */
+    }
+    
+    /* 리포트 작성 버튼 */
+    .saveReport-btn {
+        background-color: #007bff; /* 기본 파란색 */
+        color: white;
+        padding: 5px 10px;
+        border: none;
+        cursor: pointer;
+    }
+    .saveReport-btn:hover {
+        background-color: #0056b3; /* 호버 시 더 어두운 파란색 */
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* 그림자 효과 */
+    }
+    .saveReport-btn:active {
+        background-color: #003f7f; /* 클릭 시 더 짙은 파란색 */
+        transform: scale(0.98); /* 클릭 시 살짝 작아짐 */
+    }
+
+    .cancel-btn {
+        background-color: #dc3545; /* 기본 빨간색 */
+        color: white;
+        padding: 5px 10px;
+        border: none;
+        cursor: pointer;
+    }
+    .cancel-btn:hover {
+        background-color: #b02a37; /* 호버 시 더 어두운 빨간색 */
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* 그림자 효과 */
+    }
+    .cancel-btn:active {
+        background-color: #7a1e27; /* 클릭 시 더 짙은 빨간색 */
+        transform: scale(0.98); /* 클릭 시 살짝 작아짐 */
+    }
+
+    /* 리포트 상세 페이지 */
+    .back-btn {
+        padding: 5px 10px;
+        border: none;
+        background-color: #007bff; /* 기본 색상 */
+        color: white;
+        cursor: pointer;
+        border-radius: 5px;
+        font-size: 14px;
+        transition: background-color 0.3s ease, box-shadow 0.3s ease, transform 0.2s ease;
+    }
+    .back-btn:hover {
+        background-color: #0056b3; /* 호버 시 더 어두운 파란색 */
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* 그림자 추가 */
+    }
+    .back-btn:active {
+        background-color: #003f7f; /* 클릭 시 더 짙은 파란색 */
+        transform: scale(0.98); /* 클릭 시 살짝 작아짐 */
+    }
+
+    .pdf-btn {
+        padding: 5px 10px;
+        border: none;
+        background-color: green; /* 기본 색상 */
+        color: white;
+        cursor: pointer;
+        border-radius: 5px;
+        font-size: 14px;
+        transition: background-color 0.3s ease, box-shadow 0.3s ease, transform 0.2s ease;
+    }
+    .pdf-btn:hover {
+        background-color: #006400; /* 호버 시 더 어두운 초록색 */
+        box-shadow: 0 4px 8px rgba(0, 128, 0, 0.3); /* 초록 그림자 */
+    }
+    .pdf-btn:active {
+        background-color: #004700; /* 클릭 시 더 짙은 초록색 */
+        transform: scale(0.98); /* 클릭 시 살짝 작아짐 */
     }
 </style>
 
@@ -77,11 +257,11 @@
             <h2>마이페이지</h2>
         </div>
         <ul>
-            <li><a href="#" onclick="showContent('recommended')">추천논문</a></li><hr>
-            <li><a href="#" onclick="showContent('recent')">최근 본 논문</a></li><hr>
-            <li><a href="#" onclick="showContent('saved')">저장 논문</a></li><hr>
-            <li><a href="#" onclick="showContent('analysis')">분석저장소</a></li><hr>
-            <li><a href="#" onclick="showContent('report')">리포트 목록</a></li><hr>
+            <li><a href="#" onclick="showContent('recommended')">추천논문</a></li><hr class="sidebar-hr">
+            <li><a href="#" onclick="showContent('recent')">최근 본 논문</a></li><hr class="sidebar-hr">
+            <li><a href="#" onclick="showContent('saved')">저장 논문</a></li><hr class="sidebar-hr">
+            <li><a href="#" onclick="showContent('analysis')">분석저장소</a></li><hr class="sidebar-hr">
+            <li><a href="#" onclick="showContent('report')">리포트 목록</a></li><hr class="sidebar-hr">
         </ul>
     </div>
 
@@ -615,8 +795,10 @@
     function displayImages(images, folderName) {
         const contentArea = document.getElementById('content-area');
         let html = `
-            <h3>${folderName} 폴더의 저장소</h3>
-            <button onclick="showContent('analysis')">뒤로가기</button>
+            <div class="header-container">
+                <h3>${folderName} 폴더의 저장소</h3>
+                <button class="back-btn" onclick="showContent('analysis')">뒤로가기</button>
+            </div>
             <table>
                 <tbody>
         `;
@@ -633,7 +815,7 @@
                         <div style="display: flex; flex-direction: column; align-items: center; position: relative;">
                             <img src="${imageUrl1}" alt="${images[i].name}" width="600" height="400" style="margin-bottom: 5px; cursor: pointer;" onclick="showImagePopup('${imageUrl1}', '${images[i].name}')"">
                             <span>${images[i].name}</span>
-                            <button onclick="deleteImage('${folderName}', '${images[i].name}')" style="position: absolute; top: 5px; right: 5px;">X</button>
+                            <button class="x-btn" onclick="deleteImage('${folderName}', '${images[i].name}')" style="position: absolute; top: 5px; right: 5px;">X</button>
                         </div>
                     </td>
                 `;
@@ -645,7 +827,7 @@
                             <div style="display: flex; flex-direction: column; align-items: center; position: relative;">
                                 <img src="${imageUrl2}" alt="${images[i + 1].name}" width="600" height="400" style="margin-bottom: 5px; cursor: pointer;" onclick="showImagePopup('${imageUrl2}', '${images[i + 1].name}')">
                                 <span>${images[i + 1].name}</span>
-                                <button onclick="deleteImage('${folderName}', '${images[i + 1].name}')" style="position: absolute; top: 5px; right: 5px;">X</button>
+                                <button class="x-btn" onclick="deleteImage('${folderName}', '${images[i + 1].name}')" style="position: absolute; top: 5px; right: 5px;">X</button>
                             </div>
                         </td>
                     `;
