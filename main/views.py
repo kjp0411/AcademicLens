@@ -448,13 +448,23 @@ def get_paper_ids(user_keyword, start_year=2019, end_year=2024):
         """)
         query_params.extend([f'% {user_keyword} %', f'% {user_keyword} %', f'% {user_keyword} %', f'% {user_keyword} %'])
     else:  # 검색 키워드 길이가 3 이상일 때
-        query_conditions.append("""
-            (MATCH(search, title, abstract) AGAINST(%s)
-             OR EXISTS (SELECT 1 FROM paper_keyword pk
-                        JOIN keyword k ON pk.keyword_id = k.id
-                        WHERE pk.paper_id = p.id AND MATCH(k.keyword_name) AGAINST(%s)))
-        """)
-        query_params.extend([user_keyword, user_keyword])
+        # 띄어쓰기가 포함된 경우 boolean 모드와 큰따옴표 사용
+        if " " in user_keyword:
+            query_conditions.append("""
+                (MATCH(search, title, abstract) AGAINST(%s IN BOOLEAN MODE)
+                 OR EXISTS (SELECT 1 FROM paper_keyword pk
+                            JOIN keyword k ON pk.keyword_id = k.id
+                            WHERE pk.paper_id = p.id AND MATCH(k.keyword_name) AGAINST(%s IN BOOLEAN MODE)))
+            """)
+            query_params.extend([f'"{user_keyword}"', f'"{user_keyword}"'])
+        else:  # 띄어쓰기가 없는 경우 일반적인 MATCH AGAINST 사용
+            query_conditions.append("""
+                (MATCH(search, title, abstract) AGAINST(%s)
+                 OR EXISTS (SELECT 1 FROM paper_keyword pk
+                            JOIN keyword k ON pk.keyword_id = k.id
+                            WHERE pk.paper_id = p.id AND MATCH(k.keyword_name) AGAINST(%s)))
+            """)
+            query_params.extend([user_keyword, user_keyword])
 
     # 연도 필터링 조건 추가 (기본값: 2019 ~ 2024)
     query_conditions.append("YEAR(p.date) BETWEEN %s AND %s")
@@ -1268,8 +1278,8 @@ def affiliation_network(request):
         nodes, links, node_set = [], [], set()
 
         for row in rows:
-            original_affiliation, co_affiliation, num_papers = row[0], row[1], row[2] * 10
-            original_total_papers, co_total_papers = row[3] * 100, row[4] * 50
+            original_affiliation, co_affiliation, num_papers = row[0], row[1], row[2]
+            original_total_papers, co_total_papers = row[3] , row[4]
 
             if original_affiliation not in node_set:
                 nodes.append({"id": original_affiliation, "total_papers": original_total_papers})
@@ -1530,9 +1540,9 @@ def author_network(request):
     for row in rows:
         original_author = row[0]
         co_author = row[1]
-        num_papers = row[2] * 10
-        original_author_total_papers = row[3] * 100
-        co_author_total_papers = row[4] * 50
+        num_papers = row[2]
+        original_author_total_papers = row[3]
+        co_author_total_papers = row[4]
 
         if original_author not in node_set:
             nodes.append({"id": original_author, "total_papers": original_author_total_papers})

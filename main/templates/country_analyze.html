@@ -276,7 +276,7 @@
             </div>
         </div>
     </div>
-
+    <div id="tooltip" style="position: absolute; display: none; background: #f9f9f9; padding: 5px; border: 1px solid #ccc; border-radius: 3px; font-size: 12px; pointer-events: none;"></div>
     <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
     <script>
         const isAuthenticated = {{ user.is_authenticated|yesno:"true,false" }};
@@ -559,117 +559,252 @@
         }
 
         function visualizeNetwork(data) {
-    const width = 600;
-    const height = 600;
+            const width = 600;
+            const height = 600;
+            const maxLinkValue = d3.max(data.links, d => d.value); // 최대 링크 값을 계산하여 색상 스케일에 사용
+            // 색상 강도 범례 추가 (오른쪽 위 구석)
+            const legendWidth = 100;
+            const legendHeight = 10;
+            const legendMargin = 20;
+        
+            const svg = d3.select("#network")
+                .append("svg")
+                .attr("width", width)
+                .attr("height", height);
+        
+            const centerNode = data.center_node;
 
-    const svg = d3.select("#network")
-        .append("svg")
-        .attr("width", width)
-        .attr("height", height);
+            const colorScale = d3.scaleLinear()
+                .domain([0, 1])  // 강도 비율에 따라 범위 설정 (0: 약한, 1: 강한)
+                .range(["#87ceeb", "#1e3d7f"]);  // 색상 강도의 시작과 끝
 
-    const centerNode = data.center_node;
+            // 범례의 위치와 그라디언트 색상 설정
+            const defs = svg.append("defs");
 
-    const simulation = d3.forceSimulation(data.nodes)
-        .force("link", d3.forceLink(data.links).id(d => d.id).distance(100))
-        .force("charge", d3.forceManyBody().strength(-300))
-        .force("center", d3.forceCenter(width / 2, height / 2));
+            const gradient = defs.append("linearGradient")
+                .attr("id", "color-gradient")
+                .attr("x1", "0%").attr("y1", "0%")
+                .attr("x2", "100%").attr("y2", "0%");
 
-    const link = svg.append("g")
-        .attr("class", "links")
-        .selectAll("line")
-        .data(data.links)
-        .enter()
-        .append("line")
-        .attr("class", "link")
-        .attr("stroke-width", d => Math.sqrt(d.value) * 2);
+            gradient.append("stop")
+                .attr("offset", "0%")
+                .attr("stop-color", d3.interpolateGreys(0));  // 낮은 강도
 
-    const node = svg.append("g")
-        .attr("class", "nodes")
-        .selectAll("g")
-        .data(data.nodes)
-        .enter()
-        .append("g")
-        .attr("class", "node");
+            gradient.append("stop")
+                .attr("offset", "100%")
+                .attr("stop-color", d3.interpolateGreys(1));  // 높은 강도
 
-    node.append("circle")
-        .attr("r", d => Math.sqrt(d.total_papers))
-        .attr("fill", d => d.id === centerNode ? '#8aaac6' : '#cde2f4');
+            // 범례와 텍스트를 그룹화
+            const legendGroup = svg.append("g")
+                .attr("class", "legend-group");
 
-    node.append("a")
-        .attr("xlink:href", d => `/country-analyze/?name=${d.id}`)
-        .attr("class", "country-link")
-        .append("text")
-        .attr("dy", ".35em")
-        .text(d => d.id)
-        .style("cursor", "pointer")
-        .style("pointer-events", "all")
-        .style("fill", "blue");
+            // 범례 배경 직사각형 추가
+            legendGroup.append("rect")
+                .attr("x", width - legendWidth - legendMargin - 80) // 오른쪽 여백 설정
+                .attr("y", legendMargin - 10) // 위쪽 여백 설정
+                .attr("width", legendWidth + 100) // 범례 텍스트 포함한 너비
+                .attr("height", legendHeight + 80) // 범례 텍스트 포함한 높이
+                .style("fill", "#f9f9f9") // 배경색
+                .style("stroke", "#ccc") // 테두리색
+                .style("stroke-width", 1);
 
-    let drag = d3.drag()
-        .on("start", dragstarted)
-        .on("drag", dragged)
-        .on("end", dragended);
+            // 그라디언트 그래프 추가
+            legendGroup.append("rect")
+                .attr("x", width - legendWidth - legendMargin - 70) // 내부 여백 설정
+                .attr("y", legendMargin + 15) // 범례 내부 높이 조정
+                .attr("width", legendWidth)
+                .attr("height", legendHeight)
+                .style("fill", "url(#color-gradient)");
+            
+            // '노드 크기: 논문 개수' 텍스트 왼쪽에 노드 모양 추가
+            legendGroup.append("circle")
+                .attr("cx", width - legendWidth - legendMargin - 20) // 텍스트 왼쪽 위치 조정
+                .attr("cy", legendMargin + 57) // 텍스트와 수직 위치 맞춤
+                .attr("r", 15) // 원 반지름 크기 설정
+                .style("fill", "#8aaac6"); // 원 색상 (중심 노드 색상과 맞춤)
+            
+            // 공동 연구 횟수
+            legendGroup.append("text")
+                .attr("x", width - legendWidth - legendMargin + 50)
+                .attr("y", legendMargin + 23) // 범례 높이 조정
+                .attr("text-anchor", "start")
+                .style("font-size", "10px")
+                .style("font-weight", "bold")
+                .text("공동 연구 횟수");
 
-    let isDragging = false;
+            // '노드 크기: 논문 개수' 텍스트 추가
+            legendGroup.append("text")
+                .attr("x", width - legendWidth - legendMargin + 50)
+                .attr("y", legendMargin + 55) // 범례 높이 조정
+                .attr("text-anchor", "start")
+                .style("font-size", "10px")
+                .style("font-weight", "bold")
+                .text("노드의 크기는");
+            
+            // '노드 크기: 논문 개수' 텍스트 추가
+            legendGroup.append("text")
+                .attr("x", width - legendWidth - legendMargin + 60)
+                .attr("y", legendMargin + 65) // 범례 높이 조정
+                .attr("text-anchor", "start")
+                .style("font-size", "10px")
+                .style("font-weight", "bold")
+                .text("논문 개수");
 
-    node.call(drag)
-        .on("click", function (event, d) {
-            if (!isDragging) {
-                const nodeName = d.id;
-                window.location.href = `/country-analyze/?name=${nodeName}`;
+            // 범례 라벨 추가 (Low, High)
+            legendGroup.append("text")
+                .attr("x", width - legendWidth - legendMargin - 70)
+                .attr("y", legendMargin + 10) // 범례 높이 조정
+                .attr("text-anchor", "start")
+                .style("font-size", "12px")
+                .text("Low");
+
+            legendGroup.append("text")
+                .attr("x", width - legendMargin - 70)
+                .attr("y", legendMargin + 10) // 범례 높이 조정
+                .attr("text-anchor", "end")
+                .style("font-size", "12px")
+                .text("High");
+        
+            // total_papers 최대값에 따른 반지름 비율 계산
+            const maxTotalPapers = d3.max(data.nodes, d => d.total_papers);
+            const radiusScale = d3.scaleLinear()
+                .domain([0, maxTotalPapers])
+                .range([10, 70]);  // 최소 및 최대 반지름 설정
+        
+            const simulation = d3.forceSimulation(data.nodes)
+                .force("link", d3.forceLink(data.links).id(d => d.id)
+                    .distance(() => Math.random() * 90 + 100)
+                )
+                .force("charge", d3.forceManyBody().strength(-300))
+                .force("center", d3.forceCenter(width / 2, height / 2))
+                .force("collision", d3.forceCollide().radius(d => radiusScale(d.total_papers) + 5)); // 충돌 방지 반경 추가
+        
+            const link = svg.append("g")
+                .attr("class", "links")
+                .selectAll("line")
+                .data(data.links)
+                .enter()
+                .append("line")
+                .attr("stroke-width", 7)  // 모든 링크의 굵기를 동일하게 설정
+                .attr("stroke", d => {
+                    const adjustedValue = 0.1 + 0.9 * (d.value / maxLinkValue);
+                    return d3.interpolateGreys(adjustedValue);
+                });
+            
+            
+            const tooltip = d3.select("#tooltip");
+
+            // 노드 생성
+            const node = svg.append("g")
+            .attr("class", "nodes")
+            .selectAll("g")
+            .data(data.nodes)
+            .enter()
+            .append("g")
+            .attr("class", "node")
+            .on("mouseenter", function(event, d) {
+                // 중심 노드와의 연결 강도를 계산
+                const linkToCenter = data.links.find(link =>
+                    (link.source.id === centerNode && link.target.id === d.id) ||
+                    (link.source.id === d.id && link.target.id === centerNode)
+                );
+            
+                const connectionStrength = linkToCenter ? linkToCenter.value : 0; // 연결 강도 가져오기
+            
+                d3.select(this).select("text").style("font-size", "13px").style("font-weight", "bold"); // 텍스트 강조
+                tooltip
+                    .style("display", "block")
+                    .html(`
+                        <strong>${d.id}</strong><br>
+                        논문 수: ${d.total_papers}<br>
+                        공동 연구 횟수: ${connectionStrength}
+                    `); // 툴팁에 데이터 표시
+            })
+            .on("mousemove", function(event) {
+                tooltip
+                    .style("top", (event.pageY + 10) + "px")
+                    .style("left", (event.pageX + 10) + "px");
+            })
+            .on("mouseleave", function() {
+                d3.select(this).select("text").style("font-size", "11px").style("font-weight", "normal"); // 텍스트 원상 복구
+                tooltip.style("display", "none");
+            });
+            
+            node.append("circle")
+                .attr("r", d => radiusScale(d.total_papers))
+                .attr("fill", d => d.id === centerNode ? '#8aaac6' : '#cde2f4');
+        
+            node.append("text")
+                .attr("dy", ".35em")
+                .style("text-anchor", "middle")
+                .style("font-size", "11px")
+                .text(d => d.id.length > 10 ? d.id.slice(0, 8) + '...' : d.id);
+        
+            let drag = d3.drag()
+                .on("start", dragstarted)
+                .on("drag", dragged)
+                .on("end", dragended);
+        
+            let isDragging = false;
+        
+            node.call(drag)
+                .on("click", function (event, d) {
+                    if (!isDragging) {
+                        const nodeName = d.id;
+                        window.location.href = `/country-analyze/?name=${nodeName}`;
+                    }
+                });
+        
+            function dragstarted(event, d) {
+                isDragging = false;
+                d3.select(this).raise().attr("stroke", "black");
             }
-        });
-
-    function dragstarted(event, d) {
-        isDragging = false;
-        d3.select(this).raise().attr("stroke", "black");
-    }
-
-    function dragged(event, d) {
-        isDragging = true;
-        d3.select(this)
-            .attr("x", d.x = event.x)
-            .attr("y", d.y = event.y);
-    }
-
-    function dragended(event, d) {
-        d3.select(this).attr("stroke", null);
-        setTimeout(() => { isDragging = false; }, 100);
-    }
-
-    simulation.on("tick", () => {
-        link
-            .attr("x1", d => d.source.x)
-            .attr("y1", d => d.source.y)
-            .attr("x2", d => d.target.x)
-            .attr("y2", d => d.target.y);
-
-        node
-            .attr("transform", d => `translate(${d.x},${d.y})`);
-    });
-
-    node.call(d3.drag()
-        .on("start", (event, d) => {
-            if (!event.active) simulation.alphaTarget(0.3).restart();
-            d.fx = d.x;
-            d.fy = d.y;
-        })
-        .on("drag", (event, d) => {
-            d.fx = event.x;
-            d.fy = event.y;
-        })
-        .on("end", (event, d) => {
-            if (!event.active) simulation.alphaTarget(0);
-            d.fx = null;
-            d.fy = null;
-        }));
-
-    document.getElementById('analyzeButton').addEventListener('click', function () {
-        const networkText = JSON.stringify(data);
-        analyzeNetworkData(networkText);
-    });
-}
-
+        
+            function dragged(event, d) {
+                isDragging = true;
+                d3.select(this)
+                    .attr("x", d.x = event.x)
+                    .attr("y", d.y = event.y);
+            }
+        
+            function dragended(event, d) {
+                d3.select(this).attr("stroke", null);
+                setTimeout(() => { isDragging = false; }, 100);
+            }
+        
+            simulation.on("tick", () => {
+                link
+                    .attr("x1", d => d.source.x)
+                    .attr("y1", d => d.source.y)
+                    .attr("x2", d => d.target.x)
+                    .attr("y2", d => d.target.y);
+        
+                node
+                    .attr("transform", d => `translate(${d.x},${d.y})`);
+            });
+        
+            node.call(d3.drag()
+                .on("start", (event, d) => {
+                    if (!event.active) simulation.alphaTarget(0.3).restart();
+                    d.fx = d.x;
+                    d.fy = d.y;
+                })
+                .on("drag", (event, d) => {
+                    d.fx = event.x;
+                    d.fy = event.y;
+                })
+                .on("end", (event, d) => {
+                    if (!event.active) simulation.alphaTarget(0);
+                    d.fx = null;
+                    d.fy = null;
+                }));
+        
+            document.getElementById('analyzeButton').addEventListener('click', function () {
+                const networkText = JSON.stringify(data);
+                analyzeNetworkData(networkText);
+            });
+        }
+        
 
         fetchNetworkData().then(data => {
             if (data) {
