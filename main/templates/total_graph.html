@@ -1,6 +1,6 @@
 {% extends 'searchBase.html' %}
 
-{% block title %}연도별 논문 수 및 저자별 논문 수{% endblock %}
+{% block title %}AcademicLens{% endblock %}
 
 {% block content %}
 
@@ -37,6 +37,7 @@
         right: 20px;
         top: 20px;
         z-index: 10;
+        margin-right: 20px;
     }
 
     .chart-buttons button {
@@ -59,6 +60,7 @@
         display: inline-block;
         vertical-align: top;
         margin-left: 20px;
+        margin-right: 20px;
     }
 
     .analysis-title {
@@ -70,24 +72,24 @@
         /* 줄 바꿈을 유지 */
     }
 </style>
-<br><br><br>
-<div style="text-align: center;">
-    <h2 style="display: inline;">
-        "<span style="color: blue;">{{ keyword }}</span>" 검색 결과 분석
+
+<div style="display: flex; justify-content: space-between; align-items: center; padding: 20px 50px;">
+    <!-- 키워드 표시 -->
+    
+    <h2 style="font-size: 47px; font-weight: bold; color: #007BFF; margin-left: 50px;">
+        {{ keyword }}
     </h2>
-    <h3 style="display: inline;"> ( 검색결과 {{ total_results }} 건 )</h3>
-</div>
-<br>
-<div style="text-align: center; padding: 20px;">
-    <form method="GET" action="{% url 'total_graph' %}"
-        style="display: inline-flex; align-items: center; gap: 10px; background-color: #f0f0f0; padding: 10px; border-radius: 8px;">
+
+    <!-- 분석기간 -->
+    <form method="GET" action="{% url 'total_graph' %}" 
+          style="display: flex; align-items: center; gap: 10px; padding: 15px; border-radius: 10px; margin-right: -20px;">
         <input type="hidden" name="query" value="{{ keyword }}">
         <input type="hidden" name="filter" value="{{ filter }}">
 
-        <label for="start_year" style="margin-right: 10px;">기간 설정:</label>
+        <label for="start_year" style="font-size: 16px; font-weight: bold; color: #333;">분석기간:</label>
 
-        <select name="start_year" id="start_year"
-            style="padding: 5px; border-radius: 5px; border: 1px solid #ccc; width: 100px;">
+        <select name="start_year" id="start_year" 
+                style="padding: 8px; border-radius: 5px; border: 1px solid #ccc; width: 100px; font-size: 14px;">
             <option value="2019" {% if start_year == 2019 %}selected{% endif %}>2019</option>
             <option value="2020" {% if start_year == 2020 %}selected{% endif %}>2020</option>
             <option value="2021" {% if start_year == 2021 %}selected{% endif %}>2021</option>
@@ -96,10 +98,10 @@
             <option value="2024" {% if start_year == 2024 %}selected{% endif %}>2024</option>
         </select>
 
-        <label for="end_year" style="margin: 0 10px;"> ~ </label>
+        <span style="font-size: 16px; color: #333;">~</span>
 
-        <select name="end_year" id="end_year"
-            style="padding: 5px; border-radius: 5px; border: 1px solid #ccc; width: 100px;">
+        <select name="end_year" id="end_year" 
+                style="padding: 8px; border-radius: 5px; border: 1px solid #ccc; width: 100px; font-size: 14px;">
             <option value="2019" {% if end_year == 2019 %}selected{% endif %}>2019</option>
             <option value="2020" {% if end_year == 2020 %}selected{% endif %}>2020</option>
             <option value="2021" {% if end_year == 2021 %}selected{% endif %}>2021</option>
@@ -108,16 +110,19 @@
             <option value="2024" {% if end_year == 2024 %}selected{% endif %}>2024</option>
         </select>
 
-        <button type="submit"
-            style="padding: 5px 10px; background-color: #007BFF; color: white; border: none; border-radius: 5px; cursor: pointer; width: 80px;">
-            검색
+        <button type="submit" 
+                style="padding: 8px 15px; background-color: #007BFF; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 14px; font-weight: bold; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+            분석
         </button>
     </form>
 </div>
 
-<div style="text-align: center; margin-top: 10px;">
-    <p>현재 선택한 기간: <strong>{{ start_year }} ~ {{ end_year }}</strong></p>
+<div style="text-align: center; margin-top: -40px;">
+    <p style="font-size: 22px; font-weight: bold; padding: 10px; display: inline-block;">
+        현재 선택한 기간: <strong>{{ start_year }} ~ {{ end_year }}</strong> (<strong>{{ total_results }}</strong> 건)
+    </p>
 </div>
+
 
 <br>
 

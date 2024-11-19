@@ -446,15 +446,25 @@ def get_paper_ids(user_keyword, start_year=2019, end_year=2024):
                         JOIN keyword k ON pk.keyword_id = k.id
                         WHERE pk.paper_id = p.id AND k.keyword_name LIKE %s))
         """)
-        query_params.extend([f'% {user_keyword} %', f'% {user_keyword} %', f'% {user_keyword} %', f'% {user_keyword} %'])
+        query_params.extend([f'%{user_keyword}%', f'%{user_keyword}%', f'%{user_keyword}%', f'%{user_keyword}%'])
     else:  # 검색 키워드 길이가 3 이상일 때
-        query_conditions.append("""
-            (MATCH(search, title, abstract) AGAINST(%s)
-             OR EXISTS (SELECT 1 FROM paper_keyword pk
-                        JOIN keyword k ON pk.keyword_id = k.id
-                        WHERE pk.paper_id = p.id AND MATCH(k.keyword_name) AGAINST(%s)))
-        """)
-        query_params.extend([user_keyword, user_keyword])
+        # 띄어쓰기가 포함된 경우 boolean 모드와 큰따옴표 사용
+        if " " in user_keyword:
+            query_conditions.append("""
+                (MATCH(search, title, abstract) AGAINST(%s IN BOOLEAN MODE)
+                 OR EXISTS (SELECT 1 FROM paper_keyword pk
+                            JOIN keyword k ON pk.keyword_id = k.id
+                            WHERE pk.paper_id = p.id AND MATCH(k.keyword_name) AGAINST(%s IN BOOLEAN MODE)))
+            """)
+            query_params.extend([f'"{user_keyword}"', f'"{user_keyword}"'])
+        else:  # 띄어쓰기가 없는 경우 일반적인 MATCH AGAINST 사용
+            query_conditions.append("""
+                (MATCH(search, title, abstract) AGAINST(%s)
+                 OR EXISTS (SELECT 1 FROM paper_keyword pk
+                            JOIN keyword k ON pk.keyword_id = k.id
+                            WHERE pk.paper_id = p.id AND MATCH(k.keyword_name) AGAINST(%s)))
+            """)
+            query_params.extend([user_keyword, user_keyword])
 
     # 연도 필터링 조건 추가 (기본값: 2019 ~ 2024)
     query_conditions.append("YEAR(p.date) BETWEEN %s AND %s")

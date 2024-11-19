@@ -1,20 +1,22 @@
 
 {% block content %}
-<button onclick="downloadPDF()">PDF로 저장</button>
-<button onclick="showContent('report')">리포트 목록으로 돌아가기</button>
-<h2 id ="reportTitle">{{ title }}</h2>
-
+<div class="header-container">
+    <h1 id="reportTitle">{{ title }}</h1>
+    <div class="button-container">
+        <button class="pdf-btn" onclick="downloadPDF()">PDF로 저장</button>
+        <button class="back-btn" onclick="showContent('report')">리포트 목록으로 돌아가기</button>
+    </div>
+</div>
 
 {% if error %}
 <p>{{ error }}</p>
 {% else %}
 <div id="report-content">
-    <div>
-        <h3>리포트 내용</h3>
+    <div style="font-size: 20px;">
         <pre>{{ content }}</pre>
     </div>
-
-    <h3>선택된 이미지 목록</h3>
+    <br><br>
+    <strong>선택된 이미지 목록</strong>
     <div class="image-list">
         {% for image_url in images %}
             <img src="{{ image_url }}" alt="리포트 이미지" style="max-width: 80%; height: auto; border-radius: 8px;">

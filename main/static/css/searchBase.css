@@ -115,46 +115,12 @@ body {
     margin-right: 2%;
 }
 
-/* 반응형 미디어 쿼리 */
-@media (max-width: 768px) {
-    .header {
-        flex-direction: column;
-        align-items: center;
-    }
-
-    .search-container, .auth-buttons {
-        width: 100%;
-        justify-content: center;
-        margin-top: 10px;
-    }
-
-    .search-form input {
-        font-size: 16px;
-    }
-}
-
-@media (max-width: 480px) {
-    .logo {
-        width: 120px;
-    }
-
-    .auth-buttons {
-        flex-direction: column;
-        gap: 5px;
-    }
-
-    .search-form input {
-        font-size: 14px;
-    }
-}
-
-/* 네비게이션바 */
+/* 네비게이션 바 */
 .navbar {
-    background-color: #1E90FF; /* 네비게이션 바 배경색 */
+    background-color: #1E90FF;
     overflow: hidden;
     display: flex;
-    justify-content: center; /* 가운데 정렬 */
-    margin-bottom: 10px; /* 하단 여백 제거 */
+    justify-content: center;
     width: 100%;
 }
 
@@ -166,19 +132,25 @@ body {
 }
 
 .navbar ul li {
-    float: left;
+    position: relative; /* 구분선 위치 조정을 위한 상대 위치 */
+}
+
+.navbar ul li:not(:last-child) {
+    border-right: 1px solid #8bc5ff; /* 항목 사이 구분선 추가 */
 }
 
 .navbar ul li a {
     display: block;
-    color: white; /* 글자 색상 */
+    color: white;
     text-align: center;
-    padding: 10px 20px; /* 좀 더 넉넉한 padding */
+    padding: 10px 20px; /* 좌우 패딩 조정 */
     text-decoration: none;
+    font-size: 16px; /* 글자 크기 증가 */
+    font-weight: bold; /* 볼드체로 설정 */
 }
 
 .navbar ul li a:hover {
-    background-color: #4682B4; /* 호버 시 배경색 */
+    background-color: #4682B4;
     color: white;
 }
 
@@ -192,7 +164,6 @@ body {
     display: flex;
     justify-content: space-between;
     gap: 20px;
-    flex-wrap: wrap; /* 작은 화면에서 줄바꿈 허용 */
     width: 92%;
     margin: 0 auto;
 }
@@ -204,6 +175,8 @@ body {
     align-items: flex-start;
     margin: 20px;
     width: 100%;
+    margin-left: 3%;
+    margin-right: 0;
 }
 
 /* 필터링 */

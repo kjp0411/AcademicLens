@@ -2,81 +2,86 @@
 <h2>추천 논문</h2>
 
 {% if recommended_papers %}
-    <p>사용자님의 상위 키워드는 
-        {% for item in recommended_papers %}
-            {{ item.keyword }}{% if not forloop.last %}, {% endif %}
-        {% endfor %}입니다.
-    </p>
+    <div class="top-keywords">
+        사용자님의 상위 키워드는 
+        <strong>
+            {% for item in recommended_papers %}
+                {{ item.keyword }}{% if not forloop.last %}, {% endif %}
+            {% endfor %}입니다.
+        </strong>
+    </div>
 
     {% for item in recommended_papers %}
-        <h3>추천 키워드: {{ item.keyword }}</h3>
+        <div class="keyword-section">
+            <h1>{{ item.keyword }}</h1>
 
-        {% if item.papers %}
-            {% for paper_item in item.papers %}
-                <div class="cont">
-                    <div class="cont-container">
-                        <div class="title-container">
-                            <p class="title">
-                                <strong><a href="{% url 'paper_detail' paper_item.paper.id %}">
-                                    {{ paper_item.paper.title }}
-                                </a></strong>
-                            </p>
-                            <!-- 저장 버튼 추가 -->
-                            <button class="save-btn" data-paper-id="{{ paper_item.paper.id }}">
-                                <img src="{% if paper_item.is_saved %}{% static 'image/heart-filled.png' %}{% else %}{% static 'image/heart-empty.png' %}{% endif %}" alt="save" class="save-icon">
-                            </button>
-                        </div>
-                        <div class="preAbstract-container">
-                            <p class="preAbstract">
-                                <a href="{% url 'paper_detail' paper_item.paper.id %}">{{ paper_item.paper.abstract|truncatechars:250 }}</a>
-                            </p>
-                        </div>
-
-                        <!-- 키워드 -->
-                        {% if paper_item.keywords %}
-                            <div class="keywords-container">
-                                <p class="keyword">
-                                    {% for keyword in paper_item.keywords %}
-                                        # {{ keyword.keyword_name }}{% if not forloop.last %} {% endif %}
-                                    {% endfor %}
+            {% if item.papers %}
+                {% for paper_item in item.papers %}
+                    <div class="cont">
+                        <div class="cont-container">
+                            <div class="title-container">
+                                <p class="title">
+                                    <strong><a href="{% url 'paper_detail' paper_item.paper.id %}">
+                                        {{ paper_item.paper.title }}
+                                    </a></strong>
+                                </p>
+                                <!-- 저장 버튼 추가 -->
+                                <button class="save-btn" data-paper-id="{{ paper_item.paper.id }}">
+                                    <img src="{% if paper_item.is_saved %}{% static 'image/heart-filled.png' %}{% else %}{% static 'image/heart-empty.png' %}{% endif %}" alt="save" class="save-icon">
+                                </button>
+                            </div>
+                            <div class="preAbstract-container">
+                                <p class="preAbstract">
+                                    <a href="{% url 'paper_detail' paper_item.paper.id %}">{{ paper_item.paper.abstract|truncatechars:250 }}</a>
                                 </p>
                             </div>
-                        {% endif %}
-                        
-                        <div class="etc-container">
-                            <!-- 저자 -->
-                            {% if paper_item.authors %}
-                                {% if paper_item.authors|length > 1 %}
-                                    {{ paper_item.authors.0.name }} 외 {{ paper_item.authors|length|add:"-1" }}인
-                                {% else %}
-                                    {{ paper_item.authors.0.name }}
+
+                            <!-- 키워드 -->
+                            {% if paper_item.keywords %}
+                                <div class="keywords-container">
+                                    <p class="keyword">
+                                        {% for keyword in paper_item.keywords %}
+                                            # {{ keyword.keyword_name }}{% if not forloop.last %} {% endif %}
+                                        {% endfor %}
+                                    </p>
+                                </div>
+                            {% endif %}
+                            
+                            <div class="etc-container">
+                                <!-- 저자 -->
+                                {% if paper_item.authors %}
+                                    {% if paper_item.authors|length > 1 %}
+                                        {{ paper_item.authors.0.name }} 외 {{ paper_item.authors|length|add:"-1" }}인
+                                    {% else %}
+                                        {{ paper_item.authors.0.name }}
+                                    {% endif %}
+                                    &nbsp;&nbsp;|&nbsp;&nbsp;
                                 {% endif %}
-                                &nbsp;&nbsp;|&nbsp;&nbsp;
-                            {% endif %}
-                            
-                            <!-- 연도 -->
-                            {{ paper_item.paper.date|date:"Y" }}
-                            
-                            <!-- 국가 -->
-                            {% if paper_item.countries %}
-                                &nbsp;&nbsp;|&nbsp;&nbsp;
-                                {% for country in paper_item.countries %}
-                                    {{ country }}{% if not forloop.last %} , {% endif %}
-                                {% endfor %}
-                            {% endif %}
-                            
-                            <!-- 발행처 -->
-                            {% if paper_item.paper.publisher %}
-                                &nbsp;&nbsp;|&nbsp;&nbsp;{{ paper_item.paper.publisher }}
-                            {% endif %}
+                                
+                                <!-- 연도 -->
+                                {{ paper_item.paper.date|date:"Y" }}
+                                
+                                <!-- 국가 -->
+                                {% if paper_item.countries %}
+                                    &nbsp;&nbsp;|&nbsp;&nbsp;
+                                    {% for country in paper_item.countries %}
+                                        {{ country }}{% if not forloop.last %} , {% endif %}
+                                    {% endfor %}
+                                {% endif %}
+                                
+                                <!-- 발행처 -->
+                                {% if paper_item.paper.publisher %}
+                                    &nbsp;&nbsp;|&nbsp;&nbsp;{{ paper_item.paper.publisher }}
+                                {% endif %}
+                            </div>
                         </div>
                     </div>
-                </div>
-                <hr>
-            {% endfor %}
-        {% else %}
-            <p>추천 논문이 없습니다.</p>
-        {% endif %}
+                    <hr>
+                {% endfor %}
+            {% else %}
+                <p>추천 논문이 없습니다.</p>
+            {% endif %}
+        </div>
     {% endfor %}
 {% else %}
     <p>저장 논문이 없어 논문을 추천할 수 없습니다.</p>

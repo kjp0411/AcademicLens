@@ -2,13 +2,14 @@
 {% load static %}
 
 {% block content %}
-<h2>최근 본 논문</h2>
-<p>최대 20개 논문만 보입니다.</p>
+<h2>최근 본 논문 (최대 20개) </h2>
 
 {% if papers_with_authors_and_keywords %}
     <!-- 전체 선택 및 저장하기 -->
-    &nbsp;&nbsp;<input type="checkbox" name="select_all" id="select-all" class="select-all"> &nbsp;&nbsp;&nbsp;
-    <button type="button" class="check-save-btn" id="check-save-btn">저장하기</button>
+    <div class="all-check">
+        &nbsp;&nbsp;<input type="checkbox" name="select_all" id="select-all" class="select-all"> &nbsp;&nbsp;&nbsp;
+        <button type="button" class="check-save-btn" id="check-save-btn">저장하기</button>
+    </div>
     <!-- 최근 본 논문 리스트 출력 -->
     {% for item in papers_with_authors_and_keywords %}
         <div class="cont">

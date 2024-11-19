@@ -6,45 +6,6 @@
 
 {% block content %}
 <style>
-    .folder {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        width: 100%;
-    }
-    
-    .folder-name {
-        flex: 1;
-        text-align: left;
-    }
-    
-    .folder-actions {
-        display: flex;
-        gap: 10px; /* 아이콘 간격 */
-    }
-    
-    .folder-actions button {
-        background: none;
-        border: none;
-        cursor: pointer;
-        font-size: 18px;
-    }
-
-    .delete-btn {
-        border: none;
-        background: none;
-        padding: 0;
-        cursor: pointer;
-        font-size: 16px; /* 아이콘 크기 조절 */
-        color: red;
-    }
-
-    .image-list { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; }
-    .image-item { width: 150px; text-align: center; }
-    .image-item img { width: 100%; cursor: pointer; border: 2px solid transparent; }
-    .image-item img.selected { border-color: #007bff; }
-    .report-section { margin-top: 20px; }
-
     table {
         width: 100%;
         border-collapse: collapse;
@@ -53,10 +14,28 @@
         border: 1px solid #ddd;
         padding: 8px;
         text-align: center;
+        vertical-align: middle; /* 세로 가운데 정렬 */
     }
     th {
         background-color: #f2f2f2;
     }
+
+    /* 특정 열 너비 설정 */
+    .column-affiliation {
+        width: 70%; /* 소속명 열의 너비 */
+        white-space: nowrap; /* 줄바꿈 방지 */
+        text-overflow: ellipsis; /* 넘치는 텍스트 생략 */
+        overflow: hidden;
+    }
+    .column-count, .column-action {
+        width: 15%; /* 논문 수와 분석하기 열의 너비 */
+    }
+
+    /* 전체 테이블의 크기를 유지하기 위해 최소 너비를 설정 */
+    table td, table th {
+        max-width: 100%; 
+    }
+
     .actions button {
         padding: 5px 10px;
         border: none;
@@ -68,6 +47,111 @@
     .actions .delete {
         background-color: #dc3545;
     }
+    .sidebar-hr {
+        border: none;
+        border-top: 1px solid #bbb;
+        margin-left: -20px;
+        margin-right: -20px;
+    }
+    /* 분석하기 버튼 스타일 */
+    .analyze-btn {
+        padding: 8px 15px;
+        background-color: #6c757d; /* 기본 회색 */
+        color: white;
+        border: none;
+        border-radius: 5px;
+        font-size: 14px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: background-color 0.3s ease, box-shadow 0.3s ease, transform 0.2s ease;
+    }
+
+    .analyze-btn:hover {
+        background-color: #5a6268; /* 호버 시 더 어두운 회색 */
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* 그림자 효과 */
+    }
+
+    .analyze-btn:active {
+        background-color: #4e555b; /* 클릭 시 더 짙은 회색 */
+        transform: scale(0.98); /* 클릭 시 살짝 작아짐 */
+    }
+
+    /* 검색하기 버튼 스타일 */
+    .search-btn {
+        padding: 8px 15px;
+        background-color: #007bff; /* 기본 파란색 */
+        color: white;
+        border: none;
+        border-radius: 5px;
+        font-size: 14px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: background-color 0.3s ease, box-shadow 0.3s ease, transform 0.2s ease;
+    }
+
+    .search-btn:hover {
+        background-color: #0056b3; /* 호버 시 더 어두운 파란색 */
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* 그림자 효과 */
+    }
+
+    .search-btn:active {
+        background-color: #003f7f; /* 클릭 시 더 짙은 파란색 */
+        transform: scale(0.98); /* 클릭 시 살짝 작아짐 */
+    }
+
+    #country-search-input {
+        width: 100%;
+        max-width: 300px; /* 최대 너비 제한 */
+        padding: 10px; /* 내부 여백 */
+        font-size: 14px; /* 글꼴 크기 */
+        border: 1px solid #ccc; /* 기본 테두리 */
+        border-radius: 5px; /* 둥근 모서리 */
+        box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1); /* 내부 그림자 효과 */
+        transition: border-color 0.3s ease, box-shadow 0.3s ease; /* 포커스 효과 전환 */
+    }
+
+    /* 포커스 상태 */
+    #country-search-input:focus {
+        border-color: #007bff; /* 포커스 시 파란 테두리 */
+        box-shadow: 0 0 5px rgba(0, 123, 255, 0.5); /* 파란 그림자 효과 */
+        outline: none; /* 기본 아웃라인 제거 */
+    }
+
+    #author-search-input {
+        width: 100%;
+        max-width: 300px; /* 최대 너비 제한 */
+        padding: 10px; /* 내부 여백 */
+        font-size: 14px; /* 글꼴 크기 */
+        border: 1px solid #ccc; /* 기본 테두리 */
+        border-radius: 5px; /* 둥근 모서리 */
+        box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1); /* 내부 그림자 효과 */
+        transition: border-color 0.3s ease, box-shadow 0.3s ease; /* 포커스 효과 전환 */
+    }
+
+    /* 포커스 상태 */
+    #author-search-input:focus {
+        border-color: #007bff; /* 포커스 시 파란 테두리 */
+        box-shadow: 0 0 5px rgba(0, 123, 255, 0.5); /* 파란 그림자 효과 */
+        outline: none; /* 기본 아웃라인 제거 */
+    }
+
+    #affiliation-search-input {
+        width: 100%;
+        max-width: 300px; /* 최대 너비 제한 */
+        padding: 10px; /* 내부 여백 */
+        font-size: 14px; /* 글꼴 크기 */
+        border: 1px solid #ccc; /* 기본 테두리 */
+        border-radius: 5px; /* 둥근 모서리 */
+        box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1); /* 내부 그림자 효과 */
+        transition: border-color 0.3s ease, box-shadow 0.3s ease; /* 포커스 효과 전환 */
+    }
+
+    /* 포커스 상태 */
+    #affiliation-search-input:focus {
+        border-color: #007bff; /* 포커스 시 파란 테두리 */
+        box-shadow: 0 0 5px rgba(0, 123, 255, 0.5); /* 파란 그림자 효과 */
+        outline: none; /* 기본 아웃라인 제거 */
+    }
 </style>
 
 <div class="container">
@@ -77,9 +161,9 @@
             <h2>분석 페이지</h2>
         </div>
         <ul>
-            <li><a href="#" onclick="showAnalysisContent('author')">저자 분석</a></li><hr>
-            <li><a href="#" onclick="showAnalysisContent('affiliation')">소속 분석</a></li><hr>
-            <li><a href="#" onclick="showAnalysisContent('country')">나라 분석</a></li><hr>
+            <li><a href="#" onclick="showAnalysisContent('author')">저자 분석</a></li><hr class="sidebar-hr">
+            <li><a href="#" onclick="showAnalysisContent('affiliation')">소속 분석</a></li><hr class="sidebar-hr">
+            <li><a href="#" onclick="showAnalysisContent('country')">나라 분석</a></li><hr class="sidebar-hr">
         </ul>
     </div>
 
@@ -116,7 +200,7 @@
                                     <td>
                                         <form action="{% url 'country_analyze' %}" method="get">
                                             <input type="hidden" name="name" value="{{ country.country__name }}">
-                                            <button type="submit">분석하기</button>
+                                            <button type="submit" class="analyze-btn">분석하기</button>
                                         </form>
                                     </td>
                                 </tr>
@@ -127,7 +211,7 @@
                 <div>
                     <h3>나라 검색</h3>
                     <input type="text" id="country-search-input" placeholder="나라 이름, 코드 (AF, AFG 등)">
-                    <button onclick="searchCountries()">검색하기</button>
+                    <button class="search-btn" onclick="searchCountries()">검색하기</button>
                 </div>
                 <div id="search-results">
                     <h3>검색 결과</h3>
@@ -167,7 +251,7 @@
                                     <td>
                                         <form action="{% url 'author_analyze' %}" method="get">
                                             <input type="hidden" name="name" value="{{ author.author__name }}">
-                                            <button type="submit">분석하기</button>
+                                            <button type="submit" class="analyze-btn">분석하기</button>
                                         </form>
                                     </td>
                                 </tr>
@@ -178,7 +262,7 @@
                 <div>
                     <h3>저자 검색</h3>
                     <input type="text" id="author-search-input" placeholder="저자 이름을 입력하세요">
-                    <button onclick="searchAuthors()">검색하기</button>
+                    <button class="search-btn" onclick="searchAuthors()">검색하기</button>
                 </div>
                 <div id="author-search-results">
                     <h3>저자 검색 결과</h3>
@@ -218,7 +302,7 @@
                                     <td>
                                         <form action="{% url 'affiliation_analyze' %}" method="get">
                                             <input type="hidden" name="name" value="{{ affiliation.affiliation__name }}">
-                                            <button type="submit">분석하기</button>
+                                            <button type="submit" class="analyze-btn">분석하기</button>
                                         </form>
                                     </td>
                                 </tr>
@@ -229,16 +313,16 @@
                 <div>
                     <h3>소속 검색</h3>
                     <input type="text" id="affiliation-search-input" placeholder="소속 이름을 입력하세요">
-                    <button onclick="searchAffiliations()">검색하기</button>
+                    <button class="search-btn" onclick="searchAffiliations()">검색하기</button>
                 </div>
                 <div id="affiliation-search-results">
                     <h3>소속 검색 결과</h3>
                     <table>
                         <thead>
                             <tr>
-                                <th>소속</th>
-                                <th>논문 수</th>
-                                <th>분석</th>
+                                <th class="column-affiliation">소속</th>
+                                <th class="column-count">논문 수</th>
+                                <th class="column-action">분석</th>
                             </tr>
                         </thead>
                         <tbody id="affiliation-list"></tbody>
@@ -319,7 +403,7 @@
                             <td>
                                 <form action="{% url 'country_analyze' %}" method="get">
                                     <input type="hidden" name="name" value="${country.name}">
-                                    <button type="submit">분석하기</button>
+                                    <button type="submit" class="analyze-btn">분석하기</button>
                                 </form>
                             </td>
                         `;
@@ -356,7 +440,7 @@
                             <td>
                                 <form action="{% url 'author_analyze' %}" method="get">
                                     <input type="hidden" name="name" value="${author.name}">
-                                    <button type="submit">분석하기</button>
+                                    <button type="submit" class="analyze-btn">분석하기</button>
                                 </form>
                             </td>
                         `;
@@ -389,7 +473,7 @@
                             <td>
                                 <form action="{% url 'affiliation_analyze' %}" method="get">
                                     <input type="hidden" name="name" value="${affiliation.name}">
-                                    <button type="submit">분석하기</button>
+                                    <button type="submit" class="analyze-btn">분석하기</button>
                                 </form>
                             </td>
                         `;

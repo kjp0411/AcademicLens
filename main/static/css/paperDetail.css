@@ -1,6 +1,6 @@
 .paper-container {
     max-width: 80%;
-    margin: 30px auto;
+    margin: 20px auto;
     padding: 20px;
 }
 
@@ -29,39 +29,94 @@
     height: 30px;
 }
 
-.paper-metadata {
+.main-container {
     display: flex;
-    flex-direction: column;
-    margin-bottom: 20px;
+    justify-content: space-between;
+    align-items: flex-start;
 }
 
-.paper-metadata strong {
-    display: block;
-    font-weight: bold;
-    margin-bottom: 8px;
+.left-container {
+    flex: 2;
+    margin-right: 20px;
+    margin-top: 20px;
 }
 
-.paper-metadata p {
-    margin: 0 0 10px;
-    color: #333;
+.paper-matedata {
+    padding: 20px;
 }
 
-.paper-abstract {
-    margin-bottom: 20px;
-    padding: 10px;
+.right-container {
+    flex: 1;
+    margin-left: auto;
+    max-width: 280px;
+}
+
+.paper-info-box {
+    border: 1px solid #ddd;
+    padding: 20px;
     background-color: #f2f2f2;
-    border-radius: 4px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
 }
 
-.paper-abstract h2 {
-    font-size: 1.4em;
-    font-weight: bold;
-    margin-bottom: 10px;
-}
-
-.paper-abstract p {
+.paper-info-box button.url-btn {
     color: #333;
-    line-height: 1.6;
+    border: none;
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+    text-align: left;
+    margin-left: -6px;
+    background-color: none;
+}
+
+.paper-info-box button.url-btn:hover {
+    text-decoration: underline;
+}
+
+.paper-info-box strong {
+    display: block;
+    font-size: 14px;
+    color: #333;
+    margin-bottom: 5px;
+}
+
+.paper-info-box p {
+    margin: 0;
+    font-size: 14px;
+    color: #555;
+    line-height: 1.5;
+}
+
+.paper-info-box p:not(:last-child) {
+    margin-bottom: 15px;
+}
+
+.paper-info-box hr {
+    border: none;
+    border-top: 1px solid #ddd;
+    margin: 15px 0;
+}
+
+.info-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 10px 0;
+}
+
+.info-row strong {
+    font-size: 14px;
+    color: #333;
+    flex: 1;
+    text-align: left;
+}
+
+.info-row p {
+    font-size: 14px;
+    color: #555;
+    flex: 1;
+    text-align: right;
+    margin: 0;
 }
 
 .paper-keywords {
@@ -102,8 +157,14 @@
     font-weight: bold;
 }
 
-hr {
+.custom1-hr {
     border: none;
-    border-top: 1px solid #ccc;
+    border-top: 3px solid #616161;
+    margin: 20px 0;
+}
+
+.custom-hr {
+    border: none;
+    border-top: 1px dashed #bbb;
     margin: 20px 0;
 }

@@ -16,7 +16,11 @@
             <td>{{ forloop.counter }}</td>
             <td>{{ report.folder_name }}</td>
             <td>{{ report.creation_date }}</td>
-            <td><a href="javascript:void(0);" onclick="showContent('report_detail', 1, '{{ report.folder_name }}')">상세 보기</a></td>
+            <td>
+                <button class="styled-btn" onclick="showContent('report_detail', 1, '{{ report.folder_name }}')">
+                    상세 보기
+                </button>
+            </td>
         </tr>
         {% empty %}
         <tr>
