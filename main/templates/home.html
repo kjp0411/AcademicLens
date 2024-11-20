@@ -4,15 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AcademicLens</title>
-    {% load static %}
+    {% load main/static %}
     <link rel="stylesheet" href="{% static 'css/home.css' %}">
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
-    <link rel="stylesheet" href="{% static 'css/paperDetail.css' %}">
+    <link rel="stylesheet" href="{% static 'css/paperDetail.css' %}">   
 </head>
 <body>
     <header class="header">
         <div class="logo-container">
-            <a href="{% url 'home' %}"><img src="{% static 'image/cap_logo.png' %}" alt="Logo" class="logo"></a>
+            <a href="{% url 'home' %}"><img src="{% main/static 'image/cap_logo.png' %}" alt="Logo" class="logo"></a>
         </div>
         <div class="auth-buttons">
             {% if user.is_authenticated %}
