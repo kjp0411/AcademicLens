@@ -66,12 +66,14 @@ body {
 }
 
 /* 네비게이션 바 */
+/* 네비게이션 바 */
 .navbar {
     background-color: #1E90FF;
     overflow: hidden;
     display: flex;
     justify-content: center;
     width: 100%;
+    border: none; /* 구분선 제거 */
 }
 
 .navbar ul {
@@ -79,14 +81,6 @@ body {
     margin: 0;
     padding: 0;
     display: flex;
-}
-
-.navbar ul li {
-    position: relative; /* 구분선 위치 조정을 위한 상대 위치 */
-}
-
-.navbar ul li:not(:last-child) {
-    border-right: 1px solid #8bc5ff; /* 항목 사이 구분선 추가 */
 }
 
 .navbar ul li a {
@@ -103,7 +97,6 @@ body {
     background-color: #4682B4;
     color: white;
 }
-
 
 /* 검색창 컨테이너 */
 .search-container {

@@ -73,16 +73,30 @@
     }
 </style>
 
-<div style="display: flex; justify-content: space-between; align-items: center; padding: 20px 50px;">
-    <!-- 키워드 표시 -->
-    
-    <h2 style="font-size: 47px; font-weight: bold; color: #007BFF; margin-left: 50px;">
-        {{ keyword }}
-    </h2>
+<div style="display: flex; justify-content: space-between; align-items: flex-start; padding: 20px 50px;">
+    <!-- 검색 키워드와 Keyword -->
+    <div style="display: flex; align-items: center; flex-wrap: wrap; margin-left: 50px; max-width: 70%;">
+        <span style="font-size: 30px; font-weight: bold; color: #333; white-space: nowrap;">
+            {% if request.GET.filter == "paper" %}
+                검색 키워드 &nbsp;
+            {% elif request.GET.filter == "author" %}
+                검색 저자 &nbsp;
+            {% elif request.GET.filter == "country" %}
+                검색 나라 &nbsp;
+            {% elif request.GET.filter == "affiliation" %}
+                검색 소속 &nbsp;
+            {% else %}
+                검색 키워드 &nbsp;
+            {% endif %}
+        </span>
+        <h2 style="font-size: 47px; font-weight: bold; color: #007BFF; margin: 0 0 0 10px; word-break: break-word; overflow-wrap: break-word;">
+            {{ keyword }}
+        </h2>
+    </div>
 
     <!-- 분석기간 -->
     <form method="GET" action="{% url 'total_graph' %}" 
-          style="display: flex; align-items: center; gap: 10px; padding: 15px; border-radius: 10px; margin-right: -20px;">
+          style="display: flex; align-items: center; gap: 10px; padding: 15px; border-radius: 10px; margin-right: -20px; flex-shrink: 0;">
         <input type="hidden" name="query" value="{{ keyword }}">
         <input type="hidden" name="filter" value="{{ filter }}">
 
@@ -116,6 +130,7 @@
         </button>
     </form>
 </div>
+
 
 <div style="text-align: center; margin-top: -40px;">
     <p style="font-size: 22px; font-weight: bold; padding: 10px; display: inline-block;">
