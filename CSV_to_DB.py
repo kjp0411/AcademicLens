@@ -26,7 +26,7 @@ data.loc[data['date'] == "none", 'date'] = None
 
 # 'nan' 값을 NULL로 대체
 data.fillna(value=pd.NA, inplace=True)
-data = data.head(2000)
+data = data.head(100)
 
 # MySQL에 데이터 삽입 (tqdm을 사용해 진행 상황을 표시)
 for index, row in tqdm(data.iterrows(), total=data.shape[0], desc="Inserting rows"):

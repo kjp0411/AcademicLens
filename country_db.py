@@ -3,8 +3,8 @@ import mariadb
 
 # mariadb 연결 설정
 conn = mariadb.connect(
-    host="127.0.0.1",
-    port=3307,
+    host="172.16.3.53",  # MariaDB 서버의 IP 주소
+    port=3306,           # 기본 MariaDB 포트
     user="goorm",
     password="123456",
     database="capstone",
