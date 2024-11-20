@@ -60,7 +60,7 @@ load_dotenv()
 openai.api_key = os.getenv('OPENAI_API_KEY')
 
 db_config = {
-    'host': '172.16.3.53',
+    'host': '127.0.0.1',
     'user': 'goorm',
     'password': '123456',
     'database': 'capstone',

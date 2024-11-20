@@ -31,9 +31,7 @@ EMAIL_HOST_PASSWORD = 'mcyb zqqa wfyc oyhz'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['172.16.3.53', '127.0.0.1', '0.0.0.0']
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
-
+ALLOWED_HOSTS = []
 
 # Application definition
 
@@ -94,7 +92,7 @@ DATABASES = {
         'NAME': 'capstone',
         'USER': 'goorm',
         'PASSWORD': '123456',
-        'HOST': '172.16.3.53',
+        'HOST': '127.0.0.1',
         'PORT': '3306',
     }
 }
@@ -139,9 +137,7 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.2/howto/static-files/
 
-# Nginx로부터 전달된 HTTPS 헤더 처리
-SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
-STATIC_URL = 'http://172.16.3.53:8000/static/'
+STATIC_URL = '/static/'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field
