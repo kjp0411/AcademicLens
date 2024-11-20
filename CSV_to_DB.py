@@ -2,6 +2,7 @@ import pandas as pd
 import mariadb
 import ast  # 문자열을 리스트나 딕셔너리로 변환하기 위한 모듈
 import time
+from tqdm import tqdm  # tqdm을 추가합니다
 
 start_time = time.time()
 
@@ -16,9 +17,8 @@ conn = mariadb.connect(
 cursor = conn.cursor()
 
 # CSV 파일 읽기
-csv_file = r"total_result.csv"
+csv_file = r"preprocessing_total_result.csv"
 selected_columns = ["search", "title", "url", "author", "date", "citations", "publisher", "abstract", "affiliation", "keywords"]
-# data = pd.read_csv(csv_file, usecols=selected_columns, encoding='utf-8') 데이터 추가시 오류나서 아래 코드로 변경함
 data = pd.read_csv(csv_file, usecols=selected_columns, encoding='utf-8')
 
 # "none" 값을 None으로 변경
@@ -26,9 +26,10 @@ data.loc[data['date'] == "none", 'date'] = None
 
 # 'nan' 값을 NULL로 대체
 data.fillna(value=pd.NA, inplace=True)
+data = data.head(2000)
 
-# MySQL에 데이터 삽입
-for index, row in data.iterrows():
+# MySQL에 데이터 삽입 (tqdm을 사용해 진행 상황을 표시)
+for index, row in tqdm(data.iterrows(), total=data.shape[0], desc="Inserting rows"):
     # 'nan' 값을 포함하지 않는 행만 삽입
     if not row.isnull().any():
         try:
@@ -47,12 +48,6 @@ for index, row in data.iterrows():
                 affiliations = {"affiliation": affiliations}
             else:
                 affiliations = ast.literal_eval(affiliations)
-
-            # 이미 존재하는 URL인지 확인
-            cursor.execute("SELECT COUNT(*) FROM paper WHERE url = %s", (url,))
-            if cursor.fetchone()[0] > 0:
-                print(f"Skipping insertion for duplicate URL: {url}")
-                continue  # 이미 존재하는 URL이면 다음 행으로 넘어감
 
             # 존재하지 않는 url이면 삽입 진행
             sql = "INSERT INTO paper (search, title, url, date, citations, publisher, abstract) VALUES (%s, %s, %s, %s, %s, %s, %s)"
@@ -86,16 +81,13 @@ for index, row in data.iterrows():
                 affiliation = ', '.join(affiliation_list)
 
                 # 소속 삽입 코드
-                # 소속 데이터가 이미 있는지 확인하는 쿼리
                 check_sql = "SELECT id FROM affiliation WHERE name = %s"
                 cursor.execute(check_sql, (affiliation,))
                 result = cursor.fetchone()
 
                 if result:
-                    # 소속 데이터가 이미 있는 경우 해당 id를 가져옴
                     affiliation_id = result[0]
                 else:
-                    # 소속 데이터가 없는 경우 삽입하고 lastrowid를 가져옴
                     insert_sql = "INSERT INTO affiliation (name) VALUES (%s)"
                     cursor.execute(insert_sql, (affiliation,))
                     affiliation_id = cursor.lastrowid  
@@ -106,10 +98,8 @@ for index, row in data.iterrows():
                 result = cursor.fetchone()
 
                 if result:
-                    # 저자 데이터가 이미 있는 경우 해당 id를 가져옴
                     author_id = result[0]
                 else:
-                    # 저자 데이터가 없는 경우 삽입하고 lastrowid를 가져옴
                     sql = "INSERT INTO author (name, affiliation) VALUES (%s, %s)"
                     cursor.execute(sql, (author, affiliation))
                     author_id = cursor.lastrowid
@@ -126,7 +116,6 @@ for index, row in data.iterrows():
 
             # keyword 테이블과 paper_keyword 테이블에 데이터 삽입
             for keyword in keywords:
-                # 먼저 keyword 테이블에 키워드가 존재하는지 확인
                 sql = "SELECT id FROM keyword WHERE keyword_name = %s"
                 cursor.execute(sql, (keyword,))
                 result = cursor.fetchone()
@@ -134,12 +123,10 @@ for index, row in data.iterrows():
                 if result:
                     keyword_id = result[0]
                 else:
-                    # 키워드가 없으면 삽입
                     sql = "INSERT INTO keyword (keyword_name) VALUES (%s)"
                     cursor.execute(sql, (keyword,))
                     keyword_id = cursor.lastrowid
 
-                # paper_keyword 테이블에 paper_id와 keyword_id를 삽입
                 sql = "INSERT INTO paper_keyword (paper_id, keyword_id) VALUES (%s, %s)"
                 cursor.execute(sql, (paper_id, keyword_id))
         except Exception:  # 오류 발생
