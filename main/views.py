@@ -60,11 +60,11 @@ load_dotenv()
 openai.api_key = os.getenv('OPENAI_API_KEY')
 
 db_config = {
-    'host': '127.0.0.1',
+    'host': '172.16.3.53',
     'user': 'goorm',
     'password': '123456',
     'database': 'capstone',
-    'port':3307
+    'port':3306
 }
 
 # 메인 화면 논문 수, 소속 수, 인기 논문 5개 가져오기

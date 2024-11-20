@@ -8,8 +8,8 @@ start_time = time.time()
 
 # mariadb 연결 설정(이건 개인별로 다르게 설정하면 됨)
 conn = mariadb.connect(
-    host="127.0.0.1",
-    port=3307,
+    host="172.16.3.53",
+    port=3306,
     user="goorm",
     password="123456",
     database="capstone",

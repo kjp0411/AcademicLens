@@ -93,8 +93,8 @@ DATABASES = {
         'NAME': 'capstone',
         'USER': 'goorm',
         'PASSWORD': '123456',
-        'HOST': '127.0.0.1',
-        'PORT': '3307',
+        'HOST': '172.16.3.53',
+        'PORT': '3306',
     }
 }
 
