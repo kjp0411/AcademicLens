@@ -927,6 +927,7 @@ def country_network(request):
                 c1.name, c2.name, cpc1.total_papers, cpc2.total_papers
             ORDER BY 
                 num_papers DESC
+            LIMIT 10;
             """
             
             cursor.execute(query, [original_country_name, original_country_name] + paper_ids_params)
