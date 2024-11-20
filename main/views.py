@@ -64,7 +64,7 @@ db_config = {
     'user': 'goorm',
     'password': '123456',
     'database': 'capstone',
-    'port':3306
+    'port':3307
 }
 
 # 메인 화면 논문 수, 소속 수, 인기 논문 5개 가져오기
