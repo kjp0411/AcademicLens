@@ -32,7 +32,7 @@ EMAIL_HOST_PASSWORD = 'mcyb zqqa wfyc oyhz'
 DEBUG = True
 
 ALLOWED_HOSTS = ['172.16.3.53', '127.0.0.1', '0.0.0.0']
-STATIC_ROOT = BASE_DIR / 'staticfiles'
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 
 # Application definition
