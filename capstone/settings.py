@@ -141,7 +141,7 @@ USE_TZ = True
 
 # Nginx로부터 전달된 HTTPS 헤더 처리
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
-STATIC_URL = '/static/'
+STATIC_URL = 'http://172.16.3.53:8000/static/'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field
