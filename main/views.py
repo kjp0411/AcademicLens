@@ -2528,9 +2528,11 @@ def analysis_page(request):
     # 상위 10개 소속과 논문 수를 가져오기
     top_affiliations = (
         PaperAffiliation.objects
-        .values('affiliation__name')
-        .annotate(total_papers=Count('paper_id', distinct=True))  # 중복 제거
-        .order_by('-total_papers')[:10]
+        .filter(affiliation__name__isnull=False)  # 소속 이름이 Null이 아닌 항목만 포함
+        .exclude(affiliation__name='')           # 소속 이름이 빈 문자열인 항목 제외
+        .values('affiliation__name')             # 소속 이름 기준으로 그룹화
+        .annotate(total_papers=Count('paper_id', distinct=True))  # 중복 논문 제거
+        .order_by('-total_papers')[:10]          # 상위 10개만 정렬
     )
 
     # 데이터를 템플릿으로 전달

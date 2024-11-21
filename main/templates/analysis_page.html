@@ -228,6 +228,12 @@
                 </div>
             `;
             updateCountryPaperCounts();
+            // 나라 검색
+            document.getElementById('country-search-input').addEventListener('keyup', function (event) {
+                if (event.key === 'Enter') {
+                    searchCountries();
+                }
+            });
         } else if (type === 'author') {
             // 저자 분석 콘텐츠 표시
             document.getElementById('content-area').innerHTML = `
@@ -279,6 +285,12 @@
                 </div>
             `;
             updateAuthorPaperCounts();
+            // 저자 검색
+            document.getElementById('author-search-input').addEventListener('keyup', function (event) {
+                if (event.key === 'Enter') {
+                    searchAuthors();
+                }
+            });
         } else if (type === 'affiliation') {
             // 소속 분석 콘텐츠 표시
             document.getElementById('content-area').innerHTML = `
@@ -330,6 +342,12 @@
                 </div>
             `;
             updateAffiliationPaperCounts();
+            // 소속 검색
+            document.getElementById('affiliation-search-input').addEventListener('keyup', function (event) {
+                if (event.key === 'Enter') {
+                    searchAffiliations();
+                }
+            });
         }
     }
 

@@ -330,7 +330,7 @@
         </div>
         <div class="main">
             <div class="chart">
-                <div class="chart-header">
+                <div class="chart-header">ㄹ
                     <h3 class="chart-title">네트워크 데이터 분석</h3>
                     <button id="analyzeButton" class="analyze-btn">
                         <i class="fas fa-chart-network"></i> 네트워크 데이터 분석
@@ -573,7 +573,9 @@
         // 검색어로 논문 리스트 출력
         function searchPapersByKeyword() {
             const keyword = document.getElementById('keywordInput').value;
-            const author = document.getElementById('authorName').innerText;
+            // 현재 URL에서 쿼리 파라미터 파싱
+            const urlParams = new URLSearchParams(window.location.search);
+            const author = urlParams.get('name'); // name 값 가져오기
 
             if (!keyword) {
                 alert("키워드를 입력하세요.");
@@ -1128,12 +1130,13 @@
         });
 
         function redirectToFilteredPage() {
-            // `authorName` 요소의 텍스트를 가져와 국가 정보를 추출
-            const author = document.getElementById('authorName').innerText;
+            // 현재 URL에서 쿼리 파라미터 파싱
+            const urlParams = new URLSearchParams(window.location.search);
+            const author = urlParams.get('name'); // name 값 가져오기
             const keywordInput = document.getElementById('keywordInput').value.trim(); // 입력 필드에서 키워드 가져오기
 
             if (!author) {
-                alert("국가 정보가 없습니다.");
+                alert("저자 정보가 없습니다.");
                 return;
             }
 
@@ -1143,7 +1146,7 @@
                 // 키워드가 있을 경우 - query와 author를 모두 포함
                 newUrl = `/search/?filter=paper&query=${encodeURIComponent(keywordInput)}&author-search=${encodeURIComponent(author)}`;
             } else {
-                // 키워드가 없을 경우 - country 필터만 사용
+                // 키워드가 없을 경우 - author 필터만 사용
                 newUrl = `/search/?filter=author&query=${encodeURIComponent(author)}`;
             }
 
