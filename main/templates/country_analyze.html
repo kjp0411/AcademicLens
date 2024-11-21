@@ -1006,15 +1006,28 @@
         }
 
         function generateWordCloud(words) {
+            // 툴팁 생성 및 스타일 설정
+            const tooltip = document.createElement('div');
+            tooltip.style.position = 'absolute';
+            tooltip.style.display = 'none';
+            tooltip.style.backgroundColor = 'rgba(0, 0, 0, 0.8)'; // 툴팁 배경색 (어두운 회색)
+            tooltip.style.color = '#fff'; // 텍스트 색상 (흰색)
+            tooltip.style.padding = '5px 10px'; // 패딩
+            tooltip.style.borderRadius = '8px'; // 테두리 둥글게
+            tooltip.style.fontSize = '12px'; // 텍스트 크기
+            tooltip.style.zIndex = '1000'; // 다른 요소 위에 표시
+            tooltip.style.boxShadow = '0px 4px 6px rgba(0, 0, 0, 0.3)'; // 그림자 추가
+            document.body.appendChild(tooltip);
             // 최대 빈도를 계산
             const maxCount = Math.max(...words.map(word => word[1]));
         
             // 워드클라우드 생성
             WordCloud(document.getElementById('wordcloud'), {
                 list: words.map(([keyword, count]) => [keyword, (count / maxCount) * 100]), // 비율로 크기 조정
-                gridSize: 2,
+                gridSize: 7,
                 weightFactor: function (size) {
-                    return size / 2; // 비율 기반 크기 설정
+                    const calculatedSize = size / 2; // 비율 기반 크기 설정
+                    return Math.max(10, calculatedSize); // 최소 크기를 10으로 설정
                 },
                 fontFamily: 'Arial, sans-serif',
                 color: function () {
@@ -1122,6 +1135,19 @@
                 return;
             }
 
+            // 툴팁 생성 및 스타일 설정
+            const tooltip = document.createElement('div');
+            tooltip.style.position = 'absolute';
+            tooltip.style.display = 'none';
+            tooltip.style.backgroundColor = 'rgba(0, 0, 0, 0.8)'; // 툴팁 배경색 (어두운 회색)
+            tooltip.style.color = '#fff'; // 텍스트 색상 (흰색)
+            tooltip.style.padding = '5px 10px'; // 패딩
+            tooltip.style.borderRadius = '8px'; // 테두리 둥글게
+            tooltip.style.fontSize = '12px'; // 텍스트 크기
+            tooltip.style.zIndex = '1000'; // 다른 요소 위에 표시
+            tooltip.style.boxShadow = '0px 4px 6px rgba(0, 0, 0, 0.3)'; // 그림자 추가
+            document.body.appendChild(tooltip);
+
             // 키워드 검색에 따라 워드 클라우드 업데이트
             fetch(`/country_wordcloud/?name=${encodeURIComponent(country)}&keyword=${encodeURIComponent(keyword)}`)
                 .then(response => response.json())
@@ -1133,9 +1159,10 @@
                     // 워드클라우드 생성
                     WordCloud(document.getElementById('wordcloud'), {
                         list: words.map(([keyword, count]) => [keyword, (count / maxCount) * 100]), // 최대 크기 50으로 조정
-                        gridSize: 2,
+                        gridSize: 7,
                         weightFactor: function (size) {
-                            return size / 2; // 비율 기반 크기 설정
+                            const calculatedSize = size / 2; // 비율 기반 크기 설정
+                            return Math.max(10, calculatedSize); // 최소 크기를 10으로 설정
                         },
                         fontFamily: 'Arial, sans-serif',
                         color: function () {
@@ -1146,7 +1173,7 @@
                         backgroundColor: '#fff',
                         drawOutOfBound: false,
                         hover: function (item, dimension, event) {
-                            const tooltip = document.getElementById("tooltip");
+                            // 툴팁 표시
                             tooltip.style.display = "block";
                             tooltip.style.left = event.pageX + 10 + "px";
                             tooltip.style.top = event.pageY + 10 + "px";
@@ -1156,7 +1183,7 @@
                             `;
                         },
                         away: function () {
-                            const tooltip = document.getElementById("tooltip");
+                            // 마우스가 키워드에서 벗어날 때 툴팁 숨김
                             tooltip.style.display = "none";
                         },
                         click: function (item) {
@@ -1164,6 +1191,11 @@
                             const count = words.find(([key]) => key === keyword)[1]; // 실제 값 가져오기
                             alert(`${keyword}: 키워드 사용 횟수는 ${count}입니다.`);
                         },
+                    });
+
+                    // 워드클라우드 전체 영역에서 마우스가 벗어날 때 툴팁 숨김
+                    document.getElementById('wordcloud').addEventListener('mouseleave', () => {
+                        tooltip.style.display = 'none';
                     });
                 })
                 .catch(error => console.error('Error fetching filtered word cloud data:', error));
