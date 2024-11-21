@@ -1134,7 +1134,11 @@
 
 
         // 모달을 생성하여 폴더 선택 및 이미지 이름 입력
+        // 모달을 생성하여 폴더 선택 및 이미지 이름 입력
         function openFolderSelectModal(folders, chartId, element) {
+            const moreBtn = document.getElementById('showTableButton'); // "더보기" 버튼 참조
+
+            // 모달 HTML 생성
             const modalHtml = `
                 <div id="folderModal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.5); display: flex; justify-content: center; align-items: center;">
                     <div style="background: white; padding: 20px; border-radius: 8px; max-width: 300px; width: 100%; position: relative;">
@@ -1157,18 +1161,25 @@
             `;
             document.body.insertAdjacentHTML('beforeend', modalHtml);
 
-            // 모달 닫기 버튼 클릭 시 모달을 닫음
-            document.getElementById('closeModalBtn').addEventListener('click', function () {
-                document.getElementById('folderModal').remove();
+            // "더보기" 버튼 숨기기
+            if (moreBtn) {
+                moreBtn.style.display = 'none'; // "더보기" 버튼 숨기기
+            }
+
+            const modal = document.getElementById('folderModal');
+            const closeModalBtn = document.getElementById('closeModalBtn');
+            const saveImageBtn = document.getElementById('saveImageBtn');
+
+            // 모달 닫기 버튼 클릭 시
+            closeModalBtn.addEventListener('click', function () {
+                modal.remove(); // 모달 제거
+                if (moreBtn) {
+                    moreBtn.style.display = ''; // "더보기" 버튼 복구
+                }
             });
 
-            // 새 폴더 추가 버튼 클릭 시 폴더 생성 함수 호출
-            document.getElementById('addFolderBtn').addEventListener('click', function () {
-                createNewFolder();
-            });
-
-            // 모달의 저장 버튼에 이벤트 추가
-            document.getElementById('saveImageBtn').addEventListener('click', function () {
+            // 저장 버튼 클릭 시
+            saveImageBtn.addEventListener('click', function () {
                 const folderName = document.getElementById('folderSelect').value;
                 const imageName = document.getElementById('imageName').value;
                 const includeAnalysis = document.getElementById('includeAnalysis').checked;
@@ -1182,20 +1193,13 @@
                     return;
                 }
 
-                // 캡처할 요소 결정
-                const captureElements = [element];
-                let analysisText = '';
-
-                // 분석 결과 포함이 선택된 경우, 해당 차트의 분석 텍스트를 가져옴
-                if (includeAnalysis) {
-                    analysisText = getAnalysisText(chartId);
-                }
-
-                // html2canvas로 선택한 요소들을 저장 로직
-                html2canvasMultiple(captureElements, analysisText).then(function (canvas) {
+                // 저장 로직 추가
+                html2canvas(element, {
+                    scale: 2,
+                    useCORS: true,
+                }).then(canvas => {
                     const imageData = canvas.toDataURL('image/png');
 
-                    // 서버에 이미지 데이터와 폴더, 이름 전송
                     fetch('/save-image/', {
                         method: 'POST',
                         headers: {
@@ -1203,24 +1207,22 @@
                             'X-CSRFToken': getCookie('csrftoken')
                         },
                         body: JSON.stringify({ imageData: imageData, folderName: folderName, imageName: imageName })
-                    })
-                        .then(response => response.json())
-                        .then(data => {
-                            if (data.status === 'success') {
-                                alert('해당 분석 결과가 성공적으로 저장되었습니다!');
-                            } else {
-                                alert('분석 결과 저장 실패: ' + data.message);
-                            }
-                        })
-                        .catch(error => {
-                            console.error('Error:', error);
-                        });
+                    }).then(response => response.json()).then(data => {
+                        if (data.status === 'success') {
+                            alert('분석 결과가 성공적으로 저장되었습니다!');
+                        } else {
+                            alert('분석 결과 저장 실패: ' + data.message);
+                        }
+                    }).catch(error => {
+                        console.error('Error:', error);
+                    }).finally(() => {
+                        modal.remove(); // 모달 제거
+                        if (moreBtn) {
+                            moreBtn.style.display = ''; // "더보기" 버튼 복구
+                        }
+                    });
                 });
-
-                // 모달 닫기
-                document.getElementById('folderModal').remove();
             });
-
         }
 
 
