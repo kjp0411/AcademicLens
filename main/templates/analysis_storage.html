@@ -54,4 +54,19 @@
         <button onclick="startReporting()" style="width: 100%; padding: 10px; background-color: #007bff; color: white; border: none; border-radius: 5px; margin-top: 10px;">리포팅 시작</button>
     </div>
 </div>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+    // 페이지 로드 직후 HTML이 보이지 않도록 설정
+    document.body.style.display = 'none';
+    
+    if (performance.navigation.type === performance.navigation.TYPE_RELOAD) {
+        // 새로고침한 경우 마이페이지로 이동
+        window.location.href = "{% url 'mypage' %}";
+    } else {
+        // 새로고침이 아닌 경우에는 페이지 내용을 보이도록 설정
+        document.body.style.display = 'block';
+    }
+});
+
+</script>
 {% endblock %}

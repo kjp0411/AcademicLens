@@ -2468,6 +2468,22 @@ def report_detail(request, folder_name):
     #         return JsonResponse({'status': 'error', 'message': str(e)})
     # return JsonResponse({'status': 'error', 'message': '잘못된 요청입니다.'})
 
+@login_required
+def delete_report(request):
+    if request.method == "DELETE":
+        folder_name = request.GET.get('folder')  # 폴더 이름
+        user_folder = os.path.join(settings.MEDIA_ROOT, 'reports', request.user.username)
+        report_path = os.path.join(user_folder, f"{folder_name}.txt")
+
+        # 파일 존재 여부 확인 후 삭제
+        if os.path.isfile(report_path):
+            os.remove(report_path)
+            return JsonResponse({'status': 'success', 'message': '리포트가 삭제되었습니다.'})
+        else:
+            return JsonResponse({'status': 'error', 'message': '리포트를 찾을 수 없습니다.'}, status=404)
+
+    return JsonResponse({'status': 'error', 'message': '잘못된 요청입니다.'}, status=400)
+
 def analyze_chart(request):
     if request.method == 'POST':
         try:

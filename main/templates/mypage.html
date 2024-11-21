@@ -1037,5 +1037,36 @@
                 .catch(error => console.error('Error loading reporting page:', error));
         }
     }
+
+    // 리포트 삭제 함수
+    function deleteReport(folderName) {
+        if (!confirm('정말로 삭제하시겠습니까?')) {
+            return;
+        }
+
+        const csrftoken = getCookie('csrftoken');
+        const url = `/delete-report/?folder=${encodeURIComponent(folderName)}`;
+
+        fetch(url, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRFToken': csrftoken,
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                alert('리포트가 삭제되었습니다.');
+                window.location.href = "{% url 'mypage' %}";
+            } else {
+                alert(`리포트 삭제 실패: ${data.message}`);
+            }
+        })
+        .catch(error => {
+            console.error('Error deleting report:', error);
+            alert('리포트를 삭제하는 중 오류가 발생했습니다.');
+        });
+    }
+
 </script>
 {% endblock %}

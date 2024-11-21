@@ -7,7 +7,7 @@
             <th>번호</th>
             <th>리포트 제목</th>
             <th>생성 날짜</th>
-            <th>보기</th>
+            <th>편집</th>
         </tr>
     </thead>
     <tbody>
@@ -20,6 +20,9 @@
                 <button class="styled-btn" onclick="showContent('report_detail', 1, '{{ report.folder_name }}')">
                     상세 보기
                 </button>
+                <button class="styled-btn" onclick="deleteReport('{{ report.folder_name }}')">
+                    삭제
+                </button>
             </td>
         </tr>
         {% empty %}
@@ -29,4 +32,19 @@
         {% endfor %}
     </tbody>
 </table>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+    // 페이지 로드 직후 HTML이 보이지 않도록 설정
+    document.body.style.display = 'none';
+    
+    if (performance.navigation.type === performance.navigation.TYPE_RELOAD) {
+        // 새로고침한 경우 마이페이지로 이동
+        window.location.href = "{% url 'mypage' %}";
+    } else {
+        // 새로고침이 아닌 경우에는 페이지 내용을 보이도록 설정
+        document.body.style.display = 'block';
+    }
+});
+
+</script>
 {% endblock %}

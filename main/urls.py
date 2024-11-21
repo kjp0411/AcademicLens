@@ -83,6 +83,7 @@ urlpatterns = [
     path('get-images/', views.get_images, name='get_images'),
     path('submit-report/', views.submit_report, name='submit_report'),
     path('reporting/', views.reporting, name='reporting'),
+    path('delete-report/', views.delete_report, name='delete_report'),
 
     path('mypage/reports/', views.report_list, name='report_list'),
     path('mypage/reports/<str:folder_name>/', views.report_detail, name='report_detail'),
