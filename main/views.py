@@ -446,7 +446,7 @@ def get_paper_ids(user_keyword, start_year=2019, end_year=2024):
                         JOIN keyword k ON pk.keyword_id = k.id
                         WHERE pk.paper_id = p.id AND k.keyword_name LIKE %s))
         """)
-        query_params.extend([f'%{user_keyword}%', f'%{user_keyword}%', f'%{user_keyword}%', f'%{user_keyword}%'])
+        query_params.extend([f'% {user_keyword} %', f'% {user_keyword} %', f'% {user_keyword} %', f'% {user_keyword} %'])
     else:  # 검색 키워드 길이가 3 이상일 때
         # 띄어쓰기가 포함된 경우 boolean 모드와 큰따옴표 사용
         if " " in user_keyword:
