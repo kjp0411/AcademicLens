@@ -716,6 +716,20 @@
             const legendWidth = 100;
             const legendHeight = 10;
             const legendMargin = 20;
+
+            // 상위 20개의 링크를 선택 (value 기준 내림차순 정렬)
+            const topLinks = data.links
+                .sort((a, b) => b.value - a.value) // 연결 강도 내림차순 정렬
+                .slice(0, 20); // 상위 20개만 선택
+
+            // 상위 20개의 링크에 포함된 노드만 필터링
+            const topNodeIds = new Set();
+            topLinks.forEach(link => {
+                topNodeIds.add(link.source);
+                topNodeIds.add(link.target);
+            });
+            const topNodes = data.nodes.filter(node => topNodeIds.has(node.id));
+
         
             const svg = d3.select("#network")
                 .append("svg")
@@ -816,13 +830,13 @@
                 .text("High"); {% endcomment %}
         
             // total_papers 최대값에 따른 반지름 비율 계산
-            const maxTotalPapers = d3.max(data.nodes, d => d.total_papers);
+            const maxTotalPapers = d3.max(topNodes, d => d.total_papers);
             const radiusScale = d3.scaleLinear()
                 .domain([0, maxTotalPapers])
                 .range([10, 70]);  // 최소 및 최대 반지름 설정
         
-            const simulation = d3.forceSimulation(data.nodes)
-                .force("link", d3.forceLink(data.links).id(d => d.id)
+            const simulation = d3.forceSimulation(topNodes)
+                .force("link", d3.forceLink(topLinks).id(d => d.id)
                     .distance(() => Math.random() * 90 + 100)
                 )
                 .force("charge", d3.forceManyBody().strength(-300))
@@ -832,7 +846,7 @@
             const link = svg.append("g")
                 .attr("class", "links")
                 .selectAll("line")
-                .data(data.links)
+                .data(topLinks)
                 .enter()
                 .append("line")
                 .attr("stroke-width", 7)  // 모든 링크의 굵기를 동일하게 설정
@@ -848,27 +862,24 @@
             const node = svg.append("g")
             .attr("class", "nodes")
             .selectAll("g")
-            .data(data.nodes)
+            .data(topNodes)
             .enter()
             .append("g")
             .attr("class", "node")
             .on("mouseenter", function(event, d) {
-                // 중심 노드와의 연결 강도를 계산
-                const linkToCenter = data.links.find(link =>
-                    (link.source.id === centerNode && link.target.id === d.id) ||
-                    (link.source.id === d.id && link.target.id === centerNode)
-                );
-            
-                const connectionStrength = linkToCenter ? linkToCenter.value : 0; // 연결 강도 가져오기
-            
-                d3.select(this).select("text").style("font-size", "13px").style("font-weight", "bold"); // 텍스트 강조
+                d3.select(this).select("text").style("font-size", "13px");
+    
+                const totalCollaboration = topLinks.filter(link =>
+                    link.source.id === d.id || link.target.id === d.id
+                ).reduce((sum, link) => sum + link.value, 0);
+    
                 tooltip
                     .style("display", "block")
                     .html(`
                         <strong>${d.id}</strong><br>
                         논문 수: ${d.total_papers}<br>
-                        공동 연구 횟수: ${connectionStrength}
-                    `); // 툴팁에 데이터 표시
+                        공동 연구 횟수: ${totalCollaboration}
+                    `);
             })
             .on("mousemove", function(event) {
                 tooltip
