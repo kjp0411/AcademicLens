@@ -421,6 +421,8 @@
     <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
     <script>
         const isAuthenticated = {{ user.is_authenticated|yesno:"true,false" }};
+        let currentNetworkData = null; // 전역 변수로 네트워크 데이터를 저장
+        
         let paperChart; 
         
         function getCookie(name) {
@@ -705,6 +707,7 @@
                 return;
             }
             const data = await response.json();
+            currentNetworkData = data;
             return data;
         }
 
@@ -1177,6 +1180,7 @@
             fetch(`/country_network/?name=${encodeURIComponent(country)}&keyword=${encodeURIComponent(keyword)}`)
                 .then(response => response.json())
                 .then(data => {
+                    currentNetworkData = data;
                     // 네트워크 데이터가 비어 있는지 확인
                     const networkContainer = document.getElementById('network');
                     networkContainer.innerHTML = ''; // 기존 네트워크 초기화
@@ -1545,90 +1549,78 @@
         document.addEventListener('DOMContentLoaded', fetchSidebarTopKeywords); 
 
         function showNetworkTable() {
-            // 팝업창 생성
-            const popup = window.open(
-                '',
-                'networkTablePopup',
-                'width=800,height=600,scrollbars=yes,resizable=yes'
-            );
+            const popup = window.open('', 'networkTablePopup', 'width=800,height=600,scrollbars=yes,resizable=yes');
 
             if (!popup) {
                 alert('팝업이 차단되었습니다. 팝업 차단을 해제하고 다시 시도해주세요.');
                 return;
             }
 
-            // 네트워크 데이터를 가져와 팝업창에 표시
-            fetchNetworkData().then((data) => {
-                if (data && data.nodes && data.links) {
-                    // 노드 데이터를 맵으로 변환하여 총 논문 수를 빠르게 조회
-                    const nodeMap = new Map(data.nodes.map(node => [node.id, node.total_papers]));
+            // 전역 변수에 저장된 현재 네트워크 데이터 참조
+            const data = currentNetworkData;
 
-                    // 팝업창의 내용 설정
-                    popup.document.write(`
-                        <html>
-                        <head>
-                            <title>네트워크 데이터 테이블</title>
-                            <style>
-                                body {
-                                    font-family: Arial, sans-serif;
-                                }
-                                table {
-                                    width: 100%;
-                                    border-collapse: collapse;
-                                    margin: 20px 0;
-                                }
-                                th, td {
-                                    border: 1px solid #ddd;
-                                    padding: 8px;
-                                    text-align: left;
-                                }
-                                th {
-                                    background-color: #f4f4f4;
-                                }
-                            </style>
-                        </head>
-                        <body>
-                            <h2>네트워크 데이터</h2>
-                            <table>
-                                <thead>
-                                    <tr>
-                                        <th>중심 노드</th>
-                                        <th>연결 노드</th>
-                                        <th>함께한 논문 수</th>
-                                        <th>중심 노드의 총 논문 수</th>
-                                        <th>연결 노드의 총 논문 수</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="networkTableBody"></tbody>
-                            </table>
-                        </body>
-                        </html>
-                    `);
+            if (data && data.nodes && data.links) {
+                // 노드 데이터를 맵 형태로 변환
+                const nodeMap = new Map(data.nodes.map(node => [node.id, node.total_papers]));
 
-                    // 테이블 데이터 렌더링
-                    const tableBody = popup.document.getElementById('networkTableBody');
-                    data.links.forEach((link) => {
-                        const row = popup.document.createElement('tr');
-                        row.innerHTML = `
-                            <td>${link.source}</td>
-                            <td><a href="/country-analyze/?name=${encodeURIComponent(link.target)}" target="_blank">${link.target}</a></td>
-                            <td>${link.value}</td>
-                            <td>${nodeMap.get(link.source) || 0}</td>
-                            <td>${nodeMap.get(link.target) || 0}</td>
-                        `;
-                        tableBody.appendChild(row);
-                    });
+                popup.document.write(`
+                    <html>
+                    <head>
+                        <title>네트워크 데이터 테이블</title>
+                        <style>
+                            table {
+                                width: 100%;
+                                border-collapse: collapse;
+                            }
+                            th, td {
+                                border: 1px solid #ddd;
+                                padding: 8px;
+                            }
+                            th {
+                                background-color: #f4f4f4;
+                            }
+                        </style>
+                    </head>
+                    <body>
+                        <h2>네트워크 데이터</h2>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>중심 노드</th>
+                                    <th>연결 노드</th>
+                                    <th>함께한 논문 수</th>
+                                    <th>중심 노드의 총 논문 수</th>
+                                    <th>연결 노드의 총 논문 수</th>
+                                </tr>
+                            </thead>
+                            <tbody id="networkTableBody"></tbody>
+                        </table>
+                    </body>
+                    </html>
+                `);
 
-                    popup.document.close();
-                } else {
-                    popup.document.write('<p>네트워크 데이터가 없습니다.</p>');
-                    popup.document.close();
-                }
-            }).catch((error) => {
-                console.error('Error fetching network data for table:', error);
-                popup.document.write('<p>네트워크 데이터를 불러오는 중 오류가 발생했습니다.</p>');
+                const tableBody = popup.document.getElementById('networkTableBody');
+
+                data.links.forEach(link => {
+                    const sourceId = typeof link.source === 'object' ? link.source.id : link.source;
+                    const targetId = typeof link.target === 'object' ? link.target.id : link.target;
+
+                    const row = popup.document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${sourceId}</td>
+                        <td><a href="/author-analyze/?name=${encodeURIComponent(targetId)}" target="_blank">${targetId}</a></td>
+                        <td>${link.value}</td>
+                        <td>${nodeMap.get(sourceId) || 0}</td>
+                        <td>${nodeMap.get(targetId) || 0}</td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+
                 popup.document.close();
-            });
+            } else {
+                popup.document.write('<p>네트워크 데이터가 없습니다.</p>');
+                popup.document.close();
+            }
         }
     </script>
 </body>
