@@ -982,38 +982,89 @@
             return color;
         }
 
-        function generateWordCloud(words) {
-            const wordCount = words.length;
+        document.addEventListener('DOMContentLoaded', function () {
+            let wordCloudRendered = false;
 
-            WordCloud(document.getElementById('wordcloud'), {
-                list: words,
-                gridSize: 5,
-                weightFactor: function (size) {
-                    return Math.max(12, size * (wordCount > 50 ? 1 : 10 / wordCount));
-                },
-                fontFamily: 'Arial, sans-serif',
-                color: function () {
-                    return getRandomColor();
-                },
-                rotateRatio: 0.5,
-                rotationSteps: 2,
-                backgroundColor: '#fff',
-                drawOutOfBound: false,
-                click: function (item) {
-                    alert(item[0] + ': ' + item[1]);
+            // 툴팁 생성 및 스타일 설정
+            const tooltip = document.createElement('div');
+            tooltip.id = 'tooltip';
+            tooltip.style.position = 'absolute';
+            tooltip.style.display = 'none';
+            tooltip.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
+            tooltip.style.color = 'white';
+            tooltip.style.padding = '5px';
+            tooltip.style.borderRadius = '4px';
+            tooltip.style.fontSize = '12px';
+            tooltip.style.zIndex = '1000';
+            document.body.appendChild(tooltip);
+
+            function generateWordCloud(words) {
+                if (wordCloudRendered) {
+                    console.warn('WordCloud already rendered. Skipping...');
+                    return;
                 }
-            });
-        }
+                wordCloudRendered = true;
 
-        fetch(`/affiliation_wordcloud/?name=${encodeURIComponent(affiliationName)}`)
-            .then(response => response.json())
-            .then(data => {
-                var words = data.map(function (d) {
-                    return [d[0], d[1]];
+                const maxFrequency = Math.max(...words.map(word => word[1]));
+                const minFrequency = Math.min(...words.map(word => word[1]));
+                const allFrequenciesEqual = maxFrequency === minFrequency; // 모든 값이 같은지 확인
+
+                WordCloud(document.getElementById('wordcloud'), {
+                    list: words,
+                    gridSize: 7,
+                    weightFactor: function (size) {
+                        if (allFrequenciesEqual) {
+                            return 30; // 모든 키워드의 값이 같을 경우 크기를 30으로 고정
+                        }
+                        const calculatedSize = (size / maxFrequency) * 50;
+                        return Math.max(calculatedSize, 10);
+                    },
+                    fontFamily: 'Arial, sans-serif',
+                    color: function () {
+                        return getRandomColor();
+                    },
+                    rotateRatio: 0.5,
+                    rotationSteps: 2,
+                    backgroundColor: '#fff',
+                    drawOutOfBound: false,
+                    hover: function (item, dimension, event) {
+                        // 툴팁 표시
+                        tooltip.style.display = 'block';
+                        tooltip.style.left = `${event.pageX + 10}px`;
+                        tooltip.style.top = `${event.pageY + 10}px`;
+                        tooltip.innerHTML = `
+                            <strong>${item[0]}</strong><br>
+                            키워드 사용 횟수: ${words.find(([keyword]) => keyword === item[0])[1]}
+                        `;
+                    },
+                    away: function () {
+                        // 마우스가 키워드에서 벗어날 때 툴팁 숨김
+                        tooltip.style.display = 'none';
+                    },
+                    click: function (item) {
+                        const keyword = item[0];
+                        const count = words.find(([key]) => key === keyword)[1]; // 실제 값 가져오기
+                        alert(`${keyword}: 키워드 사용 횟수는 ${count}입니다.`);
+                    }
                 });
-                generateWordCloud(words);
-            })
-            .catch(error => console.error('Error fetching data:', error));
+            }
+
+            fetch(`/affiliation_wordcloud/?name=${encodeURIComponent(affiliationName)}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data && data.length > 0) {
+                        generateWordCloud(data);
+                    } else {
+                        console.error('Word cloud data is empty or invalid:', data);
+                    }
+                })
+                .catch(error => console.error('Error fetching word cloud data:', error));
+
+            // 워드클라우드 전체 영역에서 마우스가 벗어날 때 툴팁 숨김
+            document.getElementById('wordcloud').addEventListener('mouseleave', () => {
+                tooltip.style.display = 'none';
+            });
+        });
 
         document.getElementById('analyzeButtonKeywords').addEventListener('click', function () {
             fetch(`/affiliation_wordcloud/?name=${encodeURIComponent(affiliationName)}`)
@@ -1482,18 +1533,40 @@
         }
 
         // 워드 클라우드를 렌더링하는 함수
-        function renderWordCloud(data) {
-            const words = data.map(d => [d[0], d[1]]);
+        function renderWordCloud(words) {
+            // 기존 워드클라우드 초기화
             const wordCloudContainer = document.getElementById('wordcloud');
-
-            // 기존 워드클라우드를 초기화
             wordCloudContainer.innerHTML = '';
+            wordCloudRendered = false; // 워드클라우드 다시 렌더링 가능하도록 설정
 
+            // 툴팁 생성 및 스타일 설정
+            const tooltip = document.createElement('div');
+            tooltip.id = 'tooltip';
+            tooltip.style.position = 'absolute';
+            tooltip.style.display = 'none';
+            tooltip.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
+            tooltip.style.color = 'white';
+            tooltip.style.padding = '5px';
+            tooltip.style.borderRadius = '4px';
+            tooltip.style.fontSize = '12px';
+            tooltip.style.zIndex = '1000';
+            document.body.appendChild(tooltip);
+
+            // 최대 빈도 및 빈도가 동일한지 확인
+            const maxFrequency = Math.max(...words.map(word => word[1]));
+            const minFrequency = Math.min(...words.map(word => word[1]));
+            const allFrequenciesEqual = maxFrequency === minFrequency;
+
+            // 워드클라우드 생성
             WordCloud(wordCloudContainer, {
                 list: words,
-                gridSize: 5,
+                gridSize: 7,
                 weightFactor: function (size) {
-                    return Math.max(12, size * 5);
+                    if (allFrequenciesEqual) {
+                        return 30; // 모든 키워드의 값이 같을 경우 크기를 30으로 고정
+                    }
+                    const calculatedSize = (size / maxFrequency) * 50;
+                    return Math.max(calculatedSize, 10); // 최소 크기 10 유지
                 },
                 fontFamily: 'Arial, sans-serif',
                 color: function () {
@@ -1503,9 +1576,30 @@
                 rotationSteps: 2,
                 backgroundColor: '#fff',
                 drawOutOfBound: false,
+                hover: function (item, dimension, event) {
+                    // 툴팁 표시
+                    tooltip.style.display = 'block';
+                    tooltip.style.left = `${event.pageX + 10}px`;
+                    tooltip.style.top = `${event.pageY + 10}px`;
+                    tooltip.innerHTML = `
+                        <strong>${item[0]}</strong><br>
+                        키워드 사용 횟수: ${words.find(([keyword]) => keyword === item[0])[1]}
+                    `;
+                },
+                away: function () {
+                    // 마우스가 키워드에서 벗어날 때 툴팁 숨김
+                    tooltip.style.display = 'none';
+                },
                 click: function (item) {
-                    alert(item[0] + ': ' + item[1]);
+                    const keyword = item[0];
+                    const count = words.find(([key]) => key === keyword)[1]; // 실제 값 가져오기
+                    alert(`${keyword}: 키워드 사용 횟수는 ${count}입니다.`);
                 }
+            });
+
+            // 워드클라우드 전체 영역에서 마우스가 벗어날 때 툴팁 숨김
+            wordCloudContainer.addEventListener('mouseleave', () => {
+                tooltip.style.display = 'none';
             });
         }
 
