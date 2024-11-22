@@ -389,11 +389,8 @@
         saveButtons.forEach(button => {
             button.addEventListener('click', function() {
                 if (!isAuthenticated) {
-                    // 로그인되지 않은 경우, 로그인 페이지로 리다이렉트
-                    const loginUrl = "{% url 'accounts:login' %}";  // 로그인 페이지 URL
                     alert("로그인 후 저장할 수 있습니다.");
-                    window.location.href = loginUrl;
-                    return;  // 로그인 페이지로 이동 후 함수 종료
+                    return;
                 }
                 
                 const saveIcon = this.querySelector('.save-icon');

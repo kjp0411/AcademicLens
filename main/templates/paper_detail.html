@@ -108,10 +108,7 @@
         if (saveBtn && saveIcon) {  // 요소가 존재하는지 확인
             saveBtn.addEventListener('click', function() {
                 if (!isAuthenticated) {
-                    // 로그인되지 않은 경우, 로그인 페이지로 리다이렉트
-                    const loginUrl = "{% url 'accounts:login' %}";
                     alert("로그인 후 저장할 수 있습니다.");
-                    window.location.href = loginUrl;
                     return;
                 }
                     
