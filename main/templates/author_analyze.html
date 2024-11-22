@@ -1267,6 +1267,11 @@
                 }
             });
 
+            // 새 폴더 추가 버튼 클릭 시 폴더 생성 함수 호출
+            document.getElementById('addFolderBtn').addEventListener('click', function () {
+                createNewFolder();
+            });
+            
             // 저장 버튼 클릭 시
             saveImageBtn.addEventListener('click', function () {
                 const folderName = document.getElementById('folderSelect').value;
