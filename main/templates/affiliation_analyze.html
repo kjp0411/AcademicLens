@@ -290,6 +290,25 @@
             background-color: #1e7e34;
         }
 
+        .sidebar .refresh-btn {
+            margin-left: 135px;
+            margin-top: 10px;
+            width: 85px;
+            background-color: #28a745;
+            padding: 4px 8px;
+            border: none;
+            border-radius: 20px;
+            color: #fff;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            transition: background-color 0.3s ease;
+        }
+
+        .sidebar .refresh-btn:hover {
+            background-color: #1e7e34;
+        }
+
         /* "더보기" 버튼 스타일 */
         .more-btn {
             margin-top: -25px;
@@ -328,8 +347,8 @@
             <div class="sidebar-search-keyword search-bar">
                 <input type="text" id="sidebarKeywordInput" placeholder="키워드를 입력하세요">
                 <button onclick="searchSidebarKeyword()">검색</button>
-                <button class="refresh-btn" onclick="refreshPage()">새로고침</button>
             </div>
+            <button class="refresh-btn" onclick="refreshPage()">새로고침</button>
         </div>
         <div class="main">
             <div class="chart">
