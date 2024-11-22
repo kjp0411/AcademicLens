@@ -1693,11 +1693,6 @@
         function showNetworkTable() {
             const popup = window.open('', 'networkTablePopup', 'width=800,height=600,scrollbars=yes,resizable=yes');
 
-            if (!popup) {
-                alert('팝업이 차단되었습니다. 팝업 차단을 해제하고 다시 시도해주세요.');
-                return;
-            }
-
             // 전역 변수에 저장된 현재 네트워크 데이터 참조
             const data = currentNetworkData;
 
