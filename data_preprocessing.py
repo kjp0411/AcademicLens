@@ -2,7 +2,7 @@ import pandas as pd
 import re
 
 # CSV 파일 읽기
-csv_file = "change_IEEE_URL_total_result.csv"  # 파일 경로를 입력하세요
+csv_file = "total_result.csv"  # 파일 경로를 입력하세요
 data = pd.read_csv(csv_file, encoding='utf-8')
 
 # 1. 각 컬럼에서 비어 있거나 NaN인 값을 가진 행 삭제 (제일 먼저 실행)
