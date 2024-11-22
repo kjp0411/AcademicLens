@@ -512,29 +512,19 @@ def get_abstracts(paper_ids):
     return data
 
 def top_5_related_words(query, paper_ids):
-    # 검색 엔진을 통해 논문 ID 가져오기
-    # paper_ids = get_paper_ids(query)
-
-    # 논문 ID를 사용하여 abstract 가져오기
-    abstract_data = get_abstracts(paper_ids)
-
-    # abstract 컬럼 내용 추출
-    abstracts = abstract_data["abstract"]
+    abstract_data = get_abstracts(paper_ids) # 논문 ID를 사용하여 abstract 가져오기
+    abstracts = abstract_data["abstract"] # abstract 컬럼 내용 추출
 
     # TF-IDF 벡터화 (불용어 처리)
     tfidf_vectorizer = TfidfVectorizer(stop_words='english')
     tfidf_matrix = tfidf_vectorizer.fit_transform(abstracts)
 
-    # 각 단어의 인덱스 확인
+    # 각 단어의 인덱스 확인 후 데이터프레임으로 변환
     feature_names = tfidf_vectorizer.get_feature_names_out()
-
-    # 데이터프레임으로 변환
     tfidf_df = pd.DataFrame(tfidf_matrix.toarray(), columns=feature_names)
 
-    # 각 단어의 총 TF-IDF 값을 계산
+    # 각 단어의 총 TF-IDF 값을 계산하고 정렬하여 상위 20개 단어 선택
     tfidf_sums = tfidf_df.sum(axis=0)
-
-    # TF-IDF 값으로 정렬하여 상위 20개 단어 선택
     top_20_words = tfidf_sums.sort_values(ascending=False).head(20).index.tolist()
 
     # BERT 모델과 토크나이저 로드
@@ -1031,7 +1021,7 @@ def country_wordcloud(request):
         db.close()
 
     # 빈도수가 높은 top 20 키워드 출력하기
-    top_keywords = keyword_counts.most_common(20)
+    top_keywords = keyword_counts.most_common(40)
     top_keywords_list = [[keyword, count] for keyword, count in top_keywords]
 
     return JsonResponse(top_keywords_list, safe=False)
@@ -1329,7 +1319,7 @@ def affiliation_wordcloud(request):
         db.close()
 
     # 상위 20개 키워드만 반환
-    top_keywords = keyword_counts.most_common(20)
+    top_keywords = keyword_counts.most_common(40)
     top_keywords_list = [[keyword, count] for keyword, count in top_keywords]
 
     return JsonResponse(top_keywords_list, safe=False)
@@ -1583,7 +1573,7 @@ def author_wordcloud(request):
         cursor.close()
         db.close()
 
-    top_keywords = keyword_counts.most_common(20)
+    top_keywords = keyword_counts.most_common(40)
     top_keywords_list = [[keyword, count] for keyword, count in top_keywords]
 
     return JsonResponse(top_keywords_list, safe=False)

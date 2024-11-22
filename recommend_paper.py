@@ -164,7 +164,7 @@ def get_recommended_papers_for_user(username, start_year=2019, end_year=2024):
     return recommended_papers
 
 # 예시 실행
-username = 'kaihojun'
+username = 'rlaghwns'
 recommended_papers = get_recommended_papers_for_user(username)
 
 # 결과 출력

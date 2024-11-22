@@ -8,8 +8,8 @@ import mariadb
 
 # 데이터베이스 연결 설정
 db_config = {
-    'host': 'localhost',
-    'user': 'root',
+    'host': '127.0.0.1',
+    'user': 'goorm',
     'password': '123456',
     'database': 'capstone',
     'port': 3307
@@ -98,7 +98,9 @@ def top_5_keywords(user_keyword):
 
     # 가져온 논문의 수 확인
     num_papers = len(abstract_data)
-    print(f"가져온 논문의 수: {num_papers}")
+    if num_papers == 0:
+        print("가져온 논문이 없습니다.")
+        return [], [], []
 
     # abstract 컬럼 내용 추출
     abstracts = abstract_data["abstract"]
@@ -117,43 +119,37 @@ def top_5_keywords(user_keyword):
     tfidf_sums = tfidf_df.sum(axis=0)
 
     # TF-IDF 값으로 정렬하여 상위 20개 단어 선택
-    top_20_words = tfidf_sums.sort_values(ascending=False).head(5).index.tolist()
-    print(f"TF-IDF 상위 20개 단어: {top_20_words}")
+    top_20_words = tfidf_sums.sort_values(ascending=False).head(20).index.tolist()
 
-    # 상위 단어가 포함된 논문 ID 저장
-    containing_paper_ids = []
-    for idx, row in abstract_data.iterrows():
-        if top_20_words[0] in row['abstract']:
-            containing_paper_ids.append(row['id'])
-            print(f"논문 ID {row['id']}에는 상위 단어 '{top_20_words[0]}'가 포함되어 있습니다.")
-
-    print(f"상위 단어 '{top_20_words[0]}'가 포함된 논문 ID 목록: {containing_paper_ids}")
-
-    # 사용자 입력 키워드와 상위 단어의 임베딩 계산
+    # 사용자 입력 키워드와 TF-IDF 상위 20개 단어의 유사도 계산
+    word_similarities = []
     user_keyword_embedding = get_embedding(user_keyword, tokenizer, model)
-    top_word_embedding = get_embedding(top_20_words[0], tokenizer, model)
 
-    # 논문들의 abstract 임베딩 계산 및 유사도 측정
-    similarities = []
-    for paper_id in containing_paper_ids:
-        abstract = abstract_data.loc[abstract_data['id'] == paper_id, 'abstract'].values[0]
-        abstract_embedding = get_embedding(abstract, tokenizer, model)
-        similarity = cosine_similarity([user_keyword_embedding], [abstract_embedding])[0][0]
-        similarities.append((paper_id, similarity))
+    for word in top_20_words:
+        word_embedding = get_embedding(word, tokenizer, model)
+        similarity = cosine_similarity([user_keyword_embedding], [word_embedding])[0][0]
+        word_similarities.append((word, similarity))
 
-    # 유사도 기준으로 정렬
-    similarities = sorted(similarities, key=lambda x: x[1], reverse=True)
-    print(f"유사도가 높은 논문 ID와 유사도: {similarities}")
+    # 유사도 기준 상위 5개 단어 선택
+    word_similarities = sorted(word_similarities, key=lambda x: x[1], reverse=True)
+    top_5_similar_words = word_similarities[:5]
 
-    return top_20_words, abstracts, similarities
+    # 출력
+    print("\n[TF-IDF 상위 20개 단어]")
+    print(", ".join(top_20_words))
+
+    print("\n[BERT 유사도 계산 결과]")
+    for word, similarity in word_similarities:
+        print(f"{word}: 유사도 {similarity:.4f}")
+
+    print("\n[유사도 기준 상위 5개 단어]")
+    for word, similarity in top_5_similar_words:
+        print(f"{word}: 유사도 {similarity:.4f}")
+
+    return top_20_words, abstracts, top_5_similar_words
 
 # 사용자 입력 키워드
-user_keyword = "anti"
+user_keyword = "secure"
 
 # 상위 5개의 연관 검색어 선택
-related_words, abstracts, similarities = top_5_keywords(user_keyword)
-
-# 결과 출력
-print("연관 검색어로 사용할 상위 20개 단어:")
-for word in related_words:
-    print(word)
+related_words, abstracts, top_similar_words = top_5_keywords(user_keyword)

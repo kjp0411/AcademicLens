@@ -126,8 +126,12 @@
 
         // 추천 검색어를 클릭하면 검색 폼에 입력한 후 제출하는 함수
         function searchWithTerm(term) {
-            document.getElementById('search-box').value = term;  // 검색어 입력 필드에 선택된 추천 검색어 삽입
-            document.getElementById('search-form').submit();  // 검색 폼 제출
+            const filter = document.getElementById('filter').value; // 현재 선택된 필터 가져오기
+            const baseUrl = "{% url 'search' %}"; // 검색 URL 베이스
+            const queryString = `?filter=paper&query=${encodeURIComponent(term)}`; // 필터와 검색어를 포함한 쿼리 스트링 생성
+
+            // 검색 URL로 페이지 이동
+            window.location.href = `${baseUrl}${queryString}`;
         }
 
         // 사용자가 한 글자만 검색했을 때 경고문 띄우기
