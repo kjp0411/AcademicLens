@@ -347,8 +347,8 @@
         <div class="news-container">
             <!-- 국내 뉴스 국외 뉴스 전환 버튼 -->
             <div class="news-type">
-                <button class="type_button" id="button_kor">국내</button>
-				<button class="type_button type_active" id="button_inter">국외</button>
+                <button class="type_button" id="button_kor">국내뉴스</button>
+				<button class="type_button type_active" id="button_inter">국외뉴스</button>
             </div>
         
             <div class="news-content">
@@ -379,6 +379,8 @@
 
 <script>
     const csrftoken = "{{ csrf_token }}";
+    const searchQuery = "{{ search_query|default:'' }}"; // 논문 검색어
+    const mostRelatedWord = "{{ most_related_word|default:'' }}";
 
     // 하트 저장 버튼 전환
     document.addEventListener('DOMContentLoaded', function() {
@@ -669,9 +671,21 @@
             });
         }
     
-        // 뉴스 로드 함수
         function loadNews(type) {
-            fetch(`{% url 'search' %}?query=${query}&news_type=${type}`, {
+            // 로딩 메시지 표시
+            const newsContent = document.querySelector('.news-content');
+            newsContent.innerHTML = '<p>뉴스 불러오는 중...</p>'; // 로딩 중 표시
+
+            // 현재 필터 타입이 논문 검색인지 확인
+            const filterType = "{{ filter }}"; // 서버에서 전달받은 필터 타입
+            const queryParam = filterType === 'paper' ? searchQuery : mostRelatedWord; // 논문 검색 모드면 searchQuery 사용
+
+            if (!queryParam) {
+                newsContent.innerHTML = '<p>관련 단어를 찾을 수 없습니다. 검색어를 입력해주세요.</p>';
+                return;
+            }
+
+            fetch(`/search/?query=${queryParam}&news_type=${type}`, {
                 headers: {
                     'X-Requested-With': 'XMLHttpRequest'
                 }
@@ -679,7 +693,7 @@
             .then(response => response.json())
             .then(data => {
                 let articlesHtml = '';
-                if (data.articles.length > 0) {
+                if (data.articles && data.articles.length > 0) {
                     articlesHtml = '<ul>';
                     data.articles.slice(0, 10).forEach(article => {
                         articlesHtml += `
@@ -701,9 +715,12 @@
                 } else {
                     articlesHtml = '<p>검색 결과가 없습니다.</p>';
                 }
-                newsContent.innerHTML = articlesHtml;
+                newsContent.innerHTML = articlesHtml; // 결과 표시
             })
-            .catch(error => console.error('Error:', error));
+            .catch(error => {
+                console.error('Error:', error);
+                newsContent.innerHTML = '<p>뉴스를 가져오는 중 문제가 발생했습니다.</p>';
+            });
         }
     });
 </script>

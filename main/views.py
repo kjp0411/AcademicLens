@@ -254,6 +254,32 @@ def search(request):
                 articles = [article for article in articles if article.get('title') != "[Removed]"]
             if request.headers.get('x-requested-with') == 'XMLHttpRequest':
                 return JsonResponse({'articles': articles})
+        elif filter_type == 'affiliation':
+            if search_query:
+                if news_type == 'domestic':
+                    url = f'https://newsapi.org/v2/everything?q={most_related_word}&language=ko&apiKey={api_key}'
+                else:
+                    url = f'https://newsapi.org/v2/everything?q={most_related_word}&language=en&apiKey={api_key}'
+
+                response = requests.get(url)
+                news_data = response.json()
+                articles = news_data.get('articles', [])
+                articles = [article for article in articles if article.get('title') != "[Removed]"]
+            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                return JsonResponse({'articles': articles})
+        elif filter_type == 'country':
+            if search_query:
+                if news_type == 'domestic':
+                    url = f'https://newsapi.org/v2/everything?q={most_related_word}&language=ko&apiKey={api_key}'
+                else:
+                    url = f'https://newsapi.org/v2/everything?q={most_related_word}&language=en&apiKey={api_key}'
+
+                response = requests.get(url)
+                news_data = response.json()
+                articles = news_data.get('articles', [])
+                articles = [article for article in articles if article.get('title') != "[Removed]"]
+            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                return JsonResponse({'articles': articles})
         else:
             if search_query:
                 if news_type == 'domestic':
@@ -291,6 +317,7 @@ def search(request):
             'items_per_page': items_per_page,
             'current_group_pages': current_group_pages,
             'filter': filter_type,
+            'most_related_word': most_related_word,
         }
 
         # 검색 결과가 있는 경우에만 렌더 후에 키워드 저장
