@@ -238,7 +238,7 @@ def search(request):
         paper_counts_by_country = dict(sorted(paper_counts_by_country.items(), key=lambda item: item[1], reverse=True))     # 국가별 논문 수 내림차순
 
         # 뉴스 검색 부분
-        api_key = '2f963493ee124210ac91a3b54ebb3c5c'
+        api_key = '0a2ea55291cd407d981888a4f26cf25f'
         articles = []
 
         if filter_type == 'author':
