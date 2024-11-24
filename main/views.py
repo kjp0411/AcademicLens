@@ -2294,7 +2294,7 @@ def delete_folder(request):
 
             user_folder_path = os.path.join(settings.MEDIA_ROOT, 'accounts', request.user.username, folder_name)
             if os.path.isdir(user_folder_path):
-                os.rmdir(user_folder_path)
+                shutil.rmtree(user_folder_path)
                 return JsonResponse({'status': 'success', 'message': '폴더가 삭제되었습니다.'})
             else:
                 return JsonResponse({'status': 'error', 'message': '폴더가 존재하지 않습니다.'})

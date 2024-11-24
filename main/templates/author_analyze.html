@@ -1438,7 +1438,6 @@
             document.getElementById('addFolderBtn').addEventListener('click', function () {
                 createNewFolder();
             });
-            
             // 저장 버튼 클릭 시
             saveImageBtn.addEventListener('click', function () {
                 const folderName = document.getElementById('folderSelect').value;
@@ -1454,11 +1453,18 @@
                     return;
                 }
 
+                // 캡처할 요소 결정
+                const captureElements = [element];
+                let analysisText = '';
+
+                // 분석 결과 포함이 선택된 경우, 해당 차트의 분석 텍스트를 가져옴
+                if (includeAnalysis) {
+                    analysisText = getAnalysisText(chartId);
+                }
+
                 // 저장 로직 추가
-                html2canvas(element, {
-                    scale: 2,
-                    useCORS: true,
-                }).then(canvas => {
+                // html2canvas로 선택한 요소들을 저장 로직
+                html2canvasMultiple(captureElements, analysisText).then(function (canvas) {
                     const imageData = canvas.toDataURL('image/png');
 
                     fetch('/save-image/', {
