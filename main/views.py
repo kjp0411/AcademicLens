@@ -129,8 +129,23 @@ def search(request):
             paper_ids = get_affiliation_paper_ids(query)
 
         related_terms = []
-        if query:
-            related_terms, most_related_word = top_5_related_words(query, paper_ids)
+        most_related_word = ""
+
+        # 세션에서 검색어와 연관 검색어 가져오기
+        session_query = request.session.get('query')
+        session_related_terms = request.session.get('related_terms', [])
+        session_most_related_word = request.session.get('most_related_word', "")
+
+        if query != session_query:  # 새로운 검색어일 경우
+            if query:
+                related_terms, most_related_word = top_5_related_words(query, paper_ids)
+                # 세션에 저장
+                request.session['query'] = query
+                request.session['related_terms'] = related_terms
+                request.session['most_related_word'] = most_related_word
+        else:  # 이전 검색어와 동일할 경우 세션 데이터 재사용
+            related_terms = session_related_terms
+            most_related_word = session_most_related_word
 
         # 기본 쿼리셋 생성
         papers = Paper.objects.filter(id__in=paper_ids)
@@ -643,8 +658,8 @@ def analyze(request):
                 rows = cursor.fetchall()
                 author_counts = [(row[0].encode('latin1').decode('utf8'), row[1]) for row in rows]
 
-        # 저자 이름과 논문 수를 결합한 리스트 생성
-        author_data = list(zip([item[0] for item in author_counts], [item[1] for item in author_counts]))
+        # author_data를 JSON 형식으로 변환
+        author_data = [{"name": item[0], "count": item[1]} for item in author_counts]
 
         # 소속별 논문 수를 계산
         affiliation_counts = []
@@ -673,8 +688,8 @@ def analyze(request):
                         # 문제가 발생한 경우 해당 데이터를 로그로 남김
                         logging.error(f"Error processing affiliation name: {row[0]} - {str(e)}")
 
-        # 소속 이름과 논문 수를 결합한 리스트 생성
-        affiliation_data = list(zip([item[0] for item in affiliation_counts], [item[1] for item in affiliation_counts]))
+        # affiliation_data를 JSON 형식으로 변환
+        affiliation_data = [{"name": item[0], "count": item[1]} for item in affiliation_counts]
 
         # 국가별 논문 수 계산
         country_counts = []
@@ -694,8 +709,8 @@ def analyze(request):
                 
                 country_counts = cursor.fetchall()
 
-        # 국가 이름과 논문 수를 결합한 리스트 생성
-        country_data = list(zip([item[0] for item in country_counts], [item[1] for item in country_counts]))
+        # country_data를 JSON 형식으로 변환
+        country_data = [{"name": item[0], "count": item[1]} for item in country_counts]
 
         # 키워드 카운트 초기화
         keyword_counts = Counter()
@@ -715,16 +730,16 @@ def analyze(request):
                 keyword_counts.update(keywords)
 
         # 빈도수가 높은 top 10 키워드 출력하기
-        top_keywords = keyword_counts.most_common(10)
+        top_keywords = [{"keyword": keyword, "count": count} for keyword, count in keyword_counts.most_common(10)]
 
 
         # 그래프에 사용할 데이터 준비
         context = {
             'papers_count': papers_count,
-            'author_data': author_data,
-            'affiliation_data': affiliation_data,
-            'country_data': country_data,
-            'top_keywords': top_keywords,
+            "author_data_json": json.dumps(author_data),
+            "affiliation_data_json": json.dumps(affiliation_data),
+            'country_data_json': json.dumps(country_data),
+            "top_keywords_json": json.dumps(top_keywords),
             'keyword': user_keyword,
             'total_results': total_results,
             'start_year': start_year,
@@ -2507,16 +2522,35 @@ def analyze_chart(request):
             data = json.loads(request.body)
             chart_id = data.get('chart_id', '')
             chart_data = data.get('chart_data', '')
+            keyword = data.get('keyword', '')  # 추가
 
             # 각 차트에 대한 GPT 프롬프트 생성
             if chart_id == 'papersChart':
-                prompt = f"연도별 논문 수 분포를 분석하고, 중요한 경향이나 패턴이 있는지 설명해 주세요: {chart_data}"
+                prompt = f"{chart_data}이 데이터는 {keyword}에 대한 연도별 논문 수 그래프야. 어떤 키워드에 대한 몇 년도 부터 몇 년도까지의 그래프인지 설명해줘. 그리고 연도별 논문 수 데이터 분포를 분석해서, 특이사항에 대해 설명해줘."
             elif chart_id == 'authorsChart':
-                prompt = f"저자별 논문 수 분포를 분석하고, 주요 기여자나 두드러진 패턴이 있는지 설명해 주세요: {chart_data}"
+                # 이름과 숫자 쌍을 명시적으로 포함
+                authors_list = "\n".join([f"{author['name']} - {author['count']}편" for author in chart_data])
+                prompt = (
+                    f"다음은 저자별 논문 수 데이터입니다:\n{authors_list}\n\n"
+                    "이 데이터를 기반으로 가장 많은 논문을 작성한 저자의 이름과 논문 수를 알려주세요. "
+                    "또한 상위 3명의 저자 이름과 논문 수도 알려주세요."
+                )
             elif chart_id == 'affiliationChart':
-                prompt = f"소속 기관별 논문 수를 분석하고, 두드러진 기관이나 기여 수준의 경향이 있는지 설명해 주세요: {chart_data}"
+                # 소속 데이터 리스트를 명시적으로 프롬프트에 포함
+                affiliation_list = "\n".join([f"{aff['name']} - {aff['count']}편" for aff in chart_data])
+                prompt = (
+                    f"다음은 소속 기관별 논문 수 데이터입니다:\n{affiliation_list}\n\n"
+                    "이 데이터를 기반으로 가장 많은 논문을 발표한 소속 기관과 논문 수를 알려주세요. "
+                    "또한 상위 3개의 소속 기관과 논문 수도 알려주세요."
+                )
             elif chart_id == 'countryChart':
-                prompt = f"국가별 논문 수 분포를 분석하고, 주요 국가나 논문 수의 경향을 설명해 주세요: {chart_data}"
+                # 국가 데이터 리스트를 명시적으로 프롬프트에 포함
+                country_list = "\n".join([f"{country['name']} - {country['count']}편" for country in chart_data])
+                prompt = (
+                    f"다음은 국가별 논문 수 데이터입니다:\n{country_list}\n\n"
+                    "이 데이터를 기반으로 가장 많은 논문을 발표한 국가와 논문 수를 알려주세요. "
+                    "또한 상위 3개의 국가와 논문 수도 알려주세요."
+                )
             elif chart_id == 'keywordChart':
                 prompt = f"논문에서 사용된 주요 키워드를 분석하고, 주요 키워드나 어떤 주제의 논문 수가 많은지 경향을 설명해 주세요: {chart_data}"
             else:
