@@ -356,21 +356,36 @@
         // Django 템플릿에서 JSON 데이터를 파싱
         var affiliationData = JSON.parse('{{ affiliation_data_json|safe }}');
 
+        // 최대 글자 수 설정
+        var maxLength = 30;
+
         // Google Charts 데이터 테이블 생성
         var data = new google.visualization.DataTable();
         data.addColumn('string', 'Affiliation');
         data.addColumn('number', '논문 수');
+        data.addColumn({ type: 'string', role: 'tooltip' }); // 툴팁에 전체 이름 표시
 
         // affiliationData를 Google Charts 데이터로 추가
         affiliationData.forEach(function(affiliation) {
-            data.addRow([affiliation.name, affiliation.count]);
+            var truncatedName = affiliation.name.length > maxLength
+                ? affiliation.name.slice(0, maxLength) + '...' // 이름을 잘라서 표시
+                : affiliation.name;
+
+            data.addRow([truncatedName, affiliation.count, affiliation.name]); // 툴팁에는 전체 이름 표시
         });
 
         // 차트 옵션 설정
         var options = {
             title: '소속 기관별 논문 수',
             chartArea: { width: '50%' },
-            legend: 'none'
+            legend: 'none',
+            hAxis: {
+                textStyle: { fontSize: 10 }, // X축 글자 크기 설정
+            },
+            vAxis: {
+                textStyle: { fontSize: 10 } // Y축 글자 크기 설정
+            },
+            tooltip: { isHtml: true }, // HTML 기반 툴팁 활성화
         };
 
         // 차트 생성

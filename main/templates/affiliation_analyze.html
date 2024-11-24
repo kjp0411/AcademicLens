@@ -1102,20 +1102,16 @@
                 }));
 
             document.getElementById('analyzeButton').addEventListener('click', function () {
-                const loadingOverlay = document.getElementById('loadingOverlay'); // 로딩 오버레이 가져오기
-                loadingOverlay.style.display = 'flex'; // 로딩 화면 표시
+                if (!currentNetworkData) {
+                    alert('분석할 네트워크 데이터가 없습니다.');
+                    return;
+                }
 
-                const networkText = JSON.stringify(data);
+                // 분석 데이터 준비
+                const networkText = JSON.stringify(currentNetworkData);
 
-                // 네트워크 데이터 분석 요청
-                analyzeNetworkData(networkText)
-                    .catch(error => {
-                        console.error('Error analyzing network data:', error);
-                        alert('네트워크 데이터 분석 중 문제가 발생했습니다.');
-                    })
-                    .finally(() => {
-                        loadingOverlay.style.display = 'none'; // 로딩 화면 숨기기
-                    });
+                // 분석 실행
+                analyzeNetworkData(networkText);
             });
         }
 
@@ -1128,21 +1124,39 @@
             console.error('Error fetching network data:', error);
         });
 
-        async function analyzeNetworkData(networkData) {
-            const response = await fetch('/api/analyze_network_data/', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': csrftoken
-                },
-                body: JSON.stringify({ network_data: networkData })
-            });
+        let isAnalyzing = false; // 분석 요청 상태 플래그
 
-            if (response.ok) {
-                const data = await response.json();
-                document.getElementById('analysisResult').textContent = data.analysis_result;
-            } else {
-                console.error('Error analyzing network data', response.statusText);
+        async function analyzeNetworkData(networkData) {
+            if (isAnalyzing) {
+                console.warn('이미 분석 요청이 진행 중입니다.');
+                return;
+            }
+
+            isAnalyzing = true; // 요청 상태를 "진행 중"으로 설정
+            const loadingOverlay = document.getElementById('loadingOverlay');
+            loadingOverlay.style.display = 'flex'; // 로딩 화면 표시
+
+            try {
+                const response = await fetch('/api/analyze_network_data/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrftoken
+                    },
+                    body: JSON.stringify({ network_data: networkData })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    document.getElementById('analysisResult').textContent = data.analysis_result;
+                } else {
+                    console.error('Error analyzing network data', response.statusText);
+                }
+            } catch (error) {
+                console.error('Error analyzing network data:', error);
+            } finally {
+                isAnalyzing = false; // 요청 상태를 "완료"로 설정
+                loadingOverlay.style.display = 'none'; // 로딩 화면 숨기기
             }
         }
 

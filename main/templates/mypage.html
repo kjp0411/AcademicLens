@@ -386,8 +386,8 @@
 
     // 하트 버튼
     function setupSaveButtons() {
-        const csrftoken = "{{ csrf_token }}"; // CSRF Token setup
         const saveButtons = document.querySelectorAll('.save-btn');
+        const csrftoken = getCookie('csrftoken'); // CSRF 토큰 가져오기
 
         saveButtons.forEach(button => {
             button.addEventListener('click', function() {
@@ -415,11 +415,8 @@
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
-                        if (isSaved) {
-                            saveIcon.src = heartEmpty;
-                        } else {
-                            saveIcon.src = heartFilled;
-                        }
+                        // 아이콘 토글
+                        saveIcon.src = isSaved ? heartEmpty : heartFilled;
                     } else {
                         alert(data.message);
                     }
@@ -428,7 +425,7 @@
             });
         });
     }
-    
+
     // 체크박스 선택
     function selectAll() {
         const checkboxes = document.querySelectorAll('.paper-checkbox');
@@ -594,6 +591,7 @@
                     setupCheckRemoveButton();
                     setupSearchForm();  // 폼을 다시 초기화
                     setupPagination('saved');
+                    setupSaveButtons();
                 })
                 .catch(error => console.error('Error during AJAX request:', error));
             });
