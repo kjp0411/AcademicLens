@@ -276,6 +276,7 @@
 
 
     const isAuthenticated = {{ user.is_authenticated|yesno:"true,false" }};
+    const keyword = "{{ keyword|escapejs }}"; // JavaScript 변수에 저장
 
     // 초기값 저장
     let previousStartYear = document.getElementById('start_year').value;
@@ -309,117 +310,125 @@
         data.addColumn('number', '논문 수');
         data.addRows([
             {% for item in papers_count %}
-    ['{{ item.year }}', {{ item.count }}],
-        {% endfor %}
+                ['{{ item.year }}', {{ item.count }}],
+            {% endfor %}
             ]);
 
-    var options = {
-        title: '연도별 논문 수',
-        legend: { position: 'bottom' },
-        chartArea: { width: '70%', height: '70%' },
-        pointSize: 5,
-        series: { 0: { lineWidth: 2 } }
-    };
+        var options = {
+            title: '연도별 논문 수',
+            legend: { position: 'bottom' },
+            chartArea: { width: '70%', height: '70%' },
+            pointSize: 5,
+            series: { 0: { lineWidth: 2 } }
+        };
 
-    var chart = new google.visualization.LineChart(document.getElementById('papersChart'));
-    chart.draw(data, options);
-        }
+        var chart = new google.visualization.LineChart(document.getElementById('papersChart'));
+        chart.draw(data, options);
+    }
 
     function drawAuthorChart() {
+        // Django 템플릿에서 전달된 데이터를 JSON으로 파싱
+        var authorData = JSON.parse('{{ author_data_json|safe }}');
+
+        // Google Charts 데이터 테이블 생성
         var data = new google.visualization.DataTable();
         data.addColumn('string', 'Author');
         data.addColumn('number', '논문 수');
-        data.addRows([
-            {% for author_name, paper_count in author_data %}
-    ['{{ author_name }}', {{ paper_count }}],
-        {% endfor %}
-            ]);
 
-    var options = {
-        title: '저자별 논문 수',
-        chartArea: { width: '50%' },
-        legend: 'none'
-    };
+        // authorData를 Google Charts 데이터로 추가
+        authorData.forEach(function(author) {
+            data.addRow([author.name, author.count]);
+        });
 
-    var chart = new google.visualization.BarChart(document.getElementById('authorsChart'));
-    chart.draw(data, options);
-        }
+        // 차트 옵션 설정
+        var options = {
+            title: '저자별 논문 수',
+            chartArea: { width: '50%' },
+            legend: 'none'
+        };
+
+        // 차트 생성
+        var chart = new google.visualization.BarChart(document.getElementById('authorsChart'));
+        chart.draw(data, options);
+    }
 
     function drawAffiliationChart() {
+        // Django 템플릿에서 JSON 데이터를 파싱
+        var affiliationData = JSON.parse('{{ affiliation_data_json|safe }}');
+
+        // Google Charts 데이터 테이블 생성
         var data = new google.visualization.DataTable();
         data.addColumn('string', 'Affiliation');
         data.addColumn('number', '논문 수');
-        data.addColumn({ type: 'string', role: 'tooltip' });  // 툴팁에 표시될 전체 소속 이름
 
-        // 최대 글자 수 설정
-        var maxLength = 30;
+        // affiliationData를 Google Charts 데이터로 추가
+        affiliationData.forEach(function(affiliation) {
+            data.addRow([affiliation.name, affiliation.count]);
+        });
 
-        data.addRows([
-            {% for affiliation_name, paper_count in affiliation_data %}
-            [
-                // 30자 초과 시 글자를 잘라서 표시하고, 툴팁에는 전체 이름을 포함
-                '{% if affiliation_name|length > 30 %}{{ affiliation_name|slice:":30" }}...{% else %}{{ affiliation_name }}{% endif %}',
-                {{ paper_count }},
-                '{{ affiliation_name }}'  // 툴팁으로 전체 이름
-            ],
-            {% endfor %}
-        ]);
-
+        // 차트 옵션 설정
         var options = {
             title: '소속 기관별 논문 수',
             chartArea: { width: '50%' },
-            legend: 'none',
-            hAxis: {
-                textStyle: { fontSize: 10 },
-            },
-            vAxis: {
-                textStyle: { fontSize: 10 }
-            }
+            legend: 'none'
         };
 
+        // 차트 생성
         var chart = new google.visualization.BarChart(document.getElementById('affiliationChart'));
         chart.draw(data, options);
     }
 
     function drawCountryChart() {
+        // Django 템플릿에서 JSON 데이터를 파싱
+        var countryData = JSON.parse('{{ country_data_json|safe }}');
+
+        // Google Charts 데이터 테이블 생성
         var data = new google.visualization.DataTable();
         data.addColumn('string', 'Country');
         data.addColumn('number', '논문 수');
-        data.addRows([
-            {% for country_name, paper_count in country_data %}
-    ['{{ country_name }}', {{ paper_count }}],
-        {% endfor %}
-            ]);
 
+        // JSON 데이터를 Google Charts에 추가
+        countryData.forEach(function(country) {
+            data.addRow([country.name, country.count]);
+        });
+
+        // 차트 옵션 설정
         var options = {
             title: '국가별 논문 수',
             chartArea: { width: '50%' },
             legend: 'none'
         };
 
+        // 차트 생성
         var chart = new google.visualization.BarChart(document.getElementById('countryChart'));
         chart.draw(data, options);
     }
 
     function drawKeywordChart() {
+        // Django 템플릿에서 JSON 데이터를 파싱
+        var topKeywords = JSON.parse('{{ top_keywords_json|safe }}');
+
+        // Google Charts 데이터 테이블 생성
         var data = new google.visualization.DataTable();
         data.addColumn('string', 'Keyword');
         data.addColumn('number', 'Count');
-        data.addRows([
-            {% for keyword, count in top_keywords %}
-    ['{{ keyword }}', {{ count }}],
-        {% endfor %}
-            ]);
 
-    var options = {
-        title: '많이 사용된 Top 10 키워드',
-        chartArea: { width: '50%' },
-        legend: 'none'
-    };
+        // JSON 데이터를 Google Charts에 추가
+        topKeywords.forEach(function(keyword) {
+            data.addRow([keyword.keyword, keyword.count]);
+        });
 
-    var chart = new google.visualization.BarChart(document.getElementById('keywordChart'));
-    chart.draw(data, options);
-        }
+        // 차트 옵션 설정
+        var options = {
+            title: '많이 사용된 Top 10 키워드',
+            chartArea: { width: '50%' },
+            legend: 'none'
+        };
+
+        // 차트 생성
+        var chart = new google.visualization.BarChart(document.getElementById('keywordChart'));
+        chart.draw(data, options);
+    }
         
     // GPT 분석 버튼 클릭 이벤트
     document.querySelectorAll('.gpt-analysis-btn').forEach(function(button) {
@@ -430,13 +439,13 @@
             if (chartId === 'papersChart') {
                 analysisData = {{ papers_count|safe }};
             } else if (chartId === 'authorsChart') {
-                analysisData = {{ author_data|safe }};
+                analysisData = JSON.parse('{{ author_data_json|safe }}');  // JSON 데이터로 파싱
             } else if (chartId === 'affiliationChart') {
-                analysisData = {{ affiliation_data|safe }};
+                analysisData = JSON.parse('{{ affiliation_data_json|safe }}'); 
             } else if (chartId === 'countryChart') {
-                analysisData = {{ country_data|safe }};
+                analysisData = JSON.parse('{{ country_data_json|safe }}'); 
             } else if (chartId === 'keywordChart') {
-                analysisData = {{ top_keywords|safe }};
+                analysisData = {{ top_keywords_json|safe }};
             }
 
             // 로딩 오버레이 표시
@@ -449,7 +458,11 @@
                     'Content-Type': 'application/json',
                     'X-CSRFToken': getCookie('csrftoken')
                 },
-                body: JSON.stringify({ chart_id: chartId, chart_data: analysisData })
+                body: JSON.stringify({ 
+                    chart_id: chartId, 
+                    chart_data: analysisData, 
+                    keyword: keyword // keyword 추가
+                })
             })
             .then(response => response.json())
             .then(data => {
@@ -521,8 +534,40 @@
         });
 
         // 새 폴더 추가 버튼 클릭 시 폴더 생성 함수 호출
-        document.getElementById('addFolderBtn').addEventListener('click', function () {
-            createNewFolder();
+        document.getElementById('addFolderBtn').addEventListener('click', async function () {
+            const folderName = prompt("새 폴더 이름을 입력하세요:");
+            if (folderName) {
+                // 새 폴더 생성 요청을 서버에 보냄
+                try {
+                    const response = await fetch('/create-folder/', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': getCookie('csrftoken')
+                        },
+                        body: JSON.stringify({ 'folder_name': folderName })
+                    });
+
+                    if (response.ok) {
+                        alert("새 폴더가 추가되었습니다!");
+
+                        // 폴더 목록을 동적으로 업데이트
+                        const folderSelect = document.getElementById('folderSelect');
+                        const newOption = document.createElement('option');
+                        newOption.value = folderName;
+                        newOption.textContent = folderName;
+                        folderSelect.appendChild(newOption);
+
+                        // 기본 선택값을 "폴더를 선택하세요"로 설정
+                        folderSelect.value = ""; // 첫 번째 옵션 선택
+                    } else {
+                        alert("폴더 생성 실패!");
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    alert("폴더 생성 중 문제가 발생했습니다.");
+                }
+            }
         });
 
         // 저장 버튼 로직 구현 (기존 코드 유지)
