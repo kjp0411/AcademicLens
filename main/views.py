@@ -1171,12 +1171,45 @@ class AnalyzeNetworkData(CsrfExemptMixin, APIView):
 
     def post(self, request, format=None):
         network_data = request.data.get('network_data', '')
+        keyword = request.data.get('keyword', '')
+        analysis_type = request.data.get('analysis_type', '')
 
         if network_data:
-            prompt = f"이 네트워크 데이터에서 노드 간의 상호작용 패턴을 식별하고, 주요 관계 및 특징적인 연결을 요약해 주세요: {network_data}"
+            prompt = (
+                f"{network_data} 이 network_data에서 nodes는 이름과 논문 수로 되어있습니다. "
+                f"links는 node 간의 공동 연구 관계입니다. 각 링크는 source, target, value 필드를 가집니다. "
+                f"value는 source와 target의 공동 연구 횟수를 의미합니다. Center Node는 사용자가 검색한 중심이 되는 노드입니다. "
+            )
+
+            # 분석 타입에 따라 프롬프트 수정
+            if analysis_type == "country":
+                prompt += (
+                    "이 네트워크는 국가 간의 연구 협력을 나타냅니다. 주요 연구 협력 관계를 분석하고, 국가별 특징을 설명해주세요."
+                    "첫 번째로 어떤 나라들이 중심 나라(중심 노드)와 공동 연구를 활발하게 진행하고 있는지 설명해주세요."
+                    "두 번째로 논문 수(노드)는 다른 나라에 비해 상대적으로 적지만 중심 나라(중심 노드)와 공동 연구를 많이 진행한 나라가 있으면 설명해주세요."
+                    "이외에 네트워크 데이터를 분석해보고 특이사항이 있다면 설명해주세요."
+                    "위 내용들을 요약해서 한 번 정리해주세요"
+                )
+            elif analysis_type == "affiliation":
+                prompt += (
+                    "이 네트워크는 소속 기관 간의 연구 협력을 나타냅니다. 주요 협력 기관과 연구 분야의 패턴을 요약해 주세요."
+                    "첫 번째로 어떤 소속들이 중심 소속(중심 노드)와 공동 연구를 활발하게 진행하고 있는지 설명해주세요."
+                    "두 번째로 논문 수(노드)는 다른 소속에 비해 상대적으로 적지만 중심 소속(중심 노드)와 공동 연구를 많이 진행한 소속이 있으면 설명해주세요."
+                    "이외에 네트워크 데이터를 분석해보고 특이사항이 있다면 설명해주세요."
+                    "위 내용들을 요약해서 한 번 정리해주세요"
+                )
+            elif analysis_type == "author":
+                prompt += (
+                    "이 네트워크는 저자 간의 연구 협력을 나타냅니다. 주요 공동 연구 관계를 분석하고, 저자 간의 연구 특징을 요약해 주세요."
+                    "첫 번째로 어떤 저자들이 중심 저자(중심 노드)와 공동 연구를 활발하게 진행하고 있는지 설명해주세요."
+                    "두 번째로 논문 수(노드)는 다른 저자에 비해 상대적으로 적지만 중심 저자(중심 노드)와 공동 연구를 많이 진행한 저자가 있으면 설명해주세요."
+                    "이외에 네트워크 데이터를 분석해보고 특이사항이 있다면 설명해주세요."
+                    "위 내용들을 요약해서 한 번 정리해주세요"
+                )
+
 
             response = openai.ChatCompletion.create(
-                model="gpt-3.5-turbo",  # 또는 gpt-4
+                model="gpt-3.5-turbo",
                 messages=[
                     {"role": "system", "content": "You are a helpful assistant."},
                     {"role": "user", "content": prompt}
@@ -1185,7 +1218,22 @@ class AnalyzeNetworkData(CsrfExemptMixin, APIView):
 
             analysis_result = response.choices[0].message['content'].strip()
 
-            return Response({'analysis_result': analysis_result})
+            # HTML로 포맷팅
+            formatted_result = (
+                "<div style='padding: 10px; line-height: 1.6;'>"
+                + analysis_result
+                    .replace("###", "<h4 style='margin: 10px 0; font-size: 16px; font-weight: bold;'>")  # ### 헤더 변환
+                    .replace("##", "<h3 style='margin: 15px 0; font-size: 18px; font-weight: bold;'>")  # ## 헤더 변환
+                    .replace("#", "<h2 style='margin: 20px 0; font-size: 20px; font-weight: bold;'>")   # # 헤더 변환
+                    .replace("**", "<strong>")  # ** 강조 처리
+                    .replace("- ", "<li style='margin-left: 20px; list-style: disc;'>")  # 리스트 변환
+                    .replace("\n", "<br>")  # 줄바꿈 처리
+                + "</div>"
+            )
+
+            # 분석 결과 반환
+            return Response({'analysis_result': formatted_result})
+        
         return Response({'error': 'Invalid request'}, status=400)
 
 #GPT API 사용 함수
@@ -2526,33 +2574,48 @@ def analyze_chart(request):
 
             # 각 차트에 대한 GPT 프롬프트 생성
             if chart_id == 'papersChart':
-                prompt = f"{chart_data}이 데이터는 {keyword}에 대한 연도별 논문 수 그래프야. 어떤 키워드에 대한 몇 년도 부터 몇 년도까지의 그래프인지 설명해줘. 그리고 연도별 논문 수 데이터 분포를 분석해서, 특이사항에 대해 설명해줘."
+                prompt = (
+                    f"{chart_data}이 데이터는 {keyword}에 대한 연도별 논문 수 그래프입니다. 어떤 키워드에 대한 몇 년도 부터 몇 년도까지의 그래프인지 설명해주세요."
+                    "그리고 연도별 논문 수 데이터 분포를 분석해서, 특이사항에 대해 설명해주세요."
+                )
             elif chart_id == 'authorsChart':
                 # 이름과 숫자 쌍을 명시적으로 포함
                 authors_list = "\n".join([f"{author['name']} - {author['count']}편" for author in chart_data])
                 prompt = (
-                    f"다음은 저자별 논문 수 데이터입니다:\n{authors_list}\n\n"
-                    "이 데이터를 기반으로 가장 많은 논문을 작성한 저자의 이름과 논문 수를 알려주세요. "
-                    "또한 상위 3명의 저자 이름과 논문 수도 알려주세요."
+                    f"다음은 {keyword}관련 논문들에 대한 저자별 논문 수 데이터입니다:\n{authors_list}\n\n"
+                    f"처음에 {keyword}이거를 보고 어떤 키워드에 대한 저자별 논문 수 그래프인지 설명해주세요."
+                    f"그리고 이 저자별 논문 수 데이터를 기반으로 어떤 저자가 이 {keyword}에 대한 논문을 많이 작성하였는지 상위 3명의 저자 이름과 논문 수도 설명해주세요."
+                    "또한 다른 특이사항이 있다면 알려주세요."
                 )
             elif chart_id == 'affiliationChart':
                 # 소속 데이터 리스트를 명시적으로 프롬프트에 포함
                 affiliation_list = "\n".join([f"{aff['name']} - {aff['count']}편" for aff in chart_data])
                 prompt = (
-                    f"다음은 소속 기관별 논문 수 데이터입니다:\n{affiliation_list}\n\n"
-                    "이 데이터를 기반으로 가장 많은 논문을 발표한 소속 기관과 논문 수를 알려주세요. "
-                    "또한 상위 3개의 소속 기관과 논문 수도 알려주세요."
+                    f"다음은 {keyword}관련 논문들에 대한 소속 기관별 논문 수 데이터입니다:\n{affiliation_list}\n\n"
+                    f"처음에 {keyword}이거를 보고 어떤 키워드에 대한 소속 기관별 논문 수 그래프인지 설명해주세요."
+                    f"그리고 이 소속 기관별 논문 수 데이터를 기반으로 어떤 소속 기관이 이 {keyword}에 대한 논문을 많이 작성하였는지 상위 3명의 소속 이름과 논문 수도 설명해주세요."
+                    "또한 다른 특이사항이 있다면 알려주세요."
                 )
             elif chart_id == 'countryChart':
                 # 국가 데이터 리스트를 명시적으로 프롬프트에 포함
                 country_list = "\n".join([f"{country['name']} - {country['count']}편" for country in chart_data])
                 prompt = (
-                    f"다음은 국가별 논문 수 데이터입니다:\n{country_list}\n\n"
-                    "이 데이터를 기반으로 가장 많은 논문을 발표한 국가와 논문 수를 알려주세요. "
-                    "또한 상위 3개의 국가와 논문 수도 알려주세요."
+                    f"다음은 {keyword}관련 논문들에 대한 국가별 논문 수 데이터입니다:\n{country_list}\n\n"
+                    f"처음에 {keyword}이거를 보고 어떤 키워드에 대한 나라별 논문 수 그래프인지 설명해주세요."
+                    f"그리고 이 나라별 논문 수 데이터를 기반으로 어떤 나라가 이 {keyword}에 대한 논문을 많이 작성하였는지 상위 3개의 나라 이름과 논문 수도 설명해주세요."
+                    "또한 다른 특이사항이 있다면 알려주세요."
                 )
             elif chart_id == 'keywordChart':
-                prompt = f"논문에서 사용된 주요 키워드를 분석하고, 주요 키워드나 어떤 주제의 논문 수가 많은지 경향을 설명해 주세요: {chart_data}"
+                # 키워드 데이터를 명시적으로 프롬프트에 포함
+                keyword_list = "\n".join([f"{kw['keyword']} - {kw['count']}회" for kw in chart_data])
+                prompt = (
+                    f"다음은 {keyword} 관련 논문에서 사용된 주요 키워드와 빈도수 데이터입니다:\n"
+                    f"{keyword_list}\n\n"
+                    f"처음에 {keyword}이거를 보고 어떤 키워드 관련 논문에서 사용된 주요 키워드와 빈도수 데이터 그래프인지 설명해주세요."
+                    f"{keyword} 관련 논문에는 이러한 키워드들이 주로 사용되었습니다. "
+                    f"가장 많이 사용된 키워드와 그 경향에 대해 분석하고, "
+                    f"특히 주제의 중심이 되는 키워드가 무엇인지 설명해 주세요."
+                )
             else:
                 return JsonResponse({'error': 'Invalid chart ID'}, status=400)
 

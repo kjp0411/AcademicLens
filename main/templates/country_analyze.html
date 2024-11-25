@@ -361,6 +361,10 @@
                 transform: rotate(360deg);
             }
         }
+        #analysisResult {
+            max-height: 500px; /* 분석 결과 박스의 최대 높이 설정 */
+            overflow-y: auto; /* 스크롤 활성화 */
+        }
     </style>
 </head>
 
@@ -484,7 +488,8 @@
         let currentNetworkData = null; // 전역 변수로 네트워크 데이터를 저장
         
         let paperChart; 
-        
+        let selectedKeyword = ""; // GPT 프롬프트에 보내기 위한 변수
+
         function getCookie(name) {
             let cookieValue = null;
             if (document.cookie && document.cookie !== '') {
@@ -669,6 +674,12 @@
             if (keywordInput) {
                 keywordInput.value = ''; // 검색 칸 비우기
             }
+
+            // 분석 결과 초기화
+            document.getElementById('analysisResult').innerHTML = '<p>분석 결과가 여기에 표시됩니다.</p>';
+
+            // 분석 결과 초기화
+            document.getElementById('analysisResultKeywords').innerHTML = '<p>분석 결과가 여기에 표시됩니다.</p>';
 
             // 네트워크 컨테이너와 로딩 화면 생성
             const networkContainer = document.getElementById('network');
@@ -1143,6 +1154,15 @@
             console.error('Error fetching network data:', error);
         });
 
+        // URL에서 분석 타입 추출
+        function getAnalysisTypeFromURL() {
+            const path = window.location.pathname; // 예: "/country-analyze/?name=China"
+            const match = path.match(/(country-analyze|author-analyze|affiliation-analyze)/);
+            return match ? match[1].replace('-analyze', '') : null; // 'country', 'author', 'affiliation' 반환
+        }
+
+        const analysisType = getAnalysisTypeFromURL();
+
         let isAnalyzing = false; // 분석 요청 상태 플래그
 
         async function analyzeNetworkData(networkData) {
@@ -1162,12 +1182,35 @@
                         'Content-Type': 'application/json',
                         'X-CSRFToken': csrftoken
                     },
-                    body: JSON.stringify({ network_data: networkData })
+                    body: JSON.stringify({
+                        network_data: networkData,
+                        keyword: selectedKeyword || '', // 선택된 키워드 (없으면 빈 문자열)
+                        analysis_type: analysisType // 분석 타입
+                    })
                 });
 
                 if (response.ok) {
                     const data = await response.json();
-                    document.getElementById('analysisResult').textContent = data.analysis_result;
+
+                    // 키워드 또는 전체 논문 정보에 따라 메시지 생성
+                    const keywordMessage = selectedKeyword 
+                        ? `<p><strong>키워드: [ ${selectedKeyword} ]</strong>에 대한 네트워크 분석 결과입니다.</p>`
+                        : `<p><strong>[ ${countryName} ] 가 작성한 전체 논문에 대한 네트워크 분석 결과입니다.</strong></p>`;
+
+                    // GPT 분석 결과를 HTML로 변환
+                    const formattedResult = `
+                        ${keywordMessage}
+                        <div style="padding: 10px; line-height: 1.6;">
+                            ${data.analysis_result
+                                .replace(/###/g, '<h4 style="margin: 10px 0; font-size: 16px; font-weight: bold;">') // ### 헤더 변환
+                                .replace(/-\s/g, '<li style="margin-left: 20px;">') // - 리스트 변환
+                                .replace(/\n/g, '</li><br>')} <!-- 줄바꿈 처리 -->
+                        </div>
+                    `;
+
+                    // 분석 결과를 표시할 컨테이너에 HTML 삽입
+                    const analysisResultContainer = document.getElementById('analysisResult');
+                    analysisResultContainer.innerHTML = formattedResult;
                 } else {
                     console.error('Error analyzing network data', response.statusText);
                 }
@@ -1178,6 +1221,7 @@
                 loadingOverlay.style.display = 'none'; // 로딩 화면 숨기기
             }
         }
+
 
         function getRandomColor() {
             const letters = '0123456789ABCDEF';
@@ -1328,6 +1372,12 @@
                 return;
             }
 
+            selectedKeyword = keyword; // 선택된 키워드 저장
+
+            // 분석 결과 초기화
+            document.getElementById('analysisResultKeywords').innerHTML = '<p>분석 결과가 여기에 표시됩니다.</p>';
+
+
             // 툴팁 생성 및 스타일 설정
             const tooltip = document.createElement('div');
             tooltip.style.position = 'absolute';
@@ -1422,6 +1472,9 @@
                 <div class="loading-spinner" style="width: 50px; height: 50px; border: 6px solid rgba(255, 255, 255, 0.3); border-top: 6px solid white; border-radius: 50%; animation: spin 1s linear infinite;"></div>
                 <div class="loading-text" style="color: white; margin-top: 10px;">네트워크 데이터를 불러오는 중입니다...</div>
             `;
+
+            // 분석 결과 초기화
+            document.getElementById('analysisResult').innerHTML = '<p>분석 결과가 여기에 표시됩니다.</p>';
 
             // 로딩 화면 추가
             networkContainer.innerHTML = '';
@@ -1550,7 +1603,6 @@
             return analysisElement ? analysisElement.innerText : '';
         }
 
-        // 모달을 생성하여 폴더 선택 및 이미지 이름 입력
         // 모달을 생성하여 폴더 선택 및 이미지 이름 입력
         function openFolderSelectModal(folders, chartId, element) {
             const moreBtn = document.getElementById('showTableButton'); // "더보기" 버튼 참조

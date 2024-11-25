@@ -363,7 +363,6 @@
         var data = new google.visualization.DataTable();
         data.addColumn('string', 'Affiliation');
         data.addColumn('number', '논문 수');
-        data.addColumn({ type: 'string', role: 'tooltip' }); // 툴팁에 전체 이름 표시
 
         // affiliationData를 Google Charts 데이터로 추가
         affiliationData.forEach(function(affiliation) {
@@ -371,7 +370,7 @@
                 ? affiliation.name.slice(0, maxLength) + '...' // 이름을 잘라서 표시
                 : affiliation.name;
 
-            data.addRow([truncatedName, affiliation.count, affiliation.name]); // 툴팁에는 전체 이름 표시
+            data.addRow([truncatedName, affiliation.count]);
         });
 
         // 차트 옵션 설정
@@ -385,14 +384,13 @@
             vAxis: {
                 textStyle: { fontSize: 10 } // Y축 글자 크기 설정
             },
-            tooltip: { isHtml: true }, // HTML 기반 툴팁 활성화
         };
 
         // 차트 생성
         var chart = new google.visualization.BarChart(document.getElementById('affiliationChart'));
         chart.draw(data, options);
     }
-
+    
     function drawCountryChart() {
         // Django 템플릿에서 JSON 데이터를 파싱
         var countryData = JSON.parse('{{ country_data_json|safe }}');
