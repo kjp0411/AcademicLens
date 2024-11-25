@@ -1328,7 +1328,14 @@
                 });
         });
 
-        async function analyzeKeywordData(keywordsText, selectedKeyword) {
+        async function analyzeKeywordData() {
+            if (!window.currentWordCloudData || window.currentWordCloudData.length === 0) {
+                alert("워드클라우드 데이터를 찾을 수 없습니다. 먼저 워드클라우드를 로드하세요.");
+                return;
+            }
+
+            const selectedKeyword = document.getElementById('sidebarKeywordInput')?.value.trim() || ''; // 선택된 키워드 가져오기
+
             try {
                 const response = await fetch('/api/analyze_keyword_data/', {
                     method: 'POST',
@@ -1337,14 +1344,17 @@
                         'X-CSRFToken': csrftoken
                     },
                     body: JSON.stringify({
-                        keyword_data: keywordsText,
-                        keyword: selectedKeyword, // 선택된 키워드 전달
+                        keyword_data: window.currentWordCloudData, // 현재 워드클라우드 데이터 사용
+                        keyword: selectedKeyword // 선택된 키워드 전달
                     })
                 });
 
                 if (response.ok) {
                     const data = await response.json();
-                    document.getElementById('analysisResultKeywords').innerHTML = data.analysis_result;
+                    document.getElementById('analysisResultKeywords').innerHTML = `
+                        <strong>분석 결과:</strong>
+                        <div>${data.analysis_result}</div>
+                    `;
                 } else {
                     console.error('Error analyzing keyword data:', response.statusText);
                     alert('키워드 데이터 분석에 실패했습니다.');
@@ -1354,6 +1364,29 @@
                 alert('키워드 데이터 분석 중 문제가 발생했습니다.');
             }
         }
+
+        // 초기 워드클라우드를 로드하고 데이터를 전역 변수에 저장
+        function fetchAndRenderInitialWordCloud() {
+            const country = document.getElementById('countryName').textContent;
+
+            fetch(`/country_wordcloud/?name=${encodeURIComponent(country)}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data) {
+                        // 초기 상태에서 워드클라우드 데이터를 전역 변수에 저장
+                        window.currentWordCloudData = data;
+
+                        // 워드클라우드를 렌더링
+                        renderWordCloud(data);
+                    } else {
+                        console.error('No word cloud data received');
+                    }
+                })
+                .catch(error => console.error('Error fetching initial word cloud data:', error));
+        }
+
+        // 페이지 로드 시 초기 워드클라우드 데이터 가져오기
+        document.addEventListener('DOMContentLoaded', fetchAndRenderInitialWordCloud);
 
         function redirectToFilteredPage() {
             // `countryName` 요소의 텍스트를 가져와 국가 정보를 추출
@@ -1395,18 +1428,17 @@
             // 분석 결과 초기화
             document.getElementById('analysisResultKeywords').innerHTML = '<p>분석 결과가 여기에 표시됩니다.</p>';
 
-
             // 툴팁 생성 및 스타일 설정
             const tooltip = document.createElement('div');
             tooltip.style.position = 'absolute';
             tooltip.style.display = 'none';
-            tooltip.style.backgroundColor = 'rgba(0, 0, 0, 0.8)'; // 툴팁 배경색 (어두운 회색)
-            tooltip.style.color = '#fff'; // 텍스트 색상 (흰색)
-            tooltip.style.padding = '5px 10px'; // 패딩
-            tooltip.style.borderRadius = '8px'; // 테두리 둥글게
-            tooltip.style.fontSize = '12px'; // 텍스트 크기
-            tooltip.style.zIndex = '1000'; // 다른 요소 위에 표시
-            tooltip.style.boxShadow = '0px 4px 6px rgba(0, 0, 0, 0.3)'; // 그림자 추가
+            tooltip.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
+            tooltip.style.color = '#fff';
+            tooltip.style.padding = '5px 10px';
+            tooltip.style.borderRadius = '8px';
+            tooltip.style.fontSize = '12px';
+            tooltip.style.zIndex = '1000';
+            tooltip.style.boxShadow = '0px 4px 6px rgba(0, 0, 0, 0.3)';
             document.body.appendChild(tooltip);
 
             // 키워드 검색에 따라 워드 클라우드 업데이트
@@ -1458,6 +1490,9 @@
                     document.getElementById('wordcloud').addEventListener('mouseleave', () => {
                         tooltip.style.display = 'none';
                     });
+
+                    // 재구성된 워드클라우드 데이터를 전역 변수에 저장
+                    window.currentWordCloudData = words;
                 })
                 .catch(error => console.error('Error fetching filtered word cloud data:', error));
 
@@ -1467,6 +1502,7 @@
             // 키워드 검색에 따라 연도별 논문 수 그래프 업데이트
             updateChartWithKeyword(keyword);
         }
+
 
         // 네트워크를 키워드로 필터링하여 업데이트
         function updateNetworkWithKeyword(country, keyword) {
