@@ -1242,10 +1242,21 @@ class AnalyzeKeywordData(CsrfExemptMixin, APIView):
 
     def post(self, request, format=None):
         keyword_data = request.data.get('keyword_data', '')
+        keyword = request.data.get('keyword', '')
 
         if keyword_data:
-            prompt = f"다음 키워드 데이터를 바탕으로 주요 주제와 잠재적인 하위 주제를 설명하고, 각 키워드가 어떤 역할을 하는지 분석해 주세요: {keyword_data}"
+            prompt = (
+                "다음은 키워드와 각 키워드가 논문들에서 사용된 빈도를 나타냅니다. "
+                "이를 바탕으로 주요 주제와 잠재적인 하위 주제를 도출하고, 키워드 간의 연관성을 분석해 주세요.\n\n"
+                f"키워드 데이터: {keyword_data}\n\n"
+                "분석 결과는 다음 항목을 포함해야 합니다:\n"
+                "1. 주요 주제 (가장 많이 사용된 키워드와 그 그룹화된 의미).\n"
+                "2. 잠재적인 하위 주제 (덜 사용된 키워드와 이들이 주제와 연관되는 방식).\n"
+                "3. 데이터에 기반한 키워드 간의 연관성 및 연구 방향에 대한 통찰.\n"
+                "결과를 깔끔하게 정리된 형식으로 제공해 주세요."
+            )
 
+            # OpenAI API 호출
             response = openai.ChatCompletion.create(
                 model="gpt-3.5-turbo",  # 또는 gpt-4
                 messages=[
@@ -1256,8 +1267,28 @@ class AnalyzeKeywordData(CsrfExemptMixin, APIView):
 
             analysis_result = response.choices[0].message['content'].strip()
 
-            return Response({'analysis_result': analysis_result})
-        
+            # HTML로 포맷팅
+            formatted_result = (
+                "<div style='padding: 10px; line-height: 1.6;'>"
+                + analysis_result
+                    .replace("###", "<h4 style='margin-top: 10px;'>")  # ### 헤더 변환
+                    .replace("##", "<h3 style='margin: 15px 0;'>")  # ## 헤더 변환
+                    .replace("#", "<h2 style='margin: 20px 0;'>")   # # 헤더 변환
+                    .replace("**", "<strong>")  # ** 강조 처리
+                    .replace("- ", "<li style='margin-left: 20px; list-style: disc;'>")  # 리스트 변환
+                    .replace("\n", "<br>")  # 줄바꿈 처리
+                + "</div>"
+            )
+
+            # 선택된 키워드 정보 추가
+            keyword_message = (
+                f"<p><strong>키워드: [{keyword}]</strong>에 대한 키워드 데이터 분석 결과입니다.</p>"
+                if keyword
+                else "<p><strong>전체 키워드 데이터에 대한 분석 결과입니다.</strong></p>"
+            )
+
+            return Response({'analysis_result': keyword_message + formatted_result})
+
         return Response({'error': 'Invalid request'}, status=400)
 
 # 소속 분석 페이지 html 출력 함수

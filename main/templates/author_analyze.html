@@ -165,20 +165,11 @@
             width: 100%;
             max-width: 600px;
             height: 600px;
+            margin: 0 auto;
             border: 1px solid #ddd;
             box-shadow: 2px 2px 12px rgba(0, 0, 0, 0.1);
             position: relative;
         }
-
-        #analysisBoxKeywords {
-            flex: 1;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            padding: 20px;
-            background-color: #f9f9f9;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-        }
-
 
         /* 네트워크 데이터 분석, 마이페이지 저장 버튼 오른쪽 정렬 */
         .chart-header {
@@ -403,6 +394,10 @@
         }
         #analysisResult {
             max-height: 500px; /* 분석 결과 박스의 최대 높이 설정 */
+            overflow-y: auto; /* 스크롤 활성화 */
+        }
+        #analysisResultKeywords {
+            max-height: 500px; /* 최대 높이를 설정하여 스크롤을 초과할 경우 제한 */
             overflow-y: auto; /* 스크롤 활성화 */
         }
     </style>
@@ -1347,6 +1342,7 @@
         document.getElementById('analyzeButtonKeywords').addEventListener('click', function () {
             const loadingOverlay = document.getElementById('loadingOverlay'); // 로딩 오버레이 가져오기
             loadingOverlay.style.display = 'flex'; // 로딩 화면 표시
+            const selectedKeyword = document.getElementById('sidebarKeywordInput')?.value.trim() || ''; // 선택된 키워드 가져오기
 
             fetch(`/author_wordcloud/?name=${encodeURIComponent(authorName)}`)
                 .then(response => response.json())
@@ -1354,7 +1350,7 @@
                     const keywordsText = JSON.stringify(data);
 
                     // 키워드 데이터 분석 요청
-                    return analyzeKeywordData(keywordsText);
+                    return analyzeKeywordData(keywordsText, selectedKeyword);
                 })
                 .catch(error => {
                     console.error('Error fetching keyword data:', error);
@@ -1365,21 +1361,30 @@
                 });
         });
 
-        async function analyzeKeywordData(keywordData) {
-            const response = await fetch('/api/analyze_keyword_data/', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': csrftoken
-                },
-                body: JSON.stringify({ keyword_data: keywordData })
-            });
+        async function analyzeKeywordData(keywordsText, selectedKeyword) {
+            try {
+                const response = await fetch('/api/analyze_keyword_data/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrftoken
+                    },
+                    body: JSON.stringify({
+                        keyword_data: keywordsText,
+                        keyword: selectedKeyword, // 선택된 키워드 전달
+                    })
+                });
 
-            if (response.ok) {
-                const data = await response.json();
-                document.getElementById('analysisResultKeywords').textContent = data.analysis_result;
-            } else {
-                console.error('Error analyzing keyword data', response.statusText);
+                if (response.ok) {
+                    const data = await response.json();
+                    document.getElementById('analysisResultKeywords').innerHTML = data.analysis_result;
+                } else {
+                    console.error('Error analyzing keyword data:', response.statusText);
+                    alert('키워드 데이터 분석에 실패했습니다.');
+                }
+            } catch (error) {
+                console.error('Error analyzing keyword data:', error);
+                alert('키워드 데이터 분석 중 문제가 발생했습니다.');
             }
         }
 
