@@ -1,13 +1,13 @@
 
 {% block content %}
-<h2>리포트 목록</h2>
+<h2>Report list</h2>
 <table>
     <thead>
         <tr>
-            <th>번호</th>
-            <th>리포트 제목</th>
-            <th>생성 날짜</th>
-            <th>편집</th>
+            <th>Number</th>
+            <th>Title</th>
+            <th>Date of creation</th>
+            <th>Edit</th>
         </tr>
     </thead>
     <tbody>
@@ -18,16 +18,16 @@
             <td>{{ report.creation_date }}</td>
             <td>
                 <button class="styled-btn" onclick="showContent('report_detail', 1, '{{ report.folder_name }}')">
-                    상세 보기
+                    View
                 </button>
                 <button class="styled-btn" onclick="deleteReport('{{ report.folder_name }}')">
-                    삭제
+                    Delete
                 </button>
             </td>
         </tr>
         {% empty %}
         <tr>
-            <td colspan="4">리포트가 없습니다.</td>
+            <td colspan="4">There are no reports.</td>
         </tr>
         {% endfor %}
     </tbody>

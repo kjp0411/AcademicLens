@@ -11,7 +11,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>소속 정보 페이지</title>
+    <title>Institution information page</title>
     <script src="https://d3js.org/d3.v6.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/wordcloud2.js/1.0.6/wordcloud2.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -334,36 +334,36 @@
         <div class="sidebar">
             <div class="affiliation-info">
                 <h2 id="affiliationName" style="color: black;"></h2>
-                <p>발표 논문 수</p>
-                <p>논문 수 (개): <span id="totalPapers">로딩 중...</span></p>
+                <p>Number of papers published</p>
+                <p>Number of papers (Total): <span id="totalPapers">Loading...</span></p>
             </div>
             <!-- 사이드바용 Top 5 키워드 버튼 형식으로 표시 -->
             <div id="sidebarTopKeywords">
-                <h3>사이드바 Top 5 키워드</h3>
+                <h3>Sidebar Top 5 keywords</h3>
                 <div id="sidebarTopKeywordButtons"></div> <!-- 여기에 사이드바용 키워드 버튼들이 추가됨 -->
             </div>
             
             <!-- 사이드바 검색 입력란과 버튼 -->
             <div class="sidebar-search-keyword search-bar">
-                <input type="text" id="sidebarKeywordInput" placeholder="키워드를 입력하세요">
-                <button onclick="searchSidebarKeyword()">검색</button>
+                <input type="text" id="sidebarKeywordInput" placeholder="Please enter a keyword">
+                <button onclick="searchSidebarKeyword()">Search</button>
             </div>
-            <button class="refresh-btn" onclick="refreshPage()">새로고침</button>
+            <button class="refresh-btn" onclick="refreshPage()">Refresh</button>
         </div>
         <div class="main">
             <div class="chart">
                 <div class="chart-header">
-                    <h3 class="chart-title">소속 정보</h3>
+                    <h3 class="chart-title">Network analysis</h3>
                     <button id="analyzeButton" class="analyze-btn">
-                        <i class="fas fa-chart-network"></i> 네트워크 데이터 분석
+                        <i class="fas fa-chart-network"></i> Network data analysis
                     </button>
-                    <button class="pdf-btn" data-chart="network">마이페이지에 저장</button>
+                    <button class="pdf-btn" data-chart="network">Save to mypage</button>
                     
                 </div>
-                <p style="margin-top: -20px; color: gray; font-size: 10px;"> 네트워크 시각화가 없을 시 공동연구가 없는 경우입니다. </p>
+                <p style="margin-top: -20px; color: gray; font-size: 10px;"> When there is no network visualization, there is no collaboration. </p>
                 <div id="network-container" style="position: relative;">
                     <div id="network" style="position: relative; width: 100%; height: 600px;">
-                        <div id="moer-btn"><button id="showTableButton" class="analyze-btn" onclick="showNetworkTable()">더보기</button></div>
+                        <div id="moer-btn"><button id="showTableButton" class="analyze-btn" onclick="showNetworkTable()">More</button></div>
                 
                         <!-- 범례 -->
                         <div id="legend-container" style="position: absolute; top: 10px; right: 10px; background-color: #f9f9f9; border: 1px solid #ccc; padding: 15px; border-radius: 5px; width: 200px; box-shadow: 0px 2px 8px rgba(0, 0, 0, 0.1);">
@@ -372,14 +372,14 @@
                                 <span style="font-size: 10px; color: #333;">Low</span>
                                 <div style="flex: 1; height: 8px; background: linear-gradient(to right, #f9f9f9, #000); margin: 0 10px; border: 1px solid #ccc;"></div>
                                 <span style="font-size: 10px; color: #333;">High</span>
-                                &nbsp;&nbsp;<div style="text-align: right; font-size: 11px; color: #333; font-weight: bold;">공동 연구 횟수</div>
+                                &nbsp;&nbsp;<div style="text-align: right; font-size: 11px; color: #333; font-weight: bold;">Number of joint studies</div>
                             </div>
 
                             <!-- 노드 크기 설명 -->
                             <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 15px;">
                                 <div style="width: 25px; height: 25px; border-radius: 50%; background-color: #8aaac6; margin-left: 25px; margin-right: 10px; border: 1px solid #ccc;"></div>
                                 <div style="text-align: right; font-size: 11px; color: #333; font-weight: bold;">
-                                    <span style="display: block;">노드의 크기는 논문 개수</span>
+                                    <span style="display: block;">Node size is number of papers</span>
                                 </div>
                             </div>
                         </div>

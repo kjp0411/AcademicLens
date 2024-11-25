@@ -2,14 +2,14 @@
 {% load static %}
 
 {% block content %}
-<h2>저장 논문</h2> 
+<h2>Saved paper</h2> 
 {% if papers_with_authors_and_keywords %}
     <div class="search">
         <form action="{% url 'saved_papers' %}" method="get" class="saved-search-form" id="saved-search-form">
             <select name="filter" id="filter">
-                <option value="paper" {% if filter == 'paper' %}selected{% endif %}>논문</option>
-                <option value="author" {% if filter == 'author' %}selected{% endif %}>저자</option>
-                <option value="country" {% if filter == 'country' %}selected{% endif %}>나라</option>
+                <option value="paper" {% if filter == 'paper' %}selected{% endif %}>Paper</option>
+                <option value="author" {% if filter == 'author' %}selected{% endif %}>Author</option>
+                <option value="country" {% if filter == 'country' %}selected{% endif %}>Country</option>
             </select>
             <input type="text" name="query" id="search-box" placeholder="Enter search query" value="{{ query }}">
             <button type="submit">Search</button>
@@ -18,19 +18,19 @@
     <div class="search-options">
         <div class="left-options">
             <input type="checkbox" name="select_all" id="select-all"> &nbsp;&nbsp;&nbsp;
-            <button type="button" class="check-remove-btn" id="check-remove-btn">삭제하기</button>
+            <button type="button" class="check-remove-btn" id="check-remove-btn">Delete</button>
         </div>
         <div class="right-options">
             <select id="sort-order" name="order">
-                <option value="desc" {% if order == 'desc' %}selected{% endif %}>내림차순</option>
-                <option value="asc" {% if order == 'asc' %}selected{% endif %}>오름차순</option>
+                <option value="desc" {% if order == 'desc' %}selected{% endif %}>Descending order</option>
+                <option value="asc" {% if order == 'asc' %}selected{% endif %}>Ascending order</option>
             </select>
             <select id="items-per-page" name="items_per_page">
-                <option value="10" {% if items_per_page == 10 %}selected{% endif %}>10개씩</option>
-                <option value="20" {% if items_per_page == 20 %}selected{% endif %}>20개씩</option>
-                <option value="30" {% if items_per_page == 30 %}selected{% endif %}>30개씩</option>
-                <option value="40" {% if items_per_page == 40 %}selected{% endif %}>40개씩</option>
-                <option value="50" {% if items_per_page == 50 %}selected{% endif %}>50개씩</option>
+                <option value="10" {% if items_per_page == 10 %}selected{% endif %}>10 at a time</option>
+                <option value="20" {% if items_per_page == 20 %}selected{% endif %}>20 at a time</option>
+                <option value="30" {% if items_per_page == 30 %}selected{% endif %}>30 at a time</option>
+                <option value="40" {% if items_per_page == 40 %}selected{% endif %}>40 at a time</option>
+                <option value="50" {% if items_per_page == 50 %}selected{% endif %}>50 at a time</option>
             </select>
         </div>
     </div>
@@ -68,7 +68,7 @@
                     <!-- 저자 -->
                     {% if item.authors %}
                         {% if item.authors|length > 1 %}
-                            {{ item.authors.0.name }} 외 {{ item.authors|length|add:"-1" }}인
+                            {{ item.authors.0.name }} and {{ item.authors|length|add:"-1" }} others
                         {% else %}
                             {{ item.authors.0.name }}
                         {% endif %}
@@ -91,7 +91,7 @@
                         &nbsp;&nbsp;|&nbsp;&nbsp;{{ item.paper.publisher }}
                     {% endif %}
                 </div>
-                <p><strong>저장된 시간:</strong> {{ item.saved_at|date:"Y-m-d H:i" }}</p>
+                <p><strong>Saved time:</strong> {{ item.saved_at|date:"Y-m-d H:i" }}</p>
             </div>
         </div>
         <hr>

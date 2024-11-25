@@ -1,13 +1,13 @@
 {% load static %}
-<h2>추천 논문</h2>
+<h2>Recommended Paper</h2>
 
 {% if recommended_papers %}
     <div class="top-keywords">
-        사용자님의 상위 키워드는 
+        Your top keyword is 
         <strong>
             {% for item in recommended_papers %}
                 {{ item.keyword }}{% if not forloop.last %}, {% endif %}
-            {% endfor %}입니다.
+            {% endfor %}
         </strong>
     </div>
 
@@ -79,12 +79,12 @@
                     <hr>
                 {% endfor %}
             {% else %}
-                <p>추천 논문이 없습니다.</p>
+                <p>There are no recommended papers.</p>
             {% endif %}
         </div>
     {% endfor %}
 {% else %}
-    <p>저장 논문이 없어 논문을 추천할 수 없습니다.</p>
+    <p>We can't recommend the paper because I don't have a saved paper.</p>
 {% endif %}
 <script>
     document.addEventListener('DOMContentLoaded', function () {

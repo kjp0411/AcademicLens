@@ -3,8 +3,8 @@
 <div class="header-container">
     <h1 id="reportTitle">{{ title }}</h1>
     <div class="button-container">
-        <button class="pdf-btn" onclick="downloadPDF()">PDF로 저장</button>
-        <button class="back-btn" onclick="showContent('report')">리포트 목록으로 돌아가기</button>
+        <button class="pdf-btn" onclick="downloadPDF()">Download as PDF</button>
+        <button class="back-btn" onclick="showContent('report')">Return to report list</button>
     </div>
 </div>
 
@@ -16,7 +16,7 @@
         <pre>{{ content }}</pre>
     </div>
     <br><br>
-    <strong>선택된 이미지 목록</strong>
+    <strong>List of selected images</strong>
     <div class="image-list">
         {% for image_url in images %}
             <img src="{{ image_url }}" alt="리포트 이미지" style="max-width: 80%; height: auto; border-radius: 8px;">

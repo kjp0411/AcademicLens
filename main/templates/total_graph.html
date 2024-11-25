@@ -78,15 +78,15 @@
     <div style="display: flex; align-items: center; flex-wrap: wrap; margin-left: 50px; max-width: 70%;">
         <span style="font-size: 30px; font-weight: bold; color: #333; white-space: nowrap;">
             {% if request.GET.filter == "paper" %}
-                검색 키워드 &nbsp;
+                Search keyword &nbsp;
             {% elif request.GET.filter == "author" %}
-                검색 저자 &nbsp;
+                Search author &nbsp;
             {% elif request.GET.filter == "country" %}
-                검색 나라 &nbsp;
+                Search country &nbsp;
             {% elif request.GET.filter == "affiliation" %}
-                검색 소속 &nbsp;
+                Search institution &nbsp;
             {% else %}
-                검색 키워드 &nbsp;
+                Search keyword &nbsp;
             {% endif %}
         </span>
         <h2 style="font-size: 47px; font-weight: bold; color: #007BFF; margin: 0 0 0 10px; word-break: break-word; overflow-wrap: break-word;">
@@ -100,7 +100,7 @@
         <input type="hidden" name="query" value="{{ keyword }}">
         <input type="hidden" name="filter" value="{{ filter }}">
 
-        <label for="start_year" style="font-size: 16px; font-weight: bold; color: #333;">분석기간:</label>
+        <label for="start_year" style="font-size: 16px; font-weight: bold; color: #333;">Analysis period:</label>
 
         <select name="start_year" id="start_year" 
                 style="padding: 8px; border-radius: 5px; border: 1px solid #ccc; width: 100px; font-size: 14px;">
@@ -126,7 +126,7 @@
 
         <button type="submit" 
                 style="padding: 8px 15px; background-color: #007BFF; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 14px; font-weight: bold; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
-            분석
+            Analysis
         </button>
     </form>
 </div>
@@ -134,7 +134,7 @@
 
 <div style="text-align: center; margin-top: -40px;">
     <p style="font-size: 22px; font-weight: bold; padding: 10px; display: inline-block;">
-        현재 선택한 기간: <strong>{{ start_year }} ~ {{ end_year }}</strong> (<strong>{{ total_results }}</strong> 건)
+        Current selected period: <strong>{{ start_year }} ~ {{ end_year }}</strong> (<strong>{{ total_results }}</strong> case)
     </p>
 </div>
 
@@ -144,14 +144,14 @@
 <div class="chart-container">
     <div id="papersChart"></div>
     <div class="chart-buttons">
-        <button class="gpt-analysis-btn">GPT 분석</button>
-        <button class="pdf-btn" data-chart="papersChart">마이페이지에 저장</button>
+        <button class="gpt-analysis-btn">GPT analysis</button>
+        <button class="pdf-btn" data-chart="papersChart">Save to mypage</button>
     </div>
     <!-- 분석 결과가 표시될 영역 -->
 <div id="analysisContainer">
-    <h4 class="analysis-title">GPT 분석 결과</h4>
+    <h4 class="analysis-title">GPT analysis result</h4>
     <div id="analysisResult" class="analysis-result">
-        <p>분석 결과가 여기에 표시됩니다.</p>
+        <p>The analysis results are displayed here.</p>
     </div>
 </div>
 </div>
@@ -237,7 +237,7 @@
     function drawPapersChart() {
         var data = new google.visualization.DataTable();
         data.addColumn('string', 'Year');
-        data.addColumn('number', '논문 수');
+        data.addColumn('number', 'Number of papers');
         data.addRows([
             {% for item in papers_count %}
     ['{{ item.year }}', {{ item.count }}],
@@ -245,7 +245,7 @@
             ]);
 
     var options = {
-        title: '연도별 논문 수',
+        title: 'Number of papers by year',
         legend: { position: 'bottom' },
         chartArea: { width: '70%', height: '70%' },
         pointSize: 5,
