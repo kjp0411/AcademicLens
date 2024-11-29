@@ -1,0 +1,11 @@
+리포트 제목: USA 리포팅
+리포트 내용:
+다음은 미국이 작성한 논문에 대한 다양한 분석 결과입니다.
+
+선택된 이미지 목록:
+/media/accounts/rlaghwns/USA 네트워크 데이터/AI 관련 USA 네트워크 데이터.png
+/media/accounts/rlaghwns/USA 네트워크 데이터/AI 관련 USA 워드클라우드 데이터.png
+/media/accounts/rlaghwns/USA 네트워크 데이터/USA 논문 증감 그래프.png
+/media/accounts/rlaghwns/USA 네트워크 데이터/USA 논문에서 많이 사용된 top 10 키워드.png
+/media/accounts/rlaghwns/USA 네트워크 데이터/전체 논문에 대한 USA 네트워크 분석.png
+/media/accounts/rlaghwns/USA 네트워크 데이터/전체 논문에 대한 USA 워드클라우드 분석.png

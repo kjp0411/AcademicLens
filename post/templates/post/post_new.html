@@ -12,7 +12,7 @@
     <div id="main_container">
 
         <div class="post_form_container">
-            <form action="#" class="post_form" method="post" enctype="multipart/form-data">
+            <form action="#" class="post_form" method="post" enctype="multipart/form-data" onsubmit="return validateContent()">
                 <div class="title">
                     New Post
                 </div>
@@ -39,51 +39,50 @@
         </div>
     </div>
 
-<script>
-var fileInput = document.querySelector("#id_photo")
-fileInput.addEventListener('change', handleImage);
-var canvas = document.getElementById('imageCanvas')
-var ctx = canvas.getContext('2d');
-
+    <script>
+        var fileInput = document.querySelector("#id_photo");
+        var canvas = document.getElementById('imageCanvas');
+        var ctx = canvas.getContext('2d');
     
-function handleImage(e){
-    var reader = new FileReader();
-    reader.onload = function(event){
-        var img = new Image();
-        img.onload = function(){
-            canvas.width = 300;
-            canvas.height = 300;
-            ctx.drawImage(img,0,0,300,300);
-        };
-        img.src = event.target.result;
-    };
-    reader.readAsDataURL(e.target.files[0]);
-}
-
-</script>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+        fileInput.addEventListener('change', handleImage);
+    
+        function handleImage(e) {
+            var reader = new FileReader();
+            reader.onload = function(event) {
+                var img = new Image();
+                img.onload = function() {
+                    canvas.width = 300;
+                    canvas.height = 300;
+                    ctx.drawImage(img, 0, 0, 300, 300);
+                };
+                img.src = event.target.result;
+            };
+            reader.readAsDataURL(e.target.files[0]);
+        }
+    
+        // 글자 수 및 이미지 검증
+        function validateContent() {
+            const textarea = document.querySelector(".post-new-content");
+            const content = textarea.value.trim();
+            const imageInput = document.querySelector("#id_photo");
+    
+            // 1. 이미지 업로드 여부 확인
+            if (!imageInput.files || imageInput.files.length === 0) {
+                alert("이미지를 업로드해주세요.");
+                imageInput.focus();
+                return false; // 폼 제출 중단
+            }
+    
+            // 2. 글자 수 검증
+            if (content.length > 140) {
+                alert("내용은 140자를 초과할 수 없습니다.");
+                textarea.focus();
+                return false; // 폼 제출 중단
+            }
+    
+            return true; // 폼 제출 허용
+        }
+    </script>
 
 {% endblock %}
 

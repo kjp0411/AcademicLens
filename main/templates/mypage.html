@@ -6,6 +6,11 @@
 
 {% block content %}
 <style>
+    pre {
+        white-space: pre-wrap; /* 공백과 줄 바꿈을 유지하면서 줄이 넘어가면 자동으로 감싸기 */
+        word-break: break-word; /* 단어가 길 경우 강제로 줄 바꿈 */
+        width: 50ch; /* 텍스트가 한 줄에 약 50글자까지만 보이도록 제한 */
+    }
     /* 분석저장소 */
     .folder {
         display: flex;

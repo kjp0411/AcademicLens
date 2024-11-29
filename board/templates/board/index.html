@@ -252,8 +252,7 @@ ITstagram
                     <li class="list-group-item">
                         <a href="{% url 'board:question_detail' question.pk %}" class="text-decoration-none">
                             {{ question.title }}
-                            <span class="small-text">작성자: {{ question.user.username }} | 작성일: {{ question.pub_date
-                                }}</span>
+                            <span class="small-text">작성자: {{ question.user.username }} | 작성일: {{ question.pub_date }}</span>
                         </a>
                         <span class="badge bg-secondary float-end">♥ {{ question.likes }}</span>
                     </li>

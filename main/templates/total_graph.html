@@ -361,8 +361,9 @@
 
         // Google Charts 데이터 테이블 생성
         var data = new google.visualization.DataTable();
-        data.addColumn('string', 'Affiliation');
-        data.addColumn('number', '논문 수');
+        data.addColumn('string', 'Affiliation'); // 축 레이블
+        data.addColumn('number', '논문 수');    // 데이터 값
+        data.addColumn({ type: 'string', role: 'tooltip' }); // 도구 힌트를 위한 열 추가
 
         // affiliationData를 Google Charts 데이터로 추가
         affiliationData.forEach(function(affiliation) {
@@ -370,7 +371,10 @@
                 ? affiliation.name.slice(0, maxLength) + '...' // 이름을 잘라서 표시
                 : affiliation.name;
 
-            data.addRow([truncatedName, affiliation.count]);
+            // 도구 힌트에 소속 풀 네임과 논문 수 포함
+            var tooltipContent = `${affiliation.name}\n논문 수: ${affiliation.count}`;
+
+            data.addRow([truncatedName, affiliation.count, tooltipContent]);
         });
 
         // 차트 옵션 설정
@@ -384,6 +388,7 @@
             vAxis: {
                 textStyle: { fontSize: 10 } // Y축 글자 크기 설정
             },
+            tooltip: { isHtml: false } // HTML을 사용하지 않고 기본 도구 힌트 사용
         };
 
         // 차트 생성

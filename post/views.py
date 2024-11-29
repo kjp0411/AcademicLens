@@ -106,7 +106,6 @@ def post_new(request):
             post.author = request.user
             post.save()
             post.tag_save()
-            messages.info(request, '새 글이 등록되었습니다')
             return redirect('post:post_list')
     else:
         form = PostForm()
